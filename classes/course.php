@@ -1268,4 +1268,636 @@ class course {
 
         return $assessmentsdue;
     }
+
+    /**
+     * MOOD-415
+     * Return a summary of assessments that have been marked, submitted, are
+     * outstanding or are overdue for the specific student to the web service.
+     * Return an error otherwise.
+     *
+     * @param string $guid
+     * @return array
+     */
+    public static function assessmentsoverview(string $guid): array {
+
+        global $DB, $CFG;
+        $stats = [];
+
+        // Find userid from GUID
+        if (!$user = $DB->get_record('user', ['username' => $guid, 'mnethostid' => $CFG->mnet_localhost_id])) {
+            $stats['error'] = 'No user record found.';
+            return $stats;
+        }
+
+        $stats = [
+            'upcoming' => 0,
+            'tosubmit' => 0,
+            'overdue' => 0,
+            'submissions' => 0,
+            'graded' => 0,
+        ];
+
+        $userid = $user->id;
+
+        $totalupcoming = 0;
+        $totaltosubmit = 0;
+        $totaloverdue = 0;
+        $totalsubmissions = 0;
+        $graded = 0;
+        $sortstring = 'shortname asc';
+        $isgradehidden = false;
+
+        $currentcourses = \local_gugrades\api::dashboard_get_courses($userid, true, false, $sortstring);
+
+        if (!$currentcourses) {
+            return $stats;
+        }
+
+        foreach ($currentcourses as $course) {
+            // Make sure we are enrolled as a student on this course.
+            if (\block_newgu_spdetails\api::return_isstudent($course->id, $userid)) {
+                $activities = self::get_activities($course->id);
+                if ($activities) {
+                    foreach ($activities as $activityitem) {
+                        $isgradehidden = false;
+                        if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
+                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
+                            $activityitem->courseid);
+                            $modinfo = get_fast_modinfo($activityitem->courseid, $userid);
+                            $cms = $modinfo->get_cms();
+                            if (array_key_exists($cm->id, $cms)) {
+                                $cm = $modinfo->get_cm($cm->id);
+                                $done = false;
+                                // If MyGrades is enabled and some grades are released, not hidden, then count them as graded.
+                                // Do not count them twice.
+                                if ($course->gugradesenabled) {
+                                    $params = [
+                                        'courseid' => $activityitem->courseid,
+                                        'gradeitemid' => $activityitem->id,
+                                        'userid' => $userid,
+                                        'gradetype' => 'RELEASED',
+                                        'iscurrent' => 1,
+                                    ];
+                                    if ($usergrades = $DB->get_records('local_gugrades_grade', $params)) {
+                                        // Swap all of this for the relevant mygrades API calls - if/when one exists.
+                                        foreach ($usergrades as $usergrade) {
+                                            // MGU-631 - Honour hidden grades and hidden activities.
+                                            $isgradehidden = $DB->record_exists('local_gugrades_hidden',
+                                                                    [
+                                                                        'gradeitemid' => $usergrade->gradeitemid,
+                                                                        'userid' => $usergrade->userid,
+                                                                        'courseid' => $usergrade->courseid,
+                                                                    ]);
+                                            if (!$isgradehidden) {
+                                                $graded++;
+                                                $done = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                // Everything else goes here.
+                                if ($cm->uservisible && !$done) {
+                                    // Get the activity based on its status.
+                                    $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                        $activityitem->courseid,
+                                        $activityitem->id,
+                                        $userid,
+                                        $activityitem->gradetype,
+                                        $activityitem->grademax,
+                                        $activityitem->scaleid,
+                                    );
+                                    $status = $gradestatus->grade_status;
+                                    if ($status == get_string('status_submissionnotopen', 'block_newgu_spdetails')) {
+                                        $totalupcoming++;
+                                    }
+
+                                    if ($status == get_string('status_submitted', 'block_newgu_spdetails')) {
+                                        $totalsubmissions++;
+                                    }
+
+                                    if ($status == get_string('status_submit', 'block_newgu_spdetails')) {
+                                        $totaltosubmit++;
+                                    }
+
+                                    if ($status == get_string('status_overdue', 'block_newgu_spdetails')) {
+                                        $totaloverdue++;
+                                    }
+
+                                    if ($status == get_string('status_graded', 'block_newgu_spdetails') && !$isgradehidden) {
+                                        if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
+                                        get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                            $graded++;
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $stats = [
+            'upcoming' => $totalupcoming,
+            'tosubmit' => $totaltosubmit,
+            'overdue' => $totaloverdue,
+            'submissions' => $totalsubmissions,
+            'graded' => $graded,
+        ];
+
+        return $stats;
+    }
+
+    /**
+     * MOOD-415
+     * Return the assessments that are due in the next 24 hours, week and month to the web service.
+     *
+     * @param string $guid
+     * @return array
+     */
+    public static function assessmentsduesoon(string $guid) {
+
+        global $DB, $CFG;
+        $stats = [];
+
+        // Find userid from GUID
+        if (!$user = $DB->get_record('user', ['username' => $guid, 'mnethostid' => $CFG->mnet_localhost_id])) {
+            $stats['error'] = 'No user record found.';
+            return $stats;
+        }
+
+        $stats = [
+            'duein24hours' => 0,
+            'duein7days' => 0,
+            'duein14days' => 0,
+            'duein1month' => 0,
+        ];
+
+        $userid = $user->id;
+
+        $sortstring = 'shortname asc';
+        $courses = \local_gugrades\api::dashboard_get_courses($userid, true, false, $sortstring);
+
+        if (!$courses) {
+            return $stats;
+        }
+
+        $assignmentdata = [];
+        foreach ($courses as $course) {
+            // Make sure we are enrolled as a student on this course.
+            if (\block_newgu_spdetails\api::return_isstudent($course->id, $userid)) {
+                // Return all the activities for this course.
+                $activities = self::get_activities($course->id);
+                if ($activities) {
+                    foreach ($activities as $activityitem) {
+                        if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
+                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
+                            $activityitem->courseid);
+                            $modinfo = get_fast_modinfo($activityitem->courseid, $userid);
+                            $cms = $modinfo->get_cms();
+                            if (array_key_exists($cm->id, $cms)) {
+                                $cm = $modinfo->get_cm($cm->id);
+                                if ($cm->uservisible) {
+                                    // Get the activity based on its type...
+                                    $activity = \block_newgu_spdetails\activity::activity_factory($activityitem->id,
+                                    $activityitem->courseid, 0);
+                                    if ($records = $activity->get_assessmentsdue()) {
+                                        $assignmentdata[] = $records[0];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$assignmentdata) {
+            return $stats;
+        }
+
+        $now = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d"), date("Y")));
+        $next24hours = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 1, date("Y")));
+        $next7days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 7, date("Y")));
+        $next14days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 14, date("Y")));
+        $nextmonth = usertime(mktime(date("H"), date("i"), date("s"), date("m") + 1, date("d"), date("Y")));
+
+        $duein24hours = 0;
+        $duein7days = 0;
+        $duein14days = 0;
+        $duein1month = 0;
+
+        foreach ($assignmentdata as $assignment) {
+            if (($assignment->duedate > $now) && ($assignment->duedate < $next24hours)) {
+                $duein24hours++;
+            }
+
+            if (($assignment->duedate > $now) && (($assignment->duedate > $next24hours) && ($assignment->duedate < $next7days))) {
+                $duein7days++;
+            }
+
+            if (($assignment->duedate > $now) && (($assignment->duedate > $next7days) && ($assignment->duedate < $next14days))) {
+                $duein14days++;
+            }
+
+            if (($assignment->duedate > $now) && (($assignment->duedate > $next14days) && ($assignment->duedate < $nextmonth))) {
+                $duein1month++;
+            }
+        }
+
+        $stats = [
+            'duein24hours' => $duein24hours,
+            'duein7days' => $duein7days,
+            'duein14days' => $duein14days,
+            'duein1month' => $duein1month,
+        ];
+
+        return $stats;
+    }
+
+    /**
+     * MOOD-415
+     * Return to the web service only the assessments that are:
+     * Upcoming
+     * Submitted
+     * To be submitted
+     * Overdue
+     * Graded
+     *
+     * Dependent on the type chosen.
+     *
+     * @param string $guid
+     * @param int $charttype
+     * @return array
+     */
+    public static function assessmentsoverviewbytype(string $guid, int $charttype): array {
+        global $DB, $CFG;
+
+        $assessmentsdue = [];
+
+        // Find userid from GUID
+        if (!$user = $DB->get_record('user', ['username' => $guid, 'mnethostid' => $CFG->mnet_localhost_id])) {
+            $assessmentsdue['error'] = 'No user record found.';
+            return $assessmentsdue;
+        }
+
+        if ($charttype < 0 || $charttype > 4) {
+            $assessmentsdue['error'] = 'Chart type can only be between 0 and 4.';
+            return $assessmentsdue;
+        }
+
+        $userid = $user->id;
+
+        $sortstring = 'shortname asc';
+        $courses = \local_gugrades\api::dashboard_get_courses($userid, true, false, $sortstring);
+
+        if (!$courses) {
+            $assessmentsdue['error'] = 'No data found.';
+            return $assessmentsdue;
+        }
+
+        $whichstatus = '';
+        switch ($charttype) {
+            case 0:
+                $whichstatus = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+                break;
+            case 1:
+                $whichstatus = get_string('status_submit', 'block_newgu_spdetails');
+                break;
+            case 2:
+                $whichstatus = get_string('status_overdue', 'block_newgu_spdetails');
+                break;
+            case 3:
+                $whichstatus = get_string('status_submitted', 'block_newgu_spdetails');
+                break;
+            case 4:
+                $whichstatus = get_string('status_graded', 'block_newgu_spdetails');
+                break;
+        }
+
+        $assessmentdata = [];
+        foreach ($courses as $course) {
+            // Make sure we are enrolled as a student on this course.
+            if (\block_newgu_spdetails\api::return_isstudent($course->id, $userid)) {
+                $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
+                $activities = self::get_activities($course->id);
+                if ($activities) {
+                    foreach ($activities as $activityitem) {
+                        if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
+                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
+                            $activityitem->courseid);
+                            $modinfo = get_fast_modinfo($activityitem->courseid, $userid);
+                            $cms = $modinfo->get_cms();
+                            if (array_key_exists($cm->id, $cms)) {
+                                $cm = $modinfo->get_cm($cm->id);
+                                // We had overlooked that we needed to check the course type when collating these numbers.
+                                // If the course that this activity belongs to is a MyGrades course, first check if we have
+                                // any 'Released' grades, for the Graded section.
+                                $grade = 'No grade information available.';
+                                $releasedandnothidden = false;
+                                $hiddenactivity = false;
+                                $processedbymygrades = false;
+                                if ($charttype == 4) {
+                                    if ($course->gugradesenabled) {
+                                        $params = [
+                                            'courseid' => $activityitem->courseid,
+                                            'gradeitemid' => $activityitem->id,
+                                            'userid' => $userid,
+                                            'gradetype' => 'RELEASED',
+                                            'iscurrent' => 1,
+                                        ];
+                                        if ($usergrades = $DB->get_records('local_gugrades_grade', $params)) {
+                                            // Swap all of this for the relevant mygrades API calls - if/when one exists.
+                                            $gradestatus = new stdClass();
+                                            foreach ($usergrades as $usergrade) {
+                                                // MGU-631 - Honour hidden grades and hidden activities.
+                                                $isgradehidden = $DB->record_exists('local_gugrades_hidden', [
+                                                        'gradeitemid' => $activityitem->id,
+                                                        'userid' => $userid,
+                                                    ]);
+                                                if (!$isgradehidden) {
+                                                    $releasedandnothidden = true;
+                                                    $processedbymygrades = true;
+                                                    $gradestatus->grade_date = $usergrade->audittimecreated;
+                                                    $gradestatus->assessment_url = $CFG->wwwroot . '/' .
+                                                        $activityitem->itemtype . '/' . $activityitem->itemmodule .
+                                                        '/view.php?id=' . $cm->id;
+
+                                                    $gradestatus->grade_status = get_string('status_graded',
+                                                        'block_newgu_spdetails');
+                                                    $gradestatus->status_text = get_string('status_text_graded',
+                                                        'block_newgu_spdetails');
+                                                    $gradestatus->status_class = get_string('status_class_graded',
+                                                        'block_newgu_spdetails');
+                                                    $gradestatus->status_link = '';
+                                                    $gradestatus->grade_to_display = get_string('status_text_graded',
+                                                        'block_newgu_spdetails');
+
+                                                    $grade = \block_newgu_spdetails\grade::is_admin_or_generic_grade(
+                                                        $usergrade->admingrade, $usergrade->displaygrade);
+
+                                                    if (!$cm->uservisible) {
+                                                        $gradestatus->assessment_url = '';
+                                                        $hiddenactivity = true;
+                                                    }
+                                                }
+                                                break;
+                                            }
+                                        } else {
+                                            if ($cm->uservisible) {
+                                                // Get the activity based on its type...
+                                                $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                                    $activityitem->courseid,
+                                                    $activityitem->id,
+                                                    $userid,
+                                                    $activityitem->gradetype,
+                                                    $activityitem->grademax,
+                                                    $activityitem->scaleid,
+                                                );
+
+                                                $grade = $gradestatus->grade_to_display;
+
+                                                if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
+                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                        continue;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if ($cm->uservisible) {
+                                            // Get the activity based on its type...
+                                            $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                                $activityitem->courseid,
+                                                $activityitem->id,
+                                                $userid,
+                                                $activityitem->gradetype,
+                                                $activityitem->grademax,
+                                                $activityitem->scaleid,
+                                            );
+
+                                            $grade = $gradestatus->grade_to_display;
+
+                                            if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
+                                                get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                    continue;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // We had overlooked that we needed to check the course type when collating these numbers.
+                                    // If the course that this activity belongs to has been processed via MyGrades, first check
+                                    // if we have any 'Released' records, if we have then this item can be skipped from any
+                                    // further checking.
+                                    if ($course->gugradesenabled) {
+                                        $params = [
+                                            'courseid' => $activityitem->courseid,
+                                            'gradeitemid' => $activityitem->id,
+                                            'userid' => $userid,
+                                            'gradetype' => 'RELEASED',
+                                            'iscurrent' => 1,
+                                        ];
+                                        if ($usergrades = $DB->get_records('local_gugrades_grade', $params)) {
+                                            // Swap all of this for the relevant mygrades API calls - if/when one exists.
+                                            $skiprecord = false;
+                                            foreach ($usergrades as $usergrade) {
+                                                // MGU-631 - Honour hidden grades and hidden activities.
+                                                $isgradehidden = \local_gugrades\api::is_grade_hidden($activityitem->id,
+                                                    $userid);
+                                                if (!$isgradehidden) {
+                                                    $skiprecord = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if ($skiprecord) {
+                                                // This item has been processed and released via MyGrades - therefore, doesn't/
+                                                // shouldn't be included in any results here.
+                                                continue;
+                                            }
+                                        } else {
+                                            // This item, while not having been released via MyGrades, is still in the game.
+                                            $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                                $activityitem->courseid,
+                                                $activityitem->id,
+                                                $userid,
+                                                $activityitem->gradetype,
+                                                $activityitem->grademax,
+                                                $activityitem->scaleid,
+                                            );
+                                        }
+
+                                    } else {
+                                        // This is just a regular Gradebook item.
+                                        $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                            $activityitem->courseid,
+                                            $activityitem->id,
+                                            $userid,
+                                            $activityitem->gradetype,
+                                            $activityitem->grademax,
+                                            $activityitem->scaleid,
+                                        );
+                                    }
+                                }
+
+                                $status = $gradestatus->grade_status;
+                                $date = '';
+
+                                if ($status == $whichstatus && ($cm->uservisible || $releasedandnothidden)) {
+                                    switch($charttype) {
+                                        case 4:
+                                            if (property_exists($gradestatus, 'grade_date') && $gradestatus->grade_date != '') {
+                                                $columnkey = 'dategraded';
+                                                $date = userdate($gradestatus->grade_date);
+                                            }
+                                            break;
+                                        default:
+                                            $columnkey = 'duedate';
+                                            $date = $gradestatus->due_date;
+                                            break;
+                                    }
+
+                                    $tmp = [
+                                        'courseurl' => $courseurl->out(),
+                                        'coursename' => $course->shortname,
+                                        'activityurl' => $gradestatus->assessment_url,
+                                        'activityname' => $activityitem->itemname,
+                                        'hiddenactivity' => $hiddenactivity,
+                                        $columnkey => $date,
+                                        'grade' => $grade,
+                                        'processedbymygrades' => $processedbymygrades,
+                                    ];
+
+                                    $assessmentdata[] = $tmp;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$assessmentdata) {
+            $assessmentsdue['error'] = 'No data found.';
+            return $assessmentsdue;
+        }
+
+        return $assessmentdata;
+    }
+
+    /**
+     * MOOD-415
+     * Return assessments that are due - filtered by type: 24hrs, 7days etc.
+     *
+     * @param string $guid
+     * @param int $charttype
+     * @return array
+     */
+    public static function assessmentsduebytype(string $guid, int $charttype): array {
+        global $DB, $CFG;
+
+        $assessmentsdue = [];
+
+        // Find userid from GUID
+        if (!$user = $DB->get_record('user', ['username' => $guid, 'mnethostid' => $CFG->mnet_localhost_id])) {
+            $assessmentsdue['error'] = 'No user record found.';
+            return $assessmentsdue;
+        }
+
+        if ($charttype < 0 || $charttype > 4) {
+            $assessmentsdue['error'] = 'Chart type can only be between 0 and 4.';
+            return $assessmentsdue;
+        }
+
+        $userid = $user->id;
+
+        $sortstring = 'shortname asc';
+        $courses = \local_gugrades\api::dashboard_get_courses($userid, true, false, $sortstring);
+
+        if (!$courses) {
+            return $assessmentsdue;
+        }
+
+        $now = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d"), date("Y")));
+        $next24hours = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 1, date("Y")));
+        $next7days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 7, date("Y")));
+        $next14days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 14, date("Y")));
+        $nextmonth = usertime(mktime(date("H"), date("i"), date("s"), date("m") + 1, date("d"), date("Y")));
+
+        $assessmentdata = [];
+        foreach ($courses as $course) {
+            // Make sure we are enrolled as a student on this course.
+            if (\block_newgu_spdetails\api::return_isstudent($course->id, $userid)) {
+                $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
+                $activities = self::get_activities($course->id);
+                if ($activities) {
+                    foreach ($activities as $item) {
+                        if (!in_array($item->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
+                            $cm = get_coursemodule_from_instance($item->itemmodule, $item->iteminstance, $item->courseid);
+                            $modinfo = get_fast_modinfo($item->courseid, $userid);
+                            $cms = $modinfo->get_cms();
+                            if (array_key_exists($cm->id, $cms)) {
+                                $cm = $modinfo->get_cm($cm->id);
+                                if ($cm->uservisible) {
+                                    // Get the activity based on its type...
+                                    $activityitem = \block_newgu_spdetails\activity::activity_factory($item->id,
+                                    $item->courseid, 0);
+                                    if ($assessments = $activityitem->get_assessmentsdue()) {
+                                        $assessment = $assessments[0];
+                                        if ($assessment->duedate > $now) {
+                                            $includeitem = false;
+                                            switch($charttype) {
+                                                case 0:
+                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") +
+                                                        1, date("Y")));
+                                                    $includeitem = ($assessment->duedate < $when);
+                                                    break;
+                                                case 1:
+                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") +
+                                                        7, date("Y")));
+                                                    $includeitem = (($assessment->duedate > $next24hours) && ($assessment->duedate
+                                                        < $next7days));
+                                                    break;
+                                                case 2:
+                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") +
+                                                        14, date("Y")));
+                                                    $includeitem = (($assessment->duedate > $next7days) && ($assessment->duedate
+                                                        < $next14days));
+                                                    break;
+                                                case 3:
+                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m") + 1,
+                                                        date("d"), date("Y")));
+                                                    $includeitem = (($assessment->duedate > $next14days) && ($assessment->duedate <
+                                                        $nextmonth));
+                                                    break;
+                                            }
+                                            if ($includeitem) {
+                                                $duedate = $activityitem->get_formattedduedate($assessment->duedate);
+                                                $tmp = [
+                                                    'courseurl' => $courseurl->out(),
+                                                    'coursename' => $course->shortname,
+                                                    'activityurl' => $activityitem->get_assessmenturl(),
+                                                    'activityname' => $assessment->name,
+                                                    'duedate' => $duedate,
+                                                ];
+
+                                                $assessmentdata[] = $tmp;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$assessmentdata) {
+            $assessmentsdue['error'] = 'No data found.';
+            return $assessmentsdue;
+        }
+
+        return $assessmentdata;
+    }
 }
