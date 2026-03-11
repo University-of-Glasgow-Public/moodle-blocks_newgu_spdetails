@@ -240,7 +240,7 @@ async function fetchAssessmentsOverview() {
                 main: 'highcharts'
             }],
             paths: {
-                'highcharts': 'https://code.highcharts.com'
+                'highcharts': '/blocks/newgu_spdetails/js'
             }
         });
         require([
