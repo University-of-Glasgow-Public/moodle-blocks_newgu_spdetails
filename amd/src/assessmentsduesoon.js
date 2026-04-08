@@ -40,6 +40,8 @@ const Selectors = {
     ASSESSMENTSDUE_CONTENTS: '#assessmentsdue_content'
 };
 
+const baseUrl = window.moodleConfig.wwwroot;
+
 /**
  * @method fetchAssessmentsDueSoon - The main method of this script.
  *
@@ -228,7 +230,7 @@ async function fetchAssessmentsDueSoon() {
                 main: 'highcharts'
             }],
             paths: {
-                'highcharts': '/blocks/newgu_spdetails/js'
+                'highcharts': baseUrl + '/blocks/newgu_spdetails/js'
             }
         });
         require([

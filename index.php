@@ -68,6 +68,13 @@ $templatecontext = (array)[
 
 $content = $OUTPUT->render_from_template('block_newgu_spdetails/coursetabs', $templatecontext);
 
+$PAGE->requires->js_init_code("
+    window.moodleConfig = {
+        wwwroot: '" . $CFG->wwwroot . "'
+    };
+    console.log('moodleConfig set:', window.moodleConfig);
+");
+
 $PAGE->requires->js_call_amd('block_newgu_spdetails/main', 'init');
 
 echo $OUTPUT->header();
