@@ -59,11 +59,11 @@ class course {
                 $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
                 $coursedata['courseurl'] = $courseurl->out();
                 if (!$active) {
-                    $startdate = \DateTime::createFromFormat('U', $course->startdate);
-                    $enddate = \DateTime::createFromFormat('U', $course->enddate);
-                    $coursedata['startdate'] = $startdate->format('jS F Y');
+                    $startdate = userdate($course->startdate, get_string('strftimedate', 'core_langconfig'));
+                    $enddate = userdate($course->enddate, get_string('strftimedate', 'core_langconfig'));
+                    $coursedata['startdate'] = $startdate;
                     $coursedata['raw_startdate'] = $course->startdate;
-                    $coursedata['enddate'] = $enddate->format('jS F Y');
+                    $coursedata['enddate'] = $enddate;
                     $coursedata['raw_enddate'] = $course->enddate;
                 }
                 $subcatdata = [];
