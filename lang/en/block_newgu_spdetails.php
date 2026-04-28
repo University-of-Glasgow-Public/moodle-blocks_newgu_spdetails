@@ -130,6 +130,7 @@ UOG_ACADEMICS_TILE&CRefName=UOG_NAVCOLL_4&AJAXTRANSFER=Y&ptgpid=UOG_MY_RESULTS_F
 $string['readfeedback'] = 'View Feedback';
 $string['readyforrelease'] = 'Ready for release';
 $string['readyforreview'] = 'Marking completed';
+$string['reassessment'] = 'Reassessment';
 $string['released'] = 'Released';
 $string['report_subheading_text'] = '<h1>{$a} Report</h1><br /><h3>A breakdown of activities undertaken and progress made.</h3>';
 $string['source'] = 'Source';

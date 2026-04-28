@@ -153,6 +153,9 @@ class course {
                     // The iteminstance is our grade category id here. $fieldid above is actually from the grade item record.
                     $subcat->id = $item->iteminstance;
                     $subcat->name = $tmpgradecategories[$index]->category->fullname;
+                    // MGU-1372 - We need to check if the category grade item is a resit grade item.
+                    $subcat->reassessment = \local_gugrades\grades::is_resit_gradeitem($item->id);
+                    $subcat->reassessment_text = $subcat->reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
                     $subcat->sortorder = $item->sortorder;
                     $subcat->is_gradecategory = true;
                     $subcat->mygradesenabled = true;
@@ -220,6 +223,9 @@ class course {
                 $subcat = new \stdClass();
                 $subcat->id = $gradecategory->category->id;
                 $subcat->name = $gradecategory->category->fullname;
+                // MGU-1372 - We need to check if the category grade item is a resit grade item.
+                $subcat->reassessment = \local_gugrades\grades::is_resit_gradeitem($gradecategory->category->itemid);
+                $subcat->reassessment_text = $subcat->reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
                 $subcat->sortorder = $item->sortorder;
                 $subcat->is_gradecategory = true;
                 $subcat->assessment_type = $assessmenttype;

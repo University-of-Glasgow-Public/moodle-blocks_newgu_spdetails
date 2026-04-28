@@ -38,6 +38,8 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/grade/constants.php');
 require_once($CFG->libdir . '/grade/grade_category.php');
 require_once($CFG->libdir . '/grade/grade_item.php');
+require_once($CFG->libdir . '/gradelib.php');
+require_once($CFG->dirroot . '/grade/querylib.php');
 
 define('ITEM_URL', $CFG->wwwroot . '/');
 define('ITEM_SCRIPT', '/view.php?id=');
@@ -126,6 +128,10 @@ class activity {
 
         // We don't need the status column for past courses.
         $coursedata['hidestatuscol'] = (($activetab == 'past') ? true : false);
+
+        // MGU-1372 - We need to check if the category grade item is a resit grade item.
+        $coursedata['reassessment'] = \local_gugrades\grades::is_resit_gradeitem($item->id);
+        $coursedata['reassessment_text'] = $coursedata['reassessment'] ? get_string('reassessment', 'block_newgu_spdetails') : '';
 
         $getactivities = api::get_activities($course->id, $subcategoryid);
         if ($getactivities[1] !== '') {
@@ -222,7 +228,7 @@ class activity {
                 $hasgradedata = true;
             }
         }
-        
+
         if (!$mygradesenabled || $hasgradedata == false) {
             $data['mygradesenabled'] = false;
 
@@ -384,6 +390,8 @@ class activity {
                                 $assessmentweight = (($rawassessmentweight > 0) ? $rawassessmentweight . "%" : "-");
                             }
                         }
+                        // MGU-1372 - We need to check if the grade item is a resit grade item.
+                        $reassessment = \local_gugrades\grades::is_resit_gradeitem($mygradesitem['gradeitemid']);
 
                         $mygradesactivityitem = new \stdClass();
                         $mygradesactivityitem->id = $mygradesitem['itemid'];
@@ -395,6 +403,8 @@ class activity {
                         $mygradesactivityitem->icon_restricted = $iconrestricted;
                         $mygradesactivityitem->icon_hidden = $iconhidden;
                         $mygradesactivityitem->item_name = $tmpgradeitems[$index]->itemname;
+                        $mygradesactivityitem->reassessment = $reassessment;
+                        $mygradesactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
                         $mygradesactivityitem->assessment_type = $assessmenttype;
                         $mygradesactivityitem->assessment_weight = $assessmentweight;
                         $mygradesactivityitem->raw_assessment_weight = $rawassessmentweight;
@@ -654,6 +664,12 @@ class activity {
                         unset($defaultactivityitem->grade_status);
                     }
                 }
+            }
+            // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
+            if (isset($defaultactivityitem)) {
+                $reassessment = \local_gugrades\grades::is_resit_gradeitem($defaultitem->id);
+                $defaultactivityitem->reassessment = $reassessment;
+                $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
             }
         }
 

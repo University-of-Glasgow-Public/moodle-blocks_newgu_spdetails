@@ -214,6 +214,10 @@ if ($coursestype) {
             if ($activitydata) {
                 foreach ($activitydata as $key => $activityitem) {
                     $itemrestriction = '';
+                    // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
+                    if (isset($activityitem->reassessment) && $activityitem->reassessment) {
+                        $itemrestriction .= ' (' . get_string('reassessment', 'block_newgu_spdetails') . ')';
+                    }
                     if (isset($activityitem->icon_hidden) && $activityitem->icon_hidden) {
                         $itemrestriction .= ' (' . get_string('status_text_hidden', 'block_newgu_spdetails') . ')';
                     }

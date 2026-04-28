@@ -74,6 +74,9 @@
         <div>
             <span class="subcategory-details-label">{{#str}} label_componentname, block_newgu_spdetails {{/str}}</span>
             <span id="subcategory-details-name" class="subcategory-details-value">{{#data.coursedata}}{{subcatfullname}}{{/data.coursedata}}</span>
+            {{#data.coursedata.reassessment}}
+                <span id="subcategory-details-resit" class="subcategory-details-value"><span class="badge badge-pill badge-success">{{#data.coursedata}}{{reassessment_text}}{{/data.coursedata}}</span></span>
+            {{/data.coursedata.reassessment}}
         </div>
         {{#data.coursedata.hascategorygrade}}
         <div>
@@ -124,7 +127,7 @@
             <tr data-assessmentid="{{id}}">
             {{/is_gradecategory}}
                 {{#is_gradecategory}}
-                <td class="td50 subcategory-row"><a href="#"><i class="icon fa fa-fw  fa-sharp fa-solid fa-folder"></i><strong>{{name}}</strong></a></td>
+                <td class="td50 subcategory-row"><a href="#"><i class="icon fa fa-fw  fa-sharp fa-solid fa-folder"></i><strong>{{name}}</strong></a> {{#reassessment}}<span class="badge badge-pill badge-success">{{reassessment_text}}</span>{{/reassessment}}</td>
                 <td class="td15 subcategory-row">{{assessment_type}}</td>
                 <td class="subcategory-row"{{#data.coursedata.hascourseitems}} colspan="3"{{/data.coursedata.hascourseitems}} data-rawcategoryweight="{{raw_category_weight}}">{{sub_category_weight}}</td>
                     {{#mygradesenabled}}
@@ -158,6 +161,7 @@
                     {{^icon_hidden}}<i class="icon fa fa-pencil-square-o fa-fw icon itemicon" title="{{icon_alt}}" alt="{{icon_alt}}" aria-hidden="true" role="img" aria-label="{{icon_alt}}"></i>{{/icon_hidden}}
                 {{/assessment_url}}
                 {{item_name}}
+                {{#reassessment}}<span class="badge badge-pill badge-success">{{reassessment_text}}</span>{{/reassessment}} {{! MGU-1372 show resit pills }}
                 {{^assessment_url}}</span>{{/assessment_url}}
                 {{#assessment_url}}</a>{{/assessment_url}}
                 {{#icon_restricted}}<i class="icon fa fa-lock fa-fw " title="Locked" alt="Locked" aria-hidden="true" role="img" aria-label="Locked"></i>{{/icon_restricted}}
