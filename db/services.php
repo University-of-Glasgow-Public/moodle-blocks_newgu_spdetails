@@ -33,10 +33,6 @@ $services = [
             'block_newgu_spdetails_get_assessmentsummary',
             'block_newgu_spdetails_get_assessments',
             'block_newgu_spdetails_get_assessmentsduesoon',
-            'block_newgu_spdetails_uofgpoc_assessmentsoverview',
-            'block_newgu_spdetails_uofgpoc_assessmentsoverviewbytype',
-            'block_newgu_spdetails_uofgpoc_assessmentsduesoon',
-            'block_newgu_spdetails_uofgpoc_assessmentsduebytype',
         ],
         'requiredcapability' => '',
         'restrictedusers' => 1,
@@ -95,45 +91,4 @@ $functions = [
             MOODLE_OFFICIAL_MOBILE_SERVICE,
         ],
     ],
-    // MOOD-415 - This is for the PoC for the UofG Life app.
-    'block_newgu_spdetails_uofgpoc_assessmentsoverview' => [
-        'classname'   => 'block_newgu_spdetails\external\assessmentsoverview',
-        'description' => 'Return an assessment overview for a given student',
-        'type'        => 'read',
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
-    'block_newgu_spdetails_uofgpoc_assessmentsoverviewbytype' => [
-        'classname'   => 'block_newgu_spdetails\external\assessmentsoverviewbytype',
-        'description' => 'Return an assessment overview by type for a given student',
-        'type'        => 'read',
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
-    'block_newgu_spdetails_uofgpoc_assessmentsduesoon' => [
-        'classname'   => 'block_newgu_spdetails\external\assessmentsduesoon',
-        'description' => 'Return assessments due in the immediate or near future for a given student',
-        'type'        => 'read',
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
-    'block_newgu_spdetails_uofgpoc_assessmentsduebytype' => [
-        'classname'   => 'block_newgu_spdetails\external\assessmentsduebytype',
-        'description' => 'Return the assessment due in the immediate or near future by type, for a given student',
-        'type'        => 'read',
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
-    // 'block_newgu_spdetails_uofgpoc_assessments' => [
-    //     'classname'   => 'block_newgu_spdetails\external\assessments',
-    //     'description' => 'Return current assessments for a given student',
-    //     'type'        => 'read',
-    //     'services'    => [
-    //         MOODLE_OFFICIAL_MOBILE_SERVICE,
-    //     ],
-    // ],
 ];
