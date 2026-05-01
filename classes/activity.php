@@ -664,12 +664,12 @@ class activity {
                         unset($defaultactivityitem->grade_status);
                     }
                 }
-            }
-            // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
-            if (isset($defaultactivityitem)) {
-                $reassessment = \local_gugrades\grades::is_resit_gradeitem($defaultitem->id);
-                $defaultactivityitem->reassessment = $reassessment;
-                $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
+                // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
+                if (isset($defaultactivityitem)) {
+                    $reassessment = \local_gugrades\grades::is_resit_gradeitem($defaultitem->id);
+                    $defaultactivityitem->reassessment = $reassessment;
+                    $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
+                }
             }
         }
 
