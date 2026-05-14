@@ -87,6 +87,7 @@ $string['header_type'] = 'Assessment Type';
 $string['header_weight'] = 'Weight';
 $string['heading'] = 'Your assessment details';
 $string['headingataglance'] = 'Your assessments at a glance';
+$string['help_url'] = 'https://www.gla.ac.uk/myglasgow/sld/digitalskills/studentmygrades/';
 $string['hidden_icon_alt_text'] = 'This activity is currently hidden on the course page.';
 $string['icon_alt_text'] = 'Link to {$a->modulename} activity {$a->activityname}';
 $string['includelti'] = 'Include LTI';

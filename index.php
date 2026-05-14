@@ -79,7 +79,7 @@ $PAGE->requires->js_call_amd('block_newgu_spdetails/main', 'init');
 
 echo $OUTPUT->header();
 
-$helpurl = 'https://www.gla.ac.uk/myglasgow/sld/digitalskills/how-to-moodleforstudents/studentmygrades/';
+$helpurl = get_string('help_url', 'block_newgu_spdetails');
 
 $helpbuttonattribs = [
     'class' => 'btn bg-info btn-lg icon-no-margin',
