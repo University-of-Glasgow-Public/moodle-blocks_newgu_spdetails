@@ -99,6 +99,7 @@ class activity {
     public static function get_activityitems(int $subcategoryid, int $userid, string $activetab): array {
         $activitydata = [];
         $coursedata = [];
+        $coursedata['haserror'] = false;
 
         // What's my parent?
         // I need the parent of the parent in order to be able to always
@@ -135,23 +136,27 @@ class activity {
 
         $getactivities = api::get_activities($course->id, $subcategoryid);
         if ($getactivities[1] !== '') {
-            // Not quite sure what to do here yet - aggregation isn't being supported.
-            $getactivities = $getactivities[0];
+            // MGU-1386 - The return value contains an error message.
+            $coursedata['hasdata'] = false;
+            $coursedata['haserror'] = true;
+            $errormsg = $getactivities[1];
+            $coursedata['errormsg'] = strip_tags($errormsg);
+            $activitydata['coursedata'] = $coursedata;
         } else {
             $activities = $getactivities[0];
-        }
-        $activitiesdata = self::process_get_activities($activities, $course->id, $subcategoryid, $userid, $activetab,
+            $activitiesdata = self::process_get_activities($activities, $course->id, $subcategoryid, $userid, $activetab,
             $assessmenttype);
-        $coursedata['courseitems'] = ((array_key_exists('courseitems', $activitiesdata)) ? $activitiesdata['courseitems'] : '');
-        $coursedata['hasdata'] = ((!empty($activitiesdata['courseitems']) ? true : false));
-        $coursedata['mygradesenabled'] = ((!empty($activitiesdata['mygradesenabled']) ? true : false));
-        $coursedata['hascategorygrade'] = ((!empty($activitiesdata['hascategorygrade']) ? true : false));
-        $coursedata['categorygrade'] = ((!empty($activitiesdata['categorygrade']) ? $activitiesdata['categorygrade'] : ''));
-        $coursedata['hasgradecategory'] = ((array_key_exists('hasgradecategory', $activitiesdata)) ? true : false);
-        $coursedata['hascourseitems'] = ((array_key_exists('hascourseitems', $activitiesdata)) ? true : false);
-        $coursedata['weighttowardscourse'] = ((array_key_exists('weighttowardscourse', $activitiesdata)) ?
-            $activitiesdata['weighttowardscourse'] : '-');
-        $activitydata['coursedata'] = $coursedata;
+            $coursedata['courseitems'] = ((array_key_exists('courseitems', $activitiesdata)) ? $activitiesdata['courseitems'] : '');
+            $coursedata['hasdata'] = ((!empty($activitiesdata['courseitems']) ? true : false));
+            $coursedata['mygradesenabled'] = ((!empty($activitiesdata['mygradesenabled']) ? true : false));
+            $coursedata['hascategorygrade'] = ((!empty($activitiesdata['hascategorygrade']) ? true : false));
+            $coursedata['categorygrade'] = ((!empty($activitiesdata['categorygrade']) ? $activitiesdata['categorygrade'] : ''));
+            $coursedata['hasgradecategory'] = ((array_key_exists('hasgradecategory', $activitiesdata)) ? true : false);
+            $coursedata['hascourseitems'] = ((array_key_exists('hascourseitems', $activitiesdata)) ? true : false);
+            $coursedata['weighttowardscourse'] = ((array_key_exists('weighttowardscourse', $activitiesdata)) ?
+                $activitiesdata['weighttowardscourse'] : '-');
+            $activitydata['coursedata'] = $coursedata;
+        }
 
         return $activitydata;
     }

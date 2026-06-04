@@ -92,9 +92,20 @@
 </div>
 <div id="current_subassessments" class="assessments-details-sort-container">
     {{^data.coursedata.hasdata}}
-    <div class="alert alert-warning" role="alert">
-    {{#str}} noactivitiesfound, block_newgu_spdetails {{/str}}
-    </div>
+        {{#data.coursedata.haserror}}
+        <div class="alert alert-danger text-center" role="alert">
+            <h4 class="alert-heading">{{#str}} error_text, block_newgu_spdetails {{/str}}</h4>
+            <hr />
+            <code>{{#data.coursedata}}{{errormsg}}{{/data.coursedata}}</code>
+            <hr />
+            <strong>{{#str}} error_text_guidance, block_newgu_spdetails {{/str}}</strong>
+        </div>
+        {{/data.coursedata.haserror}}
+        {{^data.coursedata.haserror}}
+        <div class="alert alert-warning" role="alert">
+        {{#str}} noactivitiesfound, block_newgu_spdetails {{/str}}
+        </div>
+        {{/data.coursedata.haserror}}
     {{/data.coursedata.hasdata}}
     {{#data.coursedata.hasdata}}
     <table id="category_table" class="table table-striped table-responsive assessments-details-table">
