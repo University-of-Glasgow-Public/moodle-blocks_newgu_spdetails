@@ -1,0 +1,81 @@
+[
+
+    {
+        "name": "Summative",
+        "category": true,
+        "weight": 1.0,
+        "aggregation": "weighted_mean",
+        "children": [
+            {
+                "name": "Workshop Tests",
+                "category": true,
+                "weight": 0.2,
+                "children": [
+                    {
+                        "name": "Maths Workshop",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 10
+                    },
+                    {
+                        "name": "Chem Workshop",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 10
+                    },
+                    {
+                        "name": "Physics Workshop",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 10
+                    },
+                    {
+                        "name": "Bioorganic Workshop",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 10
+                    }
+                ]
+            },
+            {
+                "name": "Class Tests 1",
+                "category": true,
+                "weight": 0.1,
+                "children": [
+                    {
+                        "name": "Class Test 1",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 25
+                    }
+                ]
+            },
+            {
+                "name": "Class Tests 2",
+                "category": true,
+                "weight": 0.1,
+                "children": [
+                    {
+                        "name": "Class Test 2",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 25
+                    }
+                ]
+            },
+            {
+                "name": "Main Exam",
+                "category": true,
+                "weight": 0.6,
+                "children": [
+                    {
+                        "name": "December Examination",
+                        "category": false,
+                        "type": "points",
+                        "grademax": 100
+                    }
+                ]
+            }
+        ]
+    }
+]

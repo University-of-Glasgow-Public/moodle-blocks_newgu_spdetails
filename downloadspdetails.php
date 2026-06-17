@@ -144,7 +144,8 @@ if ($coursestype) {
                     foreach ($course->firstlevel as $firstlevel) {
                         $firstlevelid = 0;
                         $firstlevelid = $firstlevel['id'];
-                        if ($mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user($course->id, $firstlevelid, $USER->id)) {
+                        if ($mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user($course->id, $firstlevelid,
+                            $USER->id)) {
                             $tmpitems = $mygradesdata->fields;
                             foreach ($tmpitems as $tmpitem) {
                                 if ($tmpitem['iscategory'] == true) {
@@ -197,8 +198,8 @@ if ($coursestype) {
                         $tmpactivities[] = $activity;
                     }
                     $activities = $tmpactivities;
-                    $activitydata = \block_newgu_spdetails\activity::process_mygrades_items($mygradeitems, $activities, $coursestype,
-                        '');
+                    $activitydata = \block_newgu_spdetails\activity::process_mygrades_items($mygradeitems, $activities,
+                        $coursestype, '');
                 }
             }
 

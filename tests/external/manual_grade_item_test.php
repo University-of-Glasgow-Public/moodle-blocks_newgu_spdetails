@@ -60,8 +60,8 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
 
-        $this->assertCount(1, $activities->items);
-        $this->assertEquals(0, $activities->items[0]->hidden);
+        $this->assertCount(1, $activities[0]->items);
+        $this->assertEquals(0, $activities[0]->items[0]->hidden);
     }
 
     /**
@@ -88,7 +88,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         ]);
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmanualgradeitem = $this->activityapi->process_manual_grade_item($activities->items[0], 'manual',
+        $processedmanualgradeitem = $this->activityapi->process_manual_grade_item($activities[0]->items[0], 'manual',
             $this->teacher->id);
         $icontext = get_string('manual_grade_item_hidden_icon_alt_text', 'block_newgu_spdetails');
         $iconalt = "<i class='icon fa fa-eye-slash fa-fw' title='" . $icontext . "' alt='" . $icontext
@@ -127,7 +127,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         ]);
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $this->activityapi->process_manual_grade_item($activities->items[0], 'manual',
+        $this->activityapi->process_manual_grade_item($activities[0]->items[0], 'manual',
             $this->teacher->id);
         $expectedstudentview = $manualgradeitem->hidden;
         $expectedstaffview = $gradegradesitem->hidden;
@@ -226,7 +226,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
             $this->student1->id);
-        $tmpitems = $gradedata->fields;
+        $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
         foreach ($tmpitems as $tmpitem) {
@@ -240,7 +240,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities->items, 'current',
+        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
             'summative');
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
@@ -286,6 +286,33 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'hidden' => 1,
         ]);
 
+        // We need to fake a category for this manual item.
+        $now  = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+        $categorycolid = $DB->insert_record('local_gugrades_column', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $this->mygradessummativecategory->id,
+            'gradetype' => 'CATEGORY',
+            'other' => '',
+            'points' => 0,
+        ]);
+
+        $parentcategorygradeitemid = $DB->get_record("grade_items", ['iteminstance' => $this->mygradessummativecategory->id]);
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $parentcategorygradeitemid->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+
         // Create the RELEASED entry in MyGrades and related tables.
         $now  = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
         $DB->insert_record('local_gugrades_column', [
@@ -327,7 +354,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
             $this->student1->id);
-        $tmpitems = $gradedata->fields;
+        $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
         foreach ($tmpitems as $tmpitem) {
@@ -341,7 +368,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities->items, 'current',
+        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
             'summative');
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
@@ -451,7 +478,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
             $this->student1->id);
-        $tmpitems = $gradedata->fields;
+        $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
         foreach ($tmpitems as $tmpitem) {
@@ -465,7 +492,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities->items, 'current',
+        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
             'summative');
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
@@ -510,6 +537,32 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'itemid' => $manualgradeitem->id,
             'userid' => $this->student1->id,
             'hidden' => 1,
+        ]);
+
+        // We need to fake a category for this manual item.
+        $now  = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+        $categorycolid = $DB->insert_record('local_gugrades_column', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $this->mygradessummativecategory->id,
+            'gradetype' => 'CATEGORY',
+            'other' => '',
+            'points' => 0,
+        ]);
+        $parentcategorygradeitemid = $DB->get_record("grade_items", ['iteminstance' => $this->mygradessummativecategory->id]);
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $parentcategorygradeitemid->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
         ]);
 
         // Create the RELEASED entry in MyGrades and related tables, plus the hidden entry.
@@ -558,7 +611,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
             $this->student1->id);
-        $tmpitems = $gradedata->fields;
+        $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
         foreach ($tmpitems as $tmpitem) {
@@ -572,7 +625,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities->items, 'current',
+        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
             'summative');
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');

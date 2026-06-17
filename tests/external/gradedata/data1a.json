@@ -1,0 +1,30 @@
+[
+    {
+        "item": "Maths Workshop",
+        "grade": 7
+    },
+    {
+        "item": "Chem Workshop",
+        "grade": 8
+    },
+    {
+        "item": "Physics Workshop",
+        "grade": 7
+    },
+    {
+        "item": "Bioorganic Workshop",
+        "grade": 9
+    },
+    {
+        "item": "Class Test 1",
+        "grade": 18
+    },
+    {
+        "item": "Class Test 2",
+        "grade": 20
+    },
+    {
+        "item": "December Examination",
+        "grade": "83"
+    }
+]

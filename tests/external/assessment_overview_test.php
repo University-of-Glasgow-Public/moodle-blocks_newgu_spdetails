@@ -87,7 +87,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -117,7 +117,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate2,
             'gradetype' => 2,
             'grademax' => 75,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -172,7 +172,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -202,7 +202,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate2,
             'gradetype' => 2,
             'grademax' => 75,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -231,7 +231,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate3,
             'gradetype' => 2,
             'grademax' => 75,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -284,7 +284,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -340,7 +340,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'allowsubmissionsfromdate' => $allowsubmissionsfromdate,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -391,7 +391,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -453,7 +453,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -529,7 +529,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate1,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -628,7 +628,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -658,7 +658,7 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
             'duedate' => $duedate2,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.

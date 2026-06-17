@@ -32,6 +32,7 @@ use block_newgu_spdetails\grade;
 use grade_category;
 use grade_item;
 use mod_questionnaire\responsetype\boolean;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -185,18 +186,39 @@ class activity {
             // This call should return grade data that has been processed through the MyGrades tool.
             // This includes grade category data as well as individual grade item data.
             if ($gradedata = api::get_aggregation_dashboard_user($courseid, $subcategory, $userid)) {
+                $data['mygradesenabled'] = true;
+
+                // The weight value for this category can be derived from different places in the process.
+                $weighttowardscourse = 0;
+
+                // Initially, lets see if we can get it from the $gradedata->parent property.
+                if ($item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradedata['parent']->gradeitemid])) {
+                    $tmpweighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
+                    $weighttowardscourse = $tmpweighttowardscourse->grade_category_weight;
+                }
 
                 // MGU-1153 - Reinstate the label for the category grade.
                 $data['hascategorygrade'] = false;
-                if (is_object($gradedata->parent)) {
-                    if ($gradedata->parent->released) {
+                if (is_object($gradedata['parent'])) {
+                    if ($gradedata['parent']->released) {
                         $data['hascategorygrade'] = true;
-                        $data['categorygrade'] = grade::is_admin_or_generic_grade($gradedata->parent->admingrade,
-                            $gradedata->parent->displaygrade);
+                        $data['categorygrade'] = grade::is_admin_or_generic_grade($gradedata['parent']->admingrade,
+                            $gradedata['parent']->displaygrade);
+
+                        // MGU-1410 - Check for the correct weighting.
+                        [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
+                            $gradedata['parent']->gradeitemid, $userid);
+                        if ($isaltered) {
+                            $weighttowardscourse = course::return_weight($alteredweight) . '%';
+                        } else {
+                            $weighttowardscourse = course::return_weight($originalweight) . '%';
+                        }
                     }
                 }
-                $tmpitems = $gradedata->fields;
 
+                $data['weighttowardscourse'] = $weighttowardscourse;
+
+                $tmpitems = $gradedata['fields'];
                 $gradecategories = [];
                 $gradeitems = [];
                 foreach ($tmpitems as $tmpitem) {
@@ -206,19 +228,11 @@ class activity {
                         $gradeitems[] = $tmpitem;
                     }
                 }
-                $data['mygradesenabled'] = true;
-
-                // To get the weight for this grade category, we can tap into the $gradedata->parent property.
-                $weighttowardscourse = 0;
-                if ($item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradedata->parent->gradeitemid])) {
-                    $weighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
-                }
-                $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
                 if ($gradecategories) {
                     $categorydata = [];
                     $categorydata = course::process_mygrades_subcategories($courseid, $gradecategories, $activityitems->categories,
-                        $assessmenttype);
+                        $assessmenttype, $userid);
                     $data['courseitems'] = $categorydata;
                     $data['hasgradecategory'] = true;
                 }
@@ -239,12 +253,14 @@ class activity {
 
             // The weight for this grade category can be derived from the aggregation coefficient
             // value of the grade item, this needs to have been set in Gradebook Setup however.
-            $weighttowardscourse = 0;
+            $weighttowardscourse = new stdClass();
+            $weighttowardscourse->grade_category_weight = 0;
             if ($item = \grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $activityitems->category->id,
             'itemtype' => 'category'])) {
-                $weighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
+                $tmpweighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
+                $weighttowardscourse->grade_category_weight = $tmpweighttowardscourse->grade_category_weight;
             }
-            $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
+            $data['weighttowardscourse'] = $weighttowardscourse;
 
             if ($activityitems->categories) {
                 $categorydata = [];
@@ -409,7 +425,8 @@ class activity {
                         $mygradesactivityitem->icon_hidden = $iconhidden;
                         $mygradesactivityitem->item_name = $tmpgradeitems[$index]->itemname;
                         $mygradesactivityitem->reassessment = $reassessment;
-                        $mygradesactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
+                        $mygradesactivityitem->reassessment_text = $reassessment ? get_string('reassessment',
+                            'block_newgu_spdetails') : '';
                         $mygradesactivityitem->assessment_type = $assessmenttype;
                         $mygradesactivityitem->assessment_weight = $assessmentweight;
                         $mygradesactivityitem->raw_assessment_weight = $rawassessmentweight;
@@ -673,7 +690,8 @@ class activity {
                 if (isset($defaultactivityitem)) {
                     $reassessment = \local_gugrades\grades::is_resit_gradeitem($defaultitem->id);
                     $defaultactivityitem->reassessment = $reassessment;
-                    $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
+                    $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment',
+                        'block_newgu_spdetails') : '';
                 }
             }
         }

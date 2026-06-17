@@ -129,10 +129,11 @@ class course {
      * @param array $gradecategories
      * @param array $tmpgradecategories
      * @param string $assessmenttype
+     * @param int $userid
      * @return array
      */
     public static function process_mygrades_subcategories(int $courseid, array $gradecategories, array $tmpgradecategories,
-    string $assessmenttype): array {
+    string $assessmenttype, int $userid): array {
         $gradessubcatdata = [];
         $index = 0;
         foreach ($gradecategories as $gradecategory) {
@@ -164,12 +165,23 @@ class course {
                     $subcat->raw_category_weight = $rawsubcatweight;
                     if (is_object($gradecategory['releasegrade'])) {
                         // MGU-1162 - The display of adjusted category weights wasn't being set correctly.
-                        $rawsubcatweight = (($gradecategory['releasegrade']->normalisedweight != null) ?
-                        $gradecategory['releasegrade']->normalisedweight : 0);
-                        $subcatweight = (($gradecategory['releasegrade']->normalisedweight != null) ? self::return_weight(
-                            $gradecategory['releasegrade']->normalisedweight) . '%' : '-');
-                        $subcat->sub_category_weight = $subcatweight;
+                        // MGU-1410 - Weights were disappearing when grade categories were released. Previously, we relied on the
+                        // normalisedweight property as this item was something that was in a "released" state. Now use a more
+                        // appropriate method. Tip - watch for weight adjusted categories that haven't been released - this will
+                        // make the weight totals not add up when viewing the sub categories.
+                        [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight($item->id,
+                            $userid);
+                        if ($isaltered) {
+                            $rawsubcatweight = $alteredweight;
+                            $subcatweight = self::return_weight($alteredweight) . '%';
+                        } else {
+                            $subcatweight = $originalweight;
+                            $subcatweight = self::return_weight($originalweight) . '%';
+                        }
+
                         $subcat->raw_category_weight = $rawsubcatweight;
+                        $subcat->sub_category_weight = $subcatweight;
+
                         if (!$gradecategory['grademissing']) {
                             $subcat->grade_category_grade = grade::is_admin_or_generic_grade(
                                 $gradecategory['releasegrade']->admingrade,

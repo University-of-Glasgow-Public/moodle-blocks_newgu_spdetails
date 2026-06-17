@@ -23,7 +23,7 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace block_newgu_spdetails\external;
+namespace block_newgu_spdetails\external;
 
 use externallib_advanced_testcase;
 
@@ -91,9 +91,117 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
     protected $student4;
 
     /**
-     * @var object $scale
+     * @var object $scalea
      */
-    protected $scale;
+    protected $scalea;
+
+    /**
+     * @var object $scaleb
+     */
+    protected $scaleb;
+
+    /**
+     * Called before every test.
+     * This sets up the basic course, scales and some users.
+     */
+    protected function setUp(): void {
+        global $DB;
+
+        parent::setUp();
+        $this->resetAfterTest(true);
+
+        // Create some oft used objects.
+        $api = new \block_newgu_spdetails\api();
+        $this->api = $api;
+
+        $courseapi = new \block_newgu_spdetails\course();
+        $this->courseapi = $courseapi;
+
+        $activityapi = new \block_newgu_spdetails\activity();
+        $this->activityapi = $activityapi;
+
+        $gradeapi = new \block_newgu_spdetails\grade();
+        $this->gradeapi = $gradeapi;
+
+        // Some dates for our mock course.
+        $startdate = mktime(0, 0, 0, 0, 1, date("Y"));
+        $enddate  = mktime(0, 0, 0, date("m"), date("d"), date("Y") + 1);
+
+        // Create the base MyGrades type course.
+        $mygradescourse = $this->getDataGenerator()->create_course([
+            'fullname' => 'MyGrades Test Course',
+            'shortname' => 'MGTC1',
+            'startdate' => $startdate,
+            'enddate' => $enddate,
+        ]);
+
+        // This requires further mock "enabling" this as a MyGrades type course.
+        $mygradesparams = [
+            'courseid' => $mygradescourse->id,
+            'name' => 'disabledashboard',
+            'value' => 0,
+        ];
+        $DB->insert_record('local_gugrades_config', $mygradesparams);
+
+        // Create some context.
+        $mygradescontext = \context_course::instance($mygradescourse->id);
+
+        // Create the MyGrades specific custom course field - normally done when visiting MyGrades w/in a course.
+        $this->custom_course_field($mygradescourse, $mygradescontext);
+
+        // Add some scales that this course can use.
+        // Range 1 to 23.
+        $scaleitems = 'H:0, G2:1, G1:2, F3:3, F2:4, F1:5, E3:6, E2:7, E1:8, D3:9, D2:10, D1:11,
+            C3:12, C2:13, C1:14, B3:15, B2:16, B1:17, A5:18, A4:19, A3:20, A2:21, A1:22';
+        $scalea = $this->getDataGenerator()->create_scale([
+            'name' => 'UofG 22 point scale',
+            'scale' => $scaleitems,
+            'courseid' => $mygradescourse->id,
+        ]);
+
+        // Add another scale.
+        // Range 1 to 8.
+        $scaleitemsb = 'H, G0, F0, E0, D0, C0, B0, A0';
+        $scaleb = $this->getDataGenerator()->create_scale([
+            'name' => 'UofG Schedule B',
+            'scale' => $scaleitemsb,
+            'courseid' => $mygradescourse->id,
+        ]);
+        $scheduleb = [0 => 'H', 2 => 'G0', 5 => 'F0', 8 => 'E0', 11 => 'D0', 14 => 'C0', 17 => 'B0', 22 => 'A0'];
+        $this->fill_scalevalue($scheduleb, $scaleb->id, 'scheduleb');
+
+        // Set up, enrol and assign a role for the teacher...
+        $teacher = $this->getDataGenerator()->create_user(['email' => 'teacher1@example.co.uk', 'username' => 'teacher1']);
+        $this->getDataGenerator()->enrol_user($teacher->id, $mygradescourse->id, $this->get_roleid('editingteacher'));
+        $this->getDataGenerator()->role_assign('editingteacher', $teacher->id, $mygradescontext);
+
+        // Set up, enrol and assign a role for some fake students...
+        $student1 = $this->getDataGenerator()->create_user(['email' => 'student1@example.co.uk', 'username' => 'student1']);
+        $this->getDataGenerator()->enrol_user($student1->id, $mygradescourse->id, $this->get_roleid());
+        $this->getDataGenerator()->role_assign('student', $student1->id, $mygradescontext);
+
+        $student2 = $this->getDataGenerator()->create_user(['email' => 'student2@example.co.uk', 'username' => 'student2']);
+        $this->getDataGenerator()->enrol_user($student2->id, $mygradescourse->id, $this->get_roleid());
+        $this->getDataGenerator()->role_assign('student', $student2->id, $mygradescontext);
+
+        $student3 = $this->getDataGenerator()->create_user(['email' => 'student3@example.co.uk', 'username' => 'student3']);
+        $this->getDataGenerator()->enrol_user($student3->id, $mygradescourse->id, $this->get_roleid());
+        $this->getDataGenerator()->role_assign('student', $student3->id, $mygradescontext);
+
+        $student4 = $this->getDataGenerator()->create_user(['email' => 'student4@example.co.uk', 'username' => 'student4']);
+        $this->getDataGenerator()->enrol_user($student4->id, $mygradescourse->id, $this->get_roleid());
+        $this->getDataGenerator()->role_assign('student', $student4->id, $mygradescontext);
+
+        // Finally assign everything to our main object.
+        $this->mygradescourse = $mygradescourse;
+        $this->scalea = $scalea;
+        $this->scaleb = $scaleb;
+        $this->teacher = $teacher;
+        $this->student1 = $student1;
+        $this->student2 = $student2;
+        $this->student3 = $student3;
+        $this->student4 = $student4;
+    }
 
     /**
      * Add assignment grade
@@ -198,93 +306,38 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
     }
 
     /**
-     * Called before every test.
-     * This sets up the basic course, scales and some users.
+     * Fill local_gugrades_scalevalue table
+     * @param array $scale
+     * @param int $scaleid
+     * @param string $type
      */
-    protected function setUp(): void {
+    protected function fill_scalevalue($scale, $scaleid, $type) {
         global $DB;
 
-        parent::setUp();
-        $this->resetAfterTest(true);
+        foreach ($scale as $value => $item) {
+            $scalevalue = new \stdClass();
+            $scalevalue->scaleid = $scaleid;
+            $scalevalue->item = trim($item);
+            $scalevalue->value = $value;
+            $DB->insert_record('local_gugrades_scalevalue', $scalevalue);
+        }
 
-        // Create some oft used objects.
-        $api = new \block_newgu_spdetails\api();
-        $this->api = $api;
+        $scaletype = new \stdClass();
+        $scaletype->scaleid = $scaleid;
+        $scaletype->type = $type;
+        $DB->insert_record('local_gugrades_scaletype', $scaletype);
+    }
 
-        $courseapi = new \block_newgu_spdetails\course();
-        $this->courseapi = $courseapi;
+    /**
+     * Move grade item into specified category
+     * @param int $gradeitemid
+     * @param int $gradecategoryid
+     */
+    protected function move_gradeitem_to_category(int $gradeitemid, int $gradecategoryid) {
+        global $DB;
 
-        $activityapi = new \block_newgu_spdetails\activity();
-        $this->activityapi = $activityapi;
-
-        $gradeapi = new \block_newgu_spdetails\grade();
-        $this->gradeapi = $gradeapi;
-
-        // Some dates for our mock course.
-        $startdate = mktime(0, 0, 0, 0, 1, date("Y"));
-        $enddate  = mktime(0, 0, 0, date("m"), date("d"), date("Y") + 1);
-
-        // Create the base MyGrades type course.
-        $mygradescourse = $this->getDataGenerator()->create_course([
-            'fullname' => 'MyGrades Test Course',
-            'shortname' => 'MGTC1',
-            'startdate' => $startdate,
-            'enddate' => $enddate,
-        ]);
-
-        // This requires further mock "enabling" this as a MyGrades type course.
-        $mygradesparams = [
-            'courseid' => $mygradescourse->id,
-            'name' => 'enabledashboard',
-            'value' => 1,
-        ];
-        $DB->insert_record('local_gugrades_config', $mygradesparams);
-
-        // Create some context.
-        $mygradescontext = \context_course::instance($mygradescourse->id);
-
-        // Create the MyGrades specific custom course field - normally done when visiting MyGrades w/in a course.
-        $this->custom_course_field($mygradescourse, $mygradescontext);
-
-        // Add some scales that this course can use.
-        // Range 1 to 23.
-        $scaleitems = 'H:0, G2:1, G1:2, F3:3, F2:4, F1:5, E3:6, E2:7, E1:8, D3:9, D2:10, D1:11,
-            C3:12, C2:13, C1:14, B3:15, B2:16, B1:17, A5:18, A4:19, A3:20, A2:21, A1:22';
-        $scale = $this->getDataGenerator()->create_scale([
-            'name' => 'UofG 22 point scale',
-            'scale' => $scaleitems,
-            'courseid' => $mygradescourse->id,
-        ]);
-
-        // Set up, enrol and assign a role for the teacher...
-        $teacher = $this->getDataGenerator()->create_user(['email' => 'teacher1@example.co.uk', 'username' => 'teacher1']);
-        $this->getDataGenerator()->enrol_user($teacher->id, $mygradescourse->id, $this->get_roleid('editingteacher'));
-        $this->getDataGenerator()->role_assign('editingteacher', $teacher->id, $mygradescontext);
-
-        // Set up, enrol and assign a role for some fake students...
-        $student1 = $this->getDataGenerator()->create_user(['email' => 'student1@example.co.uk', 'username' => 'student1']);
-        $this->getDataGenerator()->enrol_user($student1->id, $mygradescourse->id, $this->get_roleid());
-        $this->getDataGenerator()->role_assign('student', $student1->id, $mygradescontext);
-
-        $student2 = $this->getDataGenerator()->create_user(['email' => 'student2@example.co.uk', 'username' => 'student2']);
-        $this->getDataGenerator()->enrol_user($student2->id, $mygradescourse->id, $this->get_roleid());
-        $this->getDataGenerator()->role_assign('student', $student2->id, $mygradescontext);
-
-        $student3 = $this->getDataGenerator()->create_user(['email' => 'student3@example.co.uk', 'username' => 'student3']);
-        $this->getDataGenerator()->enrol_user($student3->id, $mygradescourse->id, $this->get_roleid());
-        $this->getDataGenerator()->role_assign('student', $student3->id, $mygradescontext);
-
-        $student4 = $this->getDataGenerator()->create_user(['email' => 'student4@example.co.uk', 'username' => 'student4']);
-        $this->getDataGenerator()->enrol_user($student4->id, $mygradescourse->id, $this->get_roleid());
-        $this->getDataGenerator()->role_assign('student', $student4->id, $mygradescontext);
-
-        // Finally assign everything to our main object.
-        $this->mygradescourse = $mygradescourse;
-        $this->scale = $scale;
-        $this->teacher = $teacher;
-        $this->student1 = $student1;
-        $this->student2 = $student2;
-        $this->student3 = $student3;
-        $this->student4 = $student4;
+        $gradeitem = $DB->get_record('grade_items', ['id' => $gradeitemid], '*', MUST_EXIST);
+        $gradeitem->categoryid = $gradecategoryid;
+        $DB->update_record('grade_items', $gradeitem);
     }
 }

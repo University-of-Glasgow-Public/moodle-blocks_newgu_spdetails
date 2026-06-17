@@ -58,7 +58,7 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
             'duedate' => $duedate,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -131,7 +131,7 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
             'duedate' => $duedate,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
@@ -217,7 +217,7 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
             'duedate' => $duedate,
             'gradetype' => 2,
             'grademax' => 50,
-            'scaleid' => $this->scale->id,
+            'scaleid' => $this->scalea->id,
         ]);
 
         // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
