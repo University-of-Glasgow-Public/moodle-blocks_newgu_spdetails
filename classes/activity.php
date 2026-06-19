@@ -260,7 +260,7 @@ class activity {
                 $tmpweighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
                 $weighttowardscourse->grade_category_weight = $tmpweighttowardscourse->grade_category_weight;
             }
-            $data['weighttowardscourse'] = $weighttowardscourse;
+            $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
             if ($activityitems->categories) {
                 $categorydata = [];
