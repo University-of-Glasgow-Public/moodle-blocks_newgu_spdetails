@@ -108,6 +108,49 @@ async function fetchAssessmentsOverview() {
         let submitted = response[0].sub_assess;
         let graded = response[0].assess_marked;
 
+        // MGU-1460 - Segments with 0 values shouldn't display. We now need to pass the index number as the Id to make this work.
+        const dataobject = [];
+        if (upcoming > 0) {
+            dataobject.push({
+                name: status_text_upcoming + ': <strong>' + upcoming + '</strong>',
+                id: '0',
+                y: upcoming,
+                color: 'rgba(255, 222, 89, 1)',
+            });
+        }
+        if (tobe_submitted > 0) {
+            dataobject.push({
+                name: status_text_tobesubmitted + ': <strong>' + tobe_submitted + '</strong>',
+                id: '1',
+                y: tobe_submitted,
+                color: 'rgba(255, 145, 77, 1)',
+            });
+        }
+        if (overdue > 0) {
+            dataobject.push({
+                name: status_text_overdue + ': <strong>' + overdue + '</strong>',
+                id: '2',
+                y: overdue,
+                color: 'rgba(255, 49, 49, 1)',
+            });
+        }
+        if (submitted > 0) {
+            dataobject.push({
+                name: status_text_submitted + ': <strong>' + submitted + '</strong>',
+                id: '3',
+                y: submitted,
+                color: 'rgba(0, 191, 99, 1)',
+            });
+        }
+        if (graded > 0) {
+            dataobject.push({
+                name: status_text_graded + ': <strong>' + graded + '</strong>',
+                id: '4',
+                y: graded,
+                color: 'rgba(56, 182, 255, 1)',
+            });
+        }
+
         // Set specific colours/fonts/weights etc for the Highcharts config object.
         let tmpFontColour = '#000';
         let backgroundColour = '#FFFFFF';
@@ -293,8 +336,9 @@ async function fetchAssessmentsOverview() {
                         itemClick: function (e) {
                             // This prevents the strikethrough and segment from being removed from the pie.
                             e.preventDefault();
-                            let index = e.legendItem.index;
-                            viewAssessmentsOverviewByChartType(index);
+                            // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
+                            let legendIndex = e.legendItem.id;
+                            viewAssessmentsOverviewByChartType(legendIndex);
                         }
                     }
                 },
@@ -314,8 +358,9 @@ async function fetchAssessmentsOverview() {
                         showInLegend: true,
                         events: {
                             click: function (e) {
-                                let index = e.point.index;
-                                viewAssessmentsOverviewByChartType(index);
+                                // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
+                                let pointIndex = e.point.id;
+                                viewAssessmentsOverviewByChartType(pointIndex);
                             }
                         }
                     }
@@ -325,32 +370,12 @@ async function fetchAssessmentsOverview() {
                     style: {
                         color: tooltipFontColour
                     },
-                    format: '<span style="color:{color}">\u25CF</span>' + overview_tooltip_preamble + '{key}: <b>{y}</b><br/>',
+                    format: '<span style="color:{color}">\u25CF</span>' + overview_tooltip_preamble + '{key}<br/>',
                     shared: true
                 },
                 series: [{
                     innerSize: '50%',
-                    data: [{
-                        name: status_text_upcoming,
-                        y: upcoming,
-                        color: 'rgba(255, 222, 89, 1)',
-                    }, {
-                        name: status_text_tobesubmitted,
-                        y: tobe_submitted,
-                        color: 'rgba(255, 145, 77, 1)',
-                    }, {
-                        name: status_text_overdue,
-                        y: overdue,
-                        color: 'rgba(255, 49, 49, 1)',
-                    }, {
-                        name: status_text_submitted,
-                        y: submitted,
-                        color: 'rgba(0, 191, 99, 1)',
-                    }, {
-                        name: status_text_graded,
-                        y: graded,
-                        color: 'rgba(56, 182, 255, 1)',
-                    }]
+                    data: dataobject
                 }]
             });
         });
@@ -362,8 +387,12 @@ async function fetchAssessmentsOverview() {
     });
 }
 
+/**
+ * @method viewAssessmentsOverviewByChartType handles the click through from the Pie chart.
+ * @param { int|string } index
+ */
 const viewAssessmentsOverviewByChartType = function(index) {
-    const chartType = index;
+    const chartType = parseInt(index);
     const loadingString = [
         {key: 'loading_text', component: 'block_newgu_spdetails'},
     ];
@@ -444,7 +473,7 @@ const viewAssessmentsOverviewByChartType = function(index) {
 };
 
 /**
- * Function to bind click handlers to row headers.
+ * Function to bind click handlers to the table row headers.
  * @param {*} rows
  */
 const sortingEventHandler = (rows) => {
@@ -457,6 +486,7 @@ const sortingEventHandler = (rows) => {
 };
 
 /**
+ * Make visible the hidden section. This approach prevents an unnecessary database call to get data we already have.
  * @method returnToAssessmentsHandler
  */
 const returnToAssessmentsHandler = () => {
