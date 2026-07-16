@@ -98,7 +98,7 @@ async function fetchAssessmentsOverview() {
         "<div class='spinner-border' role='status'><span class='hidden'>" + loading_text + "...</span></div></div>");
 
     ajax.call([{
-        methodname: 'block_newgu_spdetails_get_assessmentsummary',
+        methodname: 'block_newgu_spdetails_get_assessmentsoverview',
         args: {},
     }])[0].done(function(response) {
         document.querySelector('.loader').remove();
@@ -425,7 +425,7 @@ const viewAssessmentsOverviewByChartType = function(index) {
         "<div class='spinner-border' role='status'><span class='hidden'>" + loading_text + "...</span></div></div>");
 
     ajax.call([{
-        methodname: 'block_newgu_spdetails_get_assessmentsummarybytype',
+        methodname: 'block_newgu_spdetails_get_assessmentsoverviewbytype',
         args: {
             charttype: chartType
         },

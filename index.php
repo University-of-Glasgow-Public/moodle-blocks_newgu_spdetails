@@ -72,7 +72,6 @@ $PAGE->requires->js_init_code("
     window.moodleConfig = {
         wwwroot: '" . $CFG->wwwroot . "'
     };
-    console.log('moodleConfig set:', window.moodleConfig);
 ");
 
 $PAGE->requires->js_call_amd('block_newgu_spdetails/main', 'init');

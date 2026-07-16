@@ -40,21 +40,21 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
 /**
  * Unit tests for retrieving the assessments overview chart numbers.
  */
-final class assessment_overview_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
+final class assessments_overview_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
 
     /**
-     * Test that the assessment overview returns the specific key names.
+     * Test that the assessments overview returns the specific key names.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview(): void {
+    public function test_get_assessments_overview(): void {
         // We're the test student.
         $this->setUser($this->student1->id);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -67,9 +67,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test that the number of submitted items match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_submitted(): void {
+    public function test_get_assessments_overview_submitted(): void {
         global $DB;
 
         // We're the test student.
@@ -139,9 +139,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ASSIGN_SUBMISSION_STATUS_SUBMITTED);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -152,9 +152,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test that the number of items to be submitted match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_tosubmit(): void {
+    public function test_get_assessments_overview_tosubmit(): void {
         global $DB;
         // We're the test student.
         $this->setUser($this->student1->id);
@@ -253,9 +253,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ASSIGN_SUBMISSION_STATUS_NEW);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -266,9 +266,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test that the number of items that are overdue match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_overdue(): void {
+    public function test_get_assessments_overview_overdue(): void {
         global $DB;
 
         // We're the test student.
@@ -307,9 +307,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ASSIGN_SUBMISSION_STATUS_NEW);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -320,9 +320,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test that the number of items that are upcoming match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_upcoming(): void {
+    public function test_get_assessments_overview_upcoming(): void {
         global $DB;
 
         // We're the test student.
@@ -359,9 +359,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -372,9 +372,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test that the number of items that have been graded match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_gradebook_graded(): void {
+    public function test_get_assessments_overview_gradebook_graded(): void {
         global $DB;
 
         // We're the test student.
@@ -421,9 +421,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ]);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -434,9 +434,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test for items processed in MyGrades but not released match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_mygrades_graded_but_unreleased(): void {
+    public function test_get_assessments_overview_mygrades_graded_but_unreleased(): void {
         global $DB;
 
         // We're the test student.
@@ -497,9 +497,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ]);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -510,9 +510,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test for items processed in MyGrades and released match.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_mygrades_graded_and_released(): void {
+    public function test_get_assessments_overview_mygrades_graded_and_released(): void {
         global $DB;
 
         // We're the test student.
@@ -596,9 +596,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
         ]);
 
         // Check that our stats values are returned as expected.
-        $stats = get_assessmentsummary::execute();
+        $stats = get_assessmentsoverview::execute();
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummary::execute_returns(),
+            get_assessmentsoverview::execute_returns(),
             $stats
         );
         $this->assertIsArray($stats);
@@ -609,9 +609,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
     /**
      * Test the method returns activities due, by type, e.g. due in 1 week.
      *
-     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsummary
+     * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
-    public function test_get_assessment_overview_by_type(): void {
+    public function test_get_assessments_overview_by_type(): void {
         global $DB;
 
         // We're the test student.
@@ -679,9 +679,9 @@ final class assessment_overview_test extends \block_newgu_spdetails\external\new
 
         // Check that our stats values for the given type are returned as expected.
         $type = 1; // To be submitted.
-        $stats = get_assessmentsummarybytype::execute($type);
+        $stats = get_assessmentsoverviewbytype::execute($type);
         $stats = external_api::clean_returnvalue(
-            get_assessmentsummarybytype::execute_returns(),
+            get_assessmentsoverviewbytype::execute_returns(),
             $stats
         );
 

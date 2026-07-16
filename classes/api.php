@@ -156,9 +156,9 @@ class api extends external_api {
      *
      * @return array
      */
-    public static function get_assessmentsummary(): array {
+    public static function get_assessmentsoverview(): array {
 
-        $summary = \block_newgu_spdetails\course::get_assessmentsummary();
+        $summary = \block_newgu_spdetails\course::get_assessmentsoverview();
 
         return $summary;
     }
@@ -169,8 +169,8 @@ class api extends external_api {
      * @param int $charttype
      * @return array
      */
-    public static function get_assessmentsummarybytype(int $charttype): array {
-        $assessmentsummary = \block_newgu_spdetails\course::get_assessmentsummarybytype($charttype);
+    public static function get_assessmentsoverviewbytype(int $charttype): array {
+        $assessmentsummary = \block_newgu_spdetails\course::get_assessmentsoverviewbytype($charttype);
 
         return $assessmentsummary;
     }

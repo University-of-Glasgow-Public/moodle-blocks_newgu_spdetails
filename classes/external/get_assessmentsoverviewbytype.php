@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Web Service to return the assessment summary by type: submitted, overdue etc.
+ * Moodle Web Service to return the assessments overview by type: submitted, overdue etc.
  *
  * @package    block_newgu_spdetails
  * @author     Greg Pedder <greg.pedder@glasgow.ac.uk>
@@ -31,9 +31,9 @@ use core_external\external_single_structure;
 use core_external\external_value;
 
 /**
- * This class provides the web service description for returning an assessment summary by type.
+ * This class provides the web service description for returning the assessments overview by type.
  */
-class get_assessmentsummarybytype extends external_api {
+class get_assessmentsoverviewbytype extends external_api {
 
     /**
      * Returns description of method parameters.
@@ -59,7 +59,7 @@ class get_assessmentsummarybytype extends external_api {
                 'charttype' => $charttype,
             ]);
         return [
-            'result' => json_encode(\block_newgu_spdetails\api::get_assessmentsummarybytype(
+            'result' => json_encode(\block_newgu_spdetails\api::get_assessmentsoverviewbytype(
                 $params['charttype'])),
         ];
     }

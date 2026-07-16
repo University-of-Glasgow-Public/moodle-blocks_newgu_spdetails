@@ -95,6 +95,8 @@ class assign_activity extends base {
         $activitygrade->grade = null;
         $activitygrade->gradedate = null;
 
+        // Check if a MyGrades grade has been released.
+
         // If the grade is overridden in the Gradebook then we can
         // revert to the base - i.e., get the grade from the Gradebook.
         // We're only wanting grades that are deemed as 'released', i.e.
@@ -449,6 +451,18 @@ class assign_activity extends base {
         }
 
         return $statusobj;
+    }
+
+    private function has_group_override() {
+
+    }
+
+    private function has_override() {
+
+    }
+
+    private function allows_submissions() {
+        
     }
 
     /**

@@ -15,9 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Web Service to return assessment statistics
- *
- * More indepth description.
+ * Moodle Web Service to return assessment statistics for the user.
  *
  * @package    block_newgu_spdetails
  * @author     Greg Pedder <greg.pedder@glasgow.ac.uk>
@@ -34,9 +32,9 @@ use core_external\external_single_structure;
 use core_external\external_value;
 
 /**
- * This class provides the web service description for returning an assessment summary.
+ * This class provides the web service description for returning the assessments overview.
  */
-class get_assessmentsummary extends external_api {
+class get_assessmentsoverview extends external_api {
 
     /**
      * Returns description of method parameters
@@ -49,18 +47,18 @@ class get_assessmentsummary extends external_api {
     }
 
     /**
-     * Return the assessment summary statistics
+     * Return the assessments overview statistics
      *
-     * @return array of assessment summary statistics
+     * @return array of assessment statistics
      */
     public static function execute(): array {
 
-        $assessmentsummary = \block_newgu_spdetails\api::get_assessmentsummary();
-        $totalupcoming = $assessmentsummary['total_upcoming'];
-        $totaltosubmit = $assessmentsummary['total_tosubmit'];
-        $totaloverdue = $assessmentsummary['total_overdue'];
-        $totalsubmissions = $assessmentsummary['total_submissions'];
-        $marked = $assessmentsummary['marked'];
+        $assessmentsoverview = \block_newgu_spdetails\api::get_assessmentsoverview();
+        $totalupcoming = $assessmentsoverview['total_upcoming'];
+        $totaltosubmit = $assessmentsoverview['total_tosubmit'];
+        $totaloverdue = $assessmentsoverview['total_overdue'];
+        $totalsubmissions = $assessmentsoverview['total_submissions'];
+        $marked = $assessmentsoverview['marked'];
 
         $stats[] = [
             'upcoming' => $totalupcoming,

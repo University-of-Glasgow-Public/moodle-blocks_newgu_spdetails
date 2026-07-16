@@ -813,9 +813,9 @@ class course {
      *
      * @return array
      */
-    public static function get_assessmentsummary(): array {
+    public static function get_assessmentsoverview(): array {
 
-        global $DB, $USER, $PAGE;
+        global $USER, $PAGE;
 
         $PAGE->set_context(\context_system::instance());
 
@@ -825,7 +825,6 @@ class course {
         $totalsubmissions = 0;
         $marked = 0;
         $sortstring = 'shortname asc';
-        $isgradehidden = false;
 
         $currentcourses = \local_gugrades\api::dashboard_get_courses($USER->id, true, false, $sortstring);
 
@@ -846,78 +845,65 @@ class course {
             if (\block_newgu_spdetails\api::return_isstudent($course->id, $USER->id)) {
                 $activities = self::get_activities($course->id);
                 if ($activities) {
-                    foreach ($activities as $activityitem) {
-                        $isgradehidden = false;
-                        if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
-                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
-                            $activityitem->courseid);
-                            $modinfo = get_fast_modinfo($activityitem->courseid);
+                    foreach ($activities as $activity) {
+                        if (!in_array($activity->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
+                            $cm = get_coursemodule_from_instance($activity->itemmodule, $activity->iteminstance,
+                            $activity->courseid);
+                            $modinfo = get_fast_modinfo($activity->courseid);
                             $cms = $modinfo->get_cms();
                             if (array_key_exists($cm->id, $cms)) {
                                 $cm = $modinfo->get_cm($cm->id);
                                 $done = false;
-                                // If MyGrades is enabled and some grades are released, not hidden, then count them as graded.
-                                // Do not count them twice.
+
+                                // Check if this activity been graded and released from MyGrades.
                                 if ($course->gugradesenabled) {
-                                    $params = [
-                                        'courseid' => $activityitem->courseid,
-                                        'gradeitemid' => $activityitem->id,
-                                        'userid' => $USER->id,
-                                        'gradetype' => 'RELEASED',
-                                        'iscurrent' => 1,
-                                    ];
-                                    if ($usergrades = $DB->get_records('local_gugrades_grade', $params)) {
-                                        // Swap all of this for the relevant mygrades API calls - if/when one exists.
-                                        foreach ($usergrades as $usergrade) {
-                                            // MGU-631 - Honour hidden grades and hidden activities.
-                                            $isgradehidden = $DB->record_exists('local_gugrades_hidden',
-                                                                    [
-                                                                        'gradeitemid' => $usergrade->gradeitemid,
-                                                                        'userid' => $usergrade->userid,
-                                                                        'courseid' => $usergrade->courseid,
-                                                                    ]);
-                                            if (!$isgradehidden) {
-                                                $marked++;
-                                                $done = true;
-                                            }
-                                        }
+                                    // MGU-631 - Honour hidden grades and hidden activities.
+                                    $isgradehidden = \local_gugrades\api::is_grade_hidden($activity->id, $USER->id);
+                                    $isreleased = \local_gugrades\grades::get_released_grade($activity->courseid, $activity->id,
+                                            $USER->id);
+                                    if ((!$isgradehidden) && ($isreleased != false)) {
+                                        // Don't count this activity twice if the grading has already been done in MyGrades.                                        
+                                        $marked++;
+                                        $done = true;
                                     }
                                 }
+
                                 // Everything else goes here.
                                 if ($cm->uservisible && !$done) {
                                     // Get the activity based on its status.
                                     $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
-                                        $activityitem->courseid,
-                                        $activityitem->id,
+                                        $activity->courseid,
+                                        $activity->id,
                                         $USER->id,
-                                        $activityitem->gradetype,
-                                        $activityitem->grademax,
-                                        $activityitem->scaleid,
+                                        $activity->gradetype,
+                                        $activity->grademax,
+                                        $activity->scaleid,
                                     );
                                     $status = $gradestatus->grade_status;
-                                    if ($status == get_string('status_submissionnotopen', 'block_newgu_spdetails')) {
-                                        $totalupcoming++;
-                                    }
+                                    switch ($status) {
+                                        case get_string('status_submissionnotopen', 'block_newgu_spdetails'):
+                                            $totalupcoming++;
+                                        break;
 
-                                    if ($status == get_string('status_submitted', 'block_newgu_spdetails')) {
-                                        $totalsubmissions++;
-                                    }
+                                        case get_string('status_submitted', 'block_newgu_spdetails'):
+                                            $totalsubmissions++;
+                                        break;
+                                        
+                                        case get_string('status_submit', 'block_newgu_spdetails'):
+                                            $totaltosubmit++;
+                                        break;
 
-                                    if ($status == get_string('status_submit', 'block_newgu_spdetails')) {
-                                        $totaltosubmit++;
-                                    }
+                                        case get_string('status_overdue', 'block_newgu_spdetails'):
+                                            $totaloverdue++;
+                                        break;
 
-                                    if ($status == get_string('status_overdue', 'block_newgu_spdetails')) {
-                                        $totaloverdue++;
-                                    }
-
-                                    if ($status == get_string('status_graded', 'block_newgu_spdetails') && !$isgradehidden) {
-                                        if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
-                                        get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
-                                            $marked++;
-                                        }
-                                    }
-
+                                        case get_string('status_graded', 'block_newgu_spdetails'):
+                                            if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
+                                                get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                    $marked++;
+                                            }
+                                        break;
+                                    };
                                 }
                             }
                         }
@@ -948,7 +934,7 @@ class course {
      * @param int $charttype
      * @return array
      */
-    public static function get_assessmentsummarybytype(int $charttype): array {
+    public static function get_assessmentsoverviewbytype(int $charttype): array {
         global $DB, $CFG, $USER, $PAGE;
 
         $PAGE->set_context(\context_system::instance());

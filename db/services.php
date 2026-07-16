@@ -30,9 +30,11 @@ defined('MOODLE_INTERNAL') || die();
 $services = [
     'block_newgu_spdetails' => [
         'functions' => [
-            'block_newgu_spdetails_get_assessmentsummary',
             'block_newgu_spdetails_get_assessments',
+            'block_newgu_spdetails_get_assessmentsoverview',
+            'block_newgu_spdetails_get_assessmentsoverviewbytype',
             'block_newgu_spdetails_get_assessmentsduesoon',
+            'block_newgu_spdetails_get_assessmentsduesoonbytype',
         ],
         'requiredcapability' => '',
         'restrictedusers' => 1,
@@ -41,31 +43,31 @@ $services = [
 ];
 
 $functions = [
-    'block_newgu_spdetails_get_assessmentsummary' => [
-        'classname'   => 'block_newgu_spdetails\external\get_assessmentsummary',
-        'description' => 'Get users assessment statistics',
-        'type'        => 'read',
-        'ajax'        => true,
-        'loginrequired' => true,
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
-    'block_newgu_spdetails_get_assessmentsummarybytype' => [
-        'classname'   => 'block_newgu_spdetails\external\get_assessmentsummarybytype',
-        'description' => 'Return only assessments due by selected type: submitted, overdue etc',
-        'type'        => 'read',
-        'ajax'        => true,
-        'loginrequired' => true,
-        'services'    => [
-            MOODLE_OFFICIAL_MOBILE_SERVICE,
-        ],
-    ],
     'block_newgu_spdetails_get_assessments' => [
         'classname'   => 'block_newgu_spdetails\external\get_assessments',
         'description' => 'Display current and past assessments on the Student Dashboard',
         'type'        => 'read',
         'ajax'          => true,
+        'loginrequired' => true,
+        'services'    => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+        ],
+    ],
+    'block_newgu_spdetails_get_assessmentsoverview' => [
+        'classname'   => 'block_newgu_spdetails\external\get_assessmentsoverview',
+        'description' => 'Get assessment statistics for the user',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
+        'services'    => [
+            MOODLE_OFFICIAL_MOBILE_SERVICE,
+        ],
+    ],
+    'block_newgu_spdetails_get_assessmentsoverviewbytype' => [
+        'classname'   => 'block_newgu_spdetails\external\get_assessmentsoverviewbytype',
+        'description' => 'Return only assessments due by selected type: submitted, overdue etc',
+        'type'        => 'read',
+        'ajax'        => true,
         'loginrequired' => true,
         'services'    => [
             MOODLE_OFFICIAL_MOBILE_SERVICE,

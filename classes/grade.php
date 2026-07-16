@@ -68,6 +68,7 @@ class grade {
         $activity = \block_newgu_spdetails\activity::activity_factory($itemid, $courseid, 0);
         $activitygrade = $activity->get_grade($userid);
 
+        // Start from the easiest point - has this activity received a grade?
         if ($activitygrade) {
             $gradestatus->assessment_url = $activity->get_assessmenturl();
             $gradestatus->raw_due_date = $activity->get_rawduedate();
@@ -114,6 +115,8 @@ class grade {
         // need to display 'To be confirmed'.
         $statusobj = $activity->get_status($userid);
         $feedbackobj = $activity->get_feedback($statusobj);
+
+        // Set the property values for the object that will be returned.
         $gradestatus->due_date = $statusobj->due_date;
         $gradestatus->raw_due_date = $statusobj->raw_due_date;
         $gradestatus->grade_date = $statusobj->grade_date;
