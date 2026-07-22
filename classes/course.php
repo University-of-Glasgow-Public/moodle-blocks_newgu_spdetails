@@ -820,7 +820,6 @@ class course {
         $PAGE->set_context(\context_system::instance());
 
         $totalupcoming = 0;
-        $totaltosubmit = 0;
         $totaloverdue = 0;
         $totalsubmissions = 0;
         $marked = 0;
@@ -830,7 +829,6 @@ class course {
 
         $stats = [
             'total_upcoming' => 0,
-            'total_tosubmit' => 0,
             'total_overdue' => 0,
             'total_submissions' => 0,
             'marked' => 0,
@@ -851,59 +849,60 @@ class course {
                             $activity->courseid);
                             $modinfo = get_fast_modinfo($activity->courseid);
                             $cms = $modinfo->get_cms();
+                            $skiprecord = false;
                             if (array_key_exists($cm->id, $cms)) {
                                 $cm = $modinfo->get_cm($cm->id);
-                                $done = false;
 
-                                // Check if this activity been graded and released from MyGrades.
-                                if ($course->gugradesenabled) {
-                                    // MGU-631 - Honour hidden grades and hidden activities.
-                                    $isgradehidden = \local_gugrades\api::is_grade_hidden($activity->id, $USER->id);
-                                    $isreleased = \local_gugrades\grades::get_released_grade($activity->courseid, $activity->id,
-                                            $USER->id);
-                                    if ((!$isgradehidden) && ($isreleased != false)) {
-                                        // Don't count this activity twice if the grading has already been done in MyGrades.                                        
-                                        $marked++;
-                                        $done = true;
+                                // Lets start by saying this activity needs to be visible to the end user, regardless.
+                                if ($cm->uservisible) {
+
+                                    // If this activity been graded and released from MyGrades, there's no need to go any further.
+                                    if ($course->gugradesenabled) {
+                                        // MGU-631 - Honour hidden grades and hidden activities.
+                                        $isgradehidden = \local_gugrades\api::is_grade_hidden($activity->id, $USER->id);
+                                        $isreleased = \local_gugrades\grades::get_released_grade($activity->courseid, $activity->id,
+                                                $USER->id);
+                                        if ((!$isgradehidden) && ($isreleased != false)) {
+                                            // Don't count this activity twice if the grading has already been done in MyGrades.                                        
+                                            $marked++;
+                                            $skiprecord = true;
+                                        }
                                     }
-                                }
 
-                                // Everything else goes here.
-                                if ($cm->uservisible && !$done) {
-                                    // Get the activity based on its status.
-                                    $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
-                                        $activity->courseid,
-                                        $activity->id,
-                                        $USER->id,
-                                        $activity->gradetype,
-                                        $activity->grademax,
-                                        $activity->scaleid,
-                                    );
-                                    $status = $gradestatus->grade_status;
-                                    switch ($status) {
-                                        case get_string('status_submissionnotopen', 'block_newgu_spdetails'):
-                                            $totalupcoming++;
-                                        break;
+                                    if (!$skiprecord) {
 
-                                        case get_string('status_submitted', 'block_newgu_spdetails'):
-                                            $totalsubmissions++;
-                                        break;
-                                        
-                                        case get_string('status_submit', 'block_newgu_spdetails'):
-                                            $totaltosubmit++;
-                                        break;
+                                        // Get the activity based on its status.
+                                        $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+                                            $activity->courseid,
+                                            $activity->id,
+                                            $USER->id,
+                                            $activity->gradetype,
+                                            $activity->grademax,
+                                            $activity->scaleid,
+                                        );
+                                        $status = $gradestatus->grade_status;
+                                        switch ($status) {
+                                            case get_string('status_upcoming', 'block_newgu_spdetails'):
+                                            case get_string('status_submit', 'block_newgu_spdetails'):
+                                                $totalupcoming++;
+                                            break;
 
-                                        case get_string('status_overdue', 'block_newgu_spdetails'):
-                                            $totaloverdue++;
-                                        break;
+                                            case get_string('status_submitted', 'block_newgu_spdetails'):
+                                                $totalsubmissions++;
+                                            break;
 
-                                        case get_string('status_graded', 'block_newgu_spdetails'):
-                                            if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
-                                                get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
-                                                    $marked++;
-                                            }
-                                        break;
-                                    };
+                                            case get_string('status_overdue', 'block_newgu_spdetails'):
+                                                $totaloverdue++;
+                                            break;
+
+                                            case get_string('status_graded', 'block_newgu_spdetails'):
+                                                if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
+                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                        $marked++;
+                                                }
+                                            break;
+                                        };
+                                    }
                                 }
                             }
                         }
@@ -914,7 +913,6 @@ class course {
 
         $stats = [
             'total_upcoming' => $totalupcoming,
-            'total_tosubmit' => $totaltosubmit,
             'total_overdue' => $totaloverdue,
             'total_submissions' => $totalsubmissions,
             'marked' => $marked,
@@ -925,11 +923,10 @@ class course {
 
     /**
      * Return only the assessments that:
-     * Are upcoming
-     * Have been Submitted
-     * Are still to be submitted
+     * Are upcoming/still to be submitted. @see MGU-1472
      * Overdue
-     * Marked/Graded
+     * Have been Submitted
+     * Graded
      *
      * @param int $charttype
      * @return array
@@ -950,33 +947,37 @@ class course {
 
         $dateheader = '';
         $option = '';
-        $whichstatus = '';
+        $whichstatus = [];
         $showgradecolumn = false;
         switch ($charttype) {
             case 0:
                 $option = get_string('status_text_upcoming', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
-                $whichstatus = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-                break;
-            case 1:
-                $option = get_string('status_text_tobesubmitted', 'block_newgu_spdetails');
-                $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
-                $whichstatus = get_string('status_submit', 'block_newgu_spdetails');
+                $whichstatus = [
+                    get_string('status_submit', 'block_newgu_spdetails'),
+                    get_string('status_upcoming', 'block_newgu_spdetails')
+                ];
                 break;
             case 2:
                 $option = get_string('status_text_overdue', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
-                $whichstatus = get_string('status_overdue', 'block_newgu_spdetails');
+                $whichstatus = [
+                    get_string('status_overdue', 'block_newgu_spdetails')
+                ];
                 break;
             case 3:
                 $option = get_string('status_text_submitted', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
-                $whichstatus = get_string('status_submitted', 'block_newgu_spdetails');
+                $whichstatus = [
+                    get_string('status_submitted', 'block_newgu_spdetails')
+                ];
                 break;
             case 4:
                 $option = get_string('status_text_graded', 'block_newgu_spdetails');
                 $dateheader = get_string('header_dategraded', 'block_newgu_spdetails');
-                $whichstatus = get_string('status_graded', 'block_newgu_spdetails');
+                $whichstatus = [
+                    get_string('status_graded', 'block_newgu_spdetails')
+                ];
                 $showgradecolumn = true;
                 break;
         }
@@ -1191,7 +1192,7 @@ class course {
                                 $date = '';
                                 $rawduedate = '';
 
-                                if ($status == $whichstatus && ($cm->uservisible || $releasednadnothidden)) {
+                                if (in_array($status,$whichstatus) && ($cm->uservisible || $releasednadnothidden)) {
                                     if ($cm->visible) {
                                         $itemicon = '';
                                         $iconalt = '';

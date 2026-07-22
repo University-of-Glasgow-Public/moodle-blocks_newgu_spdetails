@@ -72,7 +72,7 @@ class get_assessments extends external_api {
             ]);
         return [
             'result' => json_encode(
-                \block_newgu_spdetails\api::retrieve_assessments(
+                \block_newgu_spdetails\api::get_assessments(
                     $params['activetab'],
                     $params['page'],
                     $params['sortby'],

@@ -55,14 +55,12 @@ class get_assessmentsoverview extends external_api {
 
         $assessmentsoverview = \block_newgu_spdetails\api::get_assessmentsoverview();
         $totalupcoming = $assessmentsoverview['total_upcoming'];
-        $totaltosubmit = $assessmentsoverview['total_tosubmit'];
         $totaloverdue = $assessmentsoverview['total_overdue'];
         $totalsubmissions = $assessmentsoverview['total_submissions'];
         $marked = $assessmentsoverview['marked'];
 
         $stats[] = [
             'upcoming' => $totalupcoming,
-            'tobe_sub' => $totaltosubmit,
             'overdue' => $totaloverdue,
             'sub_assess' => $totalsubmissions,
             'assess_marked' => $marked,
@@ -80,7 +78,6 @@ class get_assessmentsoverview extends external_api {
         return new external_multiple_structure(
             new external_single_structure([
                 'upcoming' => new external_value(PARAM_INT, 'upcoming assignments'),
-                'tobe_sub' => new external_value(PARAM_INT, 'assignments to be submitted'),
                 'overdue' => new external_value(PARAM_INT, 'assignments overdue'),
                 'sub_assess' => new external_value(PARAM_INT, 'total submissions'),
                 'assess_marked' => new external_value(PARAM_INT, 'assessments marked'),

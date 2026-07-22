@@ -115,7 +115,7 @@ final class gradable_activities_test extends \block_newgu_spdetails\external\new
         $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 35,
         ASSIGN_SUBMISSION_STATUS_NEW);
 
-        $activities = $this->api->retrieve_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
+        $activities = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
             $mygradessummativesubcategoryid);
 
         $this->assertIsArray($activities);
@@ -196,7 +196,7 @@ final class gradable_activities_test extends \block_newgu_spdetails\external\new
         $this->add_assignment_grade($pastassignment1->id, $this->student1->id, $this->teacher->id, 30,
         ASSIGN_SUBMISSION_STATUS_SUBMITTED);
 
-        $activities = $this->api->retrieve_gradable_activities('past', $this->student1->id, 'duedate', 'asc',
+        $activities = $this->api->get_gradable_activities('past', $this->student1->id, 'duedate', 'asc',
             $pastsummativesubcategoryid);
 
         $this->assertIsArray($activities);

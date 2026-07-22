@@ -58,9 +58,9 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
             $stats
         );
         $this->assertIsArray($stats);
-        $this->assertArrayHasKey('sub_assess', $stats[0]);
-        $this->assertArrayHasKey('tobe_sub', $stats[0]);
+        $this->assertArrayHasKey('upcoming', $stats[0]);
         $this->assertArrayHasKey('overdue', $stats[0]);
+        $this->assertArrayHasKey('sub_assess', $stats[0]);
         $this->assertArrayHasKey('assess_marked', $stats[0]);
     }
 
@@ -259,8 +259,8 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
             $stats
         );
         $this->assertIsArray($stats);
-        $this->assertArrayHasKey('tobe_sub', $stats[0]);
-        $this->assertEquals(3, $stats[0]['tobe_sub']);
+        $this->assertArrayHasKey('upcoming', $stats[0]);
+        $this->assertEquals(3, $stats[0]['upcoming']);
     }
 
     /**
@@ -607,7 +607,7 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
     }
 
     /**
-     * Test the method returns activities due, by type, e.g. due in 1 week.
+     * Test the method returns activities by type, e.g. upcoming, submitted etc.
      *
      * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
@@ -678,7 +678,7 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Check that our stats values for the given type are returned as expected.
-        $type = 1; // To be submitted.
+        $type = 0; // Upcoming.
         $stats = get_assessmentsoverviewbytype::execute($type);
         $stats = external_api::clean_returnvalue(
             get_assessmentsoverviewbytype::execute_returns(),

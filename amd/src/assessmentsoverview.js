@@ -58,7 +58,6 @@ async function fetchAssessmentsOverview() {
     const requiredStrings = [
         {key: 'loading_text', component: 'block_newgu_spdetails'},
         {key: 'status_text_upcoming', component: 'block_newgu_spdetails'},
-        {key: 'status_text_tobesubmitted', component: 'block_newgu_spdetails'},
         {key: 'status_text_overdue', component: 'block_newgu_spdetails'},
         {key: 'status_text_submitted', component: 'block_newgu_spdetails'},
         {key: 'status_text_graded', component: 'block_newgu_spdetails'},
@@ -68,7 +67,6 @@ async function fetchAssessmentsOverview() {
     ];
     let loading_text = '';
     let status_text_upcoming = '';
-    let status_text_tobesubmitted = '';
     let status_text_overdue = '';
     let status_text_submitted = '';
     let status_text_graded = '';
@@ -79,13 +77,12 @@ async function fetchAssessmentsOverview() {
     await getStrings(requiredStrings).then((result) => {
         loading_text = result[0];
         status_text_upcoming = result[1];
-        status_text_tobesubmitted = result[2];
-        status_text_overdue = result[3];
-        status_text_submitted = result[4];
-        status_text_graded = result[5];
-        aria_label_text = result[6];
-        accessibility_description = result[7];
-        overview_tooltip_preamble = result[8];
+        status_text_overdue = result[2];
+        status_text_submitted = result[3];
+        status_text_graded = result[4];
+        aria_label_text = result[5];
+        accessibility_description = result[6];
+        overview_tooltip_preamble = result[7];
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -103,7 +100,6 @@ async function fetchAssessmentsOverview() {
     }])[0].done(function(response) {
         document.querySelector('.loader').remove();
         let upcoming = response[0].upcoming;
-        let tobe_submitted = response[0].tobe_sub;
         let overdue = response[0].overdue;
         let submitted = response[0].sub_assess;
         let graded = response[0].assess_marked;
@@ -116,14 +112,6 @@ async function fetchAssessmentsOverview() {
                 id: '0',
                 y: upcoming,
                 color: 'rgba(255, 222, 89, 1)',
-            });
-        }
-        if (tobe_submitted > 0) {
-            dataobject.push({
-                name: status_text_tobesubmitted + ': <strong>' + tobe_submitted + '</strong>',
-                id: '1',
-                y: tobe_submitted,
-                color: 'rgba(255, 145, 77, 1)',
             });
         }
         if (overdue > 0) {

@@ -46,29 +46,19 @@ class api extends external_api {
      * @param int $subcategory
      * @return array $data
      */
-    public static function retrieve_assessments(string $activetab, int $page, string $sortby, string $sortorder,
+    public static function get_assessments(string $activetab, int $page, string $sortby, string $sortorder,
     int|null $subcategory = null): array {
-        global $USER, $OUTPUT, $PAGE;
-        $PAGE->set_context(context_system::instance());
+        global $USER, $PAGE;
 
+        $PAGE->set_context(context_system::instance());
         $userid = $USER->id;
         $limit = NUM_ASSESSMENTS_PER_PAGE;
         $offset = $page * $limit;
-        $params = [
-            'activetab' => $activetab,
-            'page' => $page,
-            'sortby' => $sortby,
-            'sortorder' => $sortorder,
-            'subcategory' => $subcategory,
-        ];
-        $url = new \moodle_url('/index.php', $params);
-        $totalassessments = 0;
         $data = [];
 
-        $items = self::retrieve_gradable_activities($activetab, $userid, $sortby, $sortorder, $subcategory);
+        $items = self::get_gradable_activities($activetab, $userid, $sortby, $sortorder, $subcategory);
 
         if ($items) {
-            $totalassessments = count($items);
             $paginatedassessments = array_splice($items, $offset, $limit);
 
             foreach ($paginatedassessments as $k => $v) {
@@ -92,9 +82,8 @@ class api extends external_api {
      * @param int $subcategory
      *
      * @return array $gradableactivities
-     * @throws dml_exception
      */
-    public static function retrieve_gradable_activities(string $activetab, int $userid, string|null $sortby = null,
+    public static function get_gradable_activities(string $activetab, int $userid, string|null $sortby = null,
     string|null $sortorder = null, int|null $subcategory = null): array {
         $gradableactivities = [];
 
@@ -128,30 +117,6 @@ class api extends external_api {
     }
 
     /**
-     * Return the assessments that are due in the next 24 hours, week and month.
-     *
-     * @return array
-     */
-    public static function get_assessmentsduesoon(): array {
-
-        $stats = \block_newgu_spdetails\course::get_assessmentsduesoon();
-
-        return $stats;
-    }
-
-    /**
-     * Return assessments that are due - filtered by type: 24hrs, 7days etc.
-     *
-     * @param int $charttype
-     * @return array
-     */
-    public static function get_assessmentsduebytype(int $charttype): array {
-        $assessmentsdue = \block_newgu_spdetails\course::get_assessmentsduebytype($charttype);
-
-        return $assessmentsdue;
-    }
-
-    /**
      * Return a summary of current assessments for the student
      *
      * @return array
@@ -173,6 +138,30 @@ class api extends external_api {
         $assessmentsummary = \block_newgu_spdetails\course::get_assessmentsoverviewbytype($charttype);
 
         return $assessmentsummary;
+    }
+
+    /**
+     * Return the assessments that are due in the next 24 hours, week and month.
+     *
+     * @return array
+     */
+    public static function get_assessmentsduesoon(): array {
+
+        $stats = \block_newgu_spdetails\course::get_assessmentsduesoon();
+
+        return $stats;
+    }
+
+    /**
+     * Return assessments that are due - filtered by type: 24hrs, 7days etc.
+     *
+     * @param int $charttype
+     * @return array
+     */
+    public static function get_assessmentsduebytype(int $charttype): array {
+        $assessmentsdue = \block_newgu_spdetails\course::get_assessmentsduebytype($charttype);
+
+        return $assessmentsdue;
     }
 
     /**

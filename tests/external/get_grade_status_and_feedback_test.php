@@ -121,7 +121,7 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
         $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 35,
         ASSIGN_SUBMISSION_STATUS_NEW);
 
-        $mygradesgradeditems = $this->api->retrieve_gradable_activities('current', $userid, 'duedate', 'asc',
+        $mygradesgradeditems = $this->api->get_gradable_activities('current', $userid, 'duedate', 'asc',
         $mygradessummativesubcategoryid);
 
         $this->assertIsArray($mygradesgradeditems);
