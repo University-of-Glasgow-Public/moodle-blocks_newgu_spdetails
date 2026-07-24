@@ -166,7 +166,6 @@ $string['status_text_dueby'] = 'Due {$a}';
 $string['status_text_graded'] = 'Graded';
 $string['status_text_hidden'] = 'Hidden';
 $string['status_text_marked'] = 'Marked';
-$string['status_text_nosubmissionrequired'] = 'Upcoming';
 $string['status_text_notsubmitted'] = 'Not submitted';
 $string['status_text_overdue'] = 'Overdue';
 $string['status_text_provisional'] = 'Provisional';

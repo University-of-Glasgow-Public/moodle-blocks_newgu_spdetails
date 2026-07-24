@@ -802,6 +802,10 @@ class course {
             return $assessmentsdue;
         }
 
+        // These were never getting sorted correctly. Default to using raw_due_date.
+        $c = new course();
+        usort($assessmentdata, [$c, 'docompare']);
+
         $assessmentsdue['assessmentitems'] = $assessmentdata;
 
         return $assessmentsdue;
@@ -882,6 +886,7 @@ class course {
                                         );
                                         $status = $gradestatus->grade_status;
                                         switch ($status) {
+                                            case get_string('status_submissionnotopen', 'block_newgu_spdetails'):
                                             case get_string('status_upcoming', 'block_newgu_spdetails'):
                                             case get_string('status_submit', 'block_newgu_spdetails'):
                                                 $totalupcoming++;
@@ -922,10 +927,10 @@ class course {
     }
 
     /**
-     * Return only the assessments that:
-     * Are upcoming/still to be submitted. @see MGU-1472
+     * Return only the assessments that are:
+     * Upcoming/to be submitted. @see MGU-1472
      * Overdue
-     * Have been Submitted
+     * Submitted
      * Graded
      *
      * @param int $charttype
@@ -954,8 +959,9 @@ class course {
                 $option = get_string('status_text_upcoming', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
                 $whichstatus = [
+                    get_string('status_submissionnotopen', 'block_newgu_spdetails'),
+                    get_string('status_upcoming', 'block_newgu_spdetails'),
                     get_string('status_submit', 'block_newgu_spdetails'),
-                    get_string('status_upcoming', 'block_newgu_spdetails')
                 ];
                 break;
             case 2:
@@ -1267,10 +1273,28 @@ class course {
             return $assessmentsdue;
         }
 
+        // These were never getting sorted correctly. Default to using raw_due_date.
+        $c = new course();
+        usort($assessmentdata, [$c, 'docompare']);
+
         $assessmentsdue['date_header'] = $dateheader;
         $assessmentsdue['show_grade_column'] = $showgradecolumn;
         $assessmentsdue['assessmentitems'] = $assessmentdata;
 
         return $assessmentsdue;
+    }
+
+    /**
+     * Callback function for comparing assessment data by raw due date, this is for
+     * ordering when using the chart click through's.
+     * @param array $a
+     * @param array $b
+     * return bool
+     */
+    public function docompare(array $a, array $b) {
+        if ($a['raw_due_date'] == $b['raw_due_date']) {
+            return 0;
+        }
+        return ($a['raw_due_date'] < $b['raw_due_date']) ? -1 : 1;
     }
 }

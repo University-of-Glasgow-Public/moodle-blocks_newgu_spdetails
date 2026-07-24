@@ -161,28 +161,19 @@ class lesson_activity extends base {
     }
 
     /**
-     * Method to return the current status of the assessment item.
+     * Has a group override been set for this activity.
      *
+     * @param object $statusobj
+     * @param int $lessonid
      * @param int $userid
      * @return object
      */
-    public function get_status(int $userid): object {
+    private function has_group_override(object $statusobj, int $lessonid, int $userid): object {
         global $DB;
-
-        $statusobj = new \stdClass();
-        $statusobj->assessment_url = $this->get_assessmenturl();
-        $statusobj->due_date = $this->lesson->deadline;
-        $statusobj->raw_due_date = $this->lesson->deadline;
-        $statusobj->grade_status = '';
-        $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-        $allowsubmissionsfromdate = $this->lesson->available;
-        $statusobj->status_link = '';
-        $statusobj->grade_date = '';
-        $statusobj->grade_class = false;
 
         // We first check if any group overrides have been created for this lesson.
         $groupselect = 'lessonid = :lessonid AND groupid IS NOT NULL AND userid IS NULL';
-        $groupparams = ['lessonid' => $this->lesson->id];
+        $groupparams = ['lessonid' => $lessonid];
         $groupoverrides = $DB->get_records_select('lesson_overrides', $groupselect, $groupparams, '',
         'groupid, available, deadline');
         if (!empty($groupoverrides)) {
@@ -192,7 +183,7 @@ class lesson_activity extends base {
                     'userid' => $userid])) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->available != null) {
-                        $allowsubmissionsfromdate = $groupoverride->available;
+                        $statusobj->availablefrom = $groupoverride->available;
                     }
                     if ($groupoverride->deadline != null) {
                         $statusobj->due_date = $groupoverride->deadline;
@@ -203,17 +194,58 @@ class lesson_activity extends base {
             }
         }
 
+        return $statusobj;
+    }
+
+    /**
+     * Has an override for the individual student been set for this activity.
+     *
+     * @param object $statusobj
+     * @param int $lessonid
+     * @param int $userid
+     * @return object
+     */
+    private function has_override(object $statusobj, int $lessonid, int $userid): object {
+        global $DB;
+
         // Individual overrides however, take precedence - based on how Moodle does things.
-        $overrides = $DB->get_record('lesson_overrides', ['lessonid' => $this->lesson->id, 'userid' => $userid]);
+        $overrides = $DB->get_record('lesson_overrides', ['lessonid' => $lessonid, 'userid' => $userid]);
         if (!empty($overrides)) {
-            $allowsubmissionsfromdate = $overrides->available;
+            $statusobj->availablefrom = $overrides->available;
             $statusobj->due_date = $overrides->deadline;
             $statusobj->raw_due_date = $overrides->deadline;
         }
 
+        return $statusobj;
+    }
+
+    /**
+     * Method to return the current status of the assessment item.
+     *
+     * @param int $userid
+     * @return object
+     */
+    public function get_status(int $userid): object {
+        global $DB;
+
         $now = usertime(time());
-        // Easy one first. The "Allow submissions from..." date has been set and is in the future.
-        if ($allowsubmissionsfromdate != 0 && ($allowsubmissionsfromdate > $now)) {
+        $statusobj = new \stdClass();
+        $statusobj->assessment_url = $this->get_assessmenturl();
+        $statusobj->due_date = $this->lesson->deadline;
+        $statusobj->raw_due_date = $this->lesson->deadline;
+        $statusobj->grade_status = '';
+        $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $statusobj->status_link = '';
+        $statusobj->grade_date = '';
+        $statusobj->grade_class = false;
+        $statusobj->availablefrom = $this->lesson->available;
+
+        // We're following the layout in the settings page, checking for any dates (available, overrides etc) 
+        // first, this seems to make more sense as these properties become necessary further on.
+        $statusobj = self::has_group_override($statusobj, $this->lesson->id, $userid);
+        $statusobj = self::has_override($statusobj, $this->lesson->id, $userid);
+
+        if ($statusobj->availablefrom != 0 && ($statusobj->availablefrom > $now)) {
             $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
             $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');

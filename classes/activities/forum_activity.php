@@ -159,6 +159,50 @@ class forum_activity extends base {
     }
 
     /**
+     * This method takes the $statusobj object and sets the display values for the grade status.
+     *
+     * @param object $statusobj
+     * @return object
+     */
+    private function set_displaystate(object $statusobj): object {
+
+        // Start by saying the student is still able to make a submission.
+        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
+        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
+        $statusobj->status_link = $statusobj->assessment_url;
+        $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $now = usertime(time());
+        // Cut-off date is the more 'finite' state - exceed this and you're not allowed to submit at all.
+        if ($statusobj->cutoff_date > 0) {
+            // The student can still post to the forum if they have exceeded the due date at this point.
+            if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
+                $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
+                $statusobj->status_link = $statusobj->assessment_url;
+            }
+            // If the student has exceeded the cut-off date then we can no longer post anything.
+            if ($now > $statusobj->cutoff_date) {
+                $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
+                $statusobj->status_link = '';
+            }
+        } else {
+            // The student can still post to the forum if they have exceeded only the due date at this point.
+            if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
+                $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
+                $statusobj->status_link = $statusobj->assessment_url;
+            }
+        }
+
+        return $statusobj;
+    }
+
+    /**
      * Method to return the current status of the assessment item.
      *
      * @param int $userid
@@ -205,50 +249,6 @@ class forum_activity extends base {
         } else {
             $statusobj->due_date = 'N/A';
             $statusobj->raw_due_date = 0;
-        }
-
-        return $statusobj;
-    }
-
-    /**
-     * This method takes the $statusobj object and sets the display values for the grade status.
-     *
-     * @param object $statusobj
-     * @return object
-     */
-    private function set_displaystate(object $statusobj): object {
-
-        // Start by saying the student is still able to make a submission.
-        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
-        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
-        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
-        $statusobj->status_link = $statusobj->assessment_url;
-        $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-        $now = usertime(time());
-        // Cut-off date is the more 'finite' state - exceed this and you're not allowed to submit at all.
-        if ($statusobj->cutoff_date > 0) {
-            // The student can still post to the forum if they have exceeded the due date at this point.
-            if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
-                $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-                $statusobj->status_link = $statusobj->assessment_url;
-            }
-            // If the student has exceeded the cut-off date then we can no longer post anything.
-            if ($now > $statusobj->cutoff_date) {
-                $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_link = '';
-            }
-        } else {
-            // The student can still post to the forum if they have exceeded only the due date at this point.
-            if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
-                $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-                $statusobj->status_link = $statusobj->assessment_url;
-            }
         }
 
         return $statusobj;
@@ -324,7 +324,6 @@ class forum_activity extends base {
         }
 
         return $forumdata;
-
     }
 
 }

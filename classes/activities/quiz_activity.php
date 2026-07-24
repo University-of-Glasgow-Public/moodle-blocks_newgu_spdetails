@@ -43,7 +43,9 @@ class quiz_activity extends base {
     private $quiz;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_quizduesoon:';
 
@@ -247,6 +249,95 @@ class quiz_activity extends base {
     }
 
     /**
+     * Has a group override been set for this activity.
+     *
+     * @param object $statusobj
+     * @param int $quizid
+     * @param int $userid
+     * @return object
+     */
+    private function has_group_override(object $statusobj, int $quizid, int $userid): object {
+        global $DB;
+
+        // We first check if any group overrides have been created for this quiz.
+        $groupselect = 'quiz = :quiz AND groupid IS NOT NULL AND userid IS NULL';
+        $groupparams = ['quiz' => $quizid];
+        $groupoverrides = $DB->get_records_select('quiz_overrides', $groupselect, $groupparams, '',
+        'groupid, timeopen, timeclose');
+        if (!empty($groupoverrides)) {
+            foreach ($groupoverrides as $groupoverride) {
+                // An override for this quiz exists - is our user a member of the group?
+                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
+                    'userid' => $userid])) {
+                    // If any of these fields are NULL, the override is using the default activity settings.
+                    if ($groupoverride->timeopen != null) {
+                        $statusobj->quizopens = $groupoverride->timeopen;
+                    }
+                    if ($groupoverride->timeclose != null) {
+                        $statusobj->due_date = $this->get_formattedduedate($groupoverride->timeclose);
+                        $statusobj->raw_due_date = $groupoverride->timeclose;
+                        $statusobj->quizcloses = $groupoverride->timeclose;
+                    }
+                    if ($groupoverride->attempts != null) {
+                        $statusobj->attemptsallowed = $groupoverride->attempts;
+                    }
+                }
+            }
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Has an override for the individual student been set for this activity.
+     *
+     * @param object $statusobj
+     * @param int $quizid
+     * @param int $userid
+     * @return object
+     */
+    private function has_override(object $statusobj, int $quizid, int $userid): object {
+        global $DB;
+
+        // Individual overrides however, take precedence - based on how Moodle does things.
+        $overrides = $DB->get_record('quiz_overrides', ['quiz' => $quizid, 'userid' => $userid]);
+        if (!empty($overrides)) {
+            // If any of these fields are NULL, the override is using the default activity settings.
+            if ($overrides->timeopen != null) {
+                $statusobj->quizopens = $overrides->timeopen;
+            }
+            if ($overrides->timeclose != null) {
+                $statusobj->due_date = $this->get_formattedduedate($overrides->timeclose);
+                $statusobj->raw_due_date = $overrides->timeclose;
+                $statusobj->quizcloses = $overrides->timeclose;
+            }
+            if ($overrides->attempts != null) {
+                $statusobj->attemptsallowed = $overrides->attempts;
+            }
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Is the quiz open.
+     *
+     * @param object $statusobj
+     * @param int $now
+     * @return object
+     */
+    private function get_quiz_availability(object $statusobj, int $now): object {
+        
+        if ($statusobj->quizopens > $now) {
+            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        }
+
+        return $statusobj;
+    }
+
+    /**
      * Method to return the current status of the assessment item.
      *
      * @param int $userid
@@ -256,10 +347,10 @@ class quiz_activity extends base {
 
         global $DB;
 
+        $now = usertime(time());
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
         $quizinstance = $this->quiz->get_quiz();
-        $allowsubmissionsfromdate = $quizinstance->timeopen;
         $statusobj->grade_status = '';
         $statusobj->status_text = '';
         $statusobj->status_class = '';
@@ -271,61 +362,16 @@ class quiz_activity extends base {
         $statusobj->grade_class = false;
         $statusobj->feedbackcolumn = false;
         $statusobj->grade_date = '';
-        $quizcloses = $quizinstance->timeclose;
-        $attemptsallowed = $quizinstance->attempts;
+        $statusobj->quizopens = $quizinstance->timeopen;
+        $statusobj->quizcloses = $quizinstance->timeclose;
+        $statusobj->attemptsallowed = $quizinstance->attempts;
+
         // This is measured in seconds.
         $graceperiod = $quizinstance->graceperiod;
 
-        // We first check if any group overrides have been created for this quiz.
-        $groupselect = 'quiz = :quiz AND groupid IS NOT NULL AND userid IS NULL';
-        $groupparams = ['quiz' => $quizinstance->id];
-        $groupoverrides = $DB->get_records_select('quiz_overrides', $groupselect, $groupparams, '',
-        'groupid, timeopen, timeclose');
-        if (!empty($groupoverrides)) {
-            foreach ($groupoverrides as $groupoverride) {
-                // An override for this quiz exists - is our user a member of the group?
-                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                    'userid' => $userid])) {
-                    // If any of these fields are NULL, the override is using the default activity settings.
-                    if ($groupoverride->timeopen != null) {
-                        $allowsubmissionsfromdate = $groupoverride->timeopen;
-                    }
-                    if ($groupoverride->timeclose != null) {
-                        $statusobj->due_date = $this->get_formattedduedate($groupoverride->timeclose);
-                        $statusobj->raw_due_date = $groupoverride->timeclose;
-                        $quizcloses = $groupoverride->timeclose;
-                    }
-                    if ($groupoverride->attempts != null) {
-                        $attemptsallowed = $groupoverride->attempts;
-                    }
-                }
-            }
-        }
-
-        // Individual overrides however, take precedence - based on how Moodle does things.
-        $overrides = $DB->get_record('quiz_overrides', ['quiz' => $quizinstance->id, 'userid' => $userid]);
-        if (!empty($overrides)) {
-            // If any of these fields are NULL, the override is using the default activity settings.
-            if ($overrides->timeopen != null) {
-                $allowsubmissionsfromdate = $overrides->timeopen;
-            }
-            if ($overrides->timeclose != null) {
-                $statusobj->due_date = $this->get_formattedduedate($overrides->timeclose);
-                $statusobj->raw_due_date = $overrides->timeclose;
-                $quizcloses = $overrides->timeclose;
-            }
-            if ($overrides->attempts != null) {
-                $attemptsallowed = $overrides->attempts;
-            }
-        }
-
-        $now = usertime(time());
-        // To begin with - check if the quiz is open.
-        if ($allowsubmissionsfromdate > $now) {
-            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-        }
+        $statusobj = self::has_group_override($statusobj, $quizinstance->id, $userid);
+        $statusobj = self::has_override($statusobj, $quizinstance->id, $userid);
+        $statusobj = self::get_quiz_availability($statusobj, $now);
 
         if ($statusobj->grade_status == '') {
             // Start by saying the student can submit this quiz.
@@ -338,7 +384,7 @@ class quiz_activity extends base {
             $unfinishedattempts = quiz_get_user_attempts($quizinstance->id, $userid, 'unfinished', true);
 
             if ($unfinishedattempts) {
-                if ($quizcloses != 0 && ($quizcloses + $graceperiod) > $now) {
+                if ($statusobj->quizcloses != 0 && ($statusobj->quizcloses + $graceperiod) > $now) {
                     foreach ($unfinishedattempts as $unfinishedattempt) {
                         // With this activity still in progress, we should class it as still submissible.
                         if ($unfinishedattempt->state == 'inprogress') {
@@ -353,7 +399,7 @@ class quiz_activity extends base {
                         }
                     }
 
-                    if ($now > ($quizcloses + $graceperiod)) {
+                    if ($now > ($statusobj->quizcloses + $graceperiod)) {
                         $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                         $statusobj->status_class = '';
@@ -363,7 +409,7 @@ class quiz_activity extends base {
                         return $statusobj;
                     }
                 }
-                if ($quizcloses != 0 && $now > ($quizcloses + $graceperiod)) {
+                if ($statusobj->quizcloses != 0 && $now > ($statusobj->quizcloses + $graceperiod)) {
                     $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                     $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                     $statusobj->status_class = '';
@@ -382,7 +428,7 @@ class quiz_activity extends base {
                 $finishedattempt = end($finishedattempts);
 
                 if ($finishedattempt->state == 'abandoned') {
-                    if ($attemptsallowed > 0 && ($finishedattempt->attempt >= $attemptsallowed)) {
+                    if ($statusobj->attemptsallowed > 0 && ($finishedattempt->attempt >= $statusobj->attemptsallowed)) {
                         $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                         $statusobj->status_class = '';
@@ -452,7 +498,7 @@ class quiz_activity extends base {
             }
 
             // If no finished or unfinished attempts were found, for a final check, lets see if this quiz is still available.
-            if ($now > ($quizcloses + $graceperiod)) {
+            if ($now > ($statusobj->quizcloses + $graceperiod)) {
                 $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_class = '';

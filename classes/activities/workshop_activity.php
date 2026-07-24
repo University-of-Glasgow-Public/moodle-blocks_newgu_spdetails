@@ -200,7 +200,6 @@ class workshop_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();

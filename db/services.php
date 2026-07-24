@@ -34,7 +34,7 @@ $services = [
             'block_newgu_spdetails_get_assessmentsoverview',
             'block_newgu_spdetails_get_assessmentsoverviewbytype',
             'block_newgu_spdetails_get_assessmentsduesoon',
-            'block_newgu_spdetails_get_assessmentsduesoonbytype',
+            'block_newgu_spdetails_get_assessmentsduebytype',
         ],
         'requiredcapability' => '',
         'restrictedusers' => 1,
