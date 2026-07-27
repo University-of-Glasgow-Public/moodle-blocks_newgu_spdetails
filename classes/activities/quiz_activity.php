@@ -328,10 +328,26 @@ class quiz_activity extends base {
      */
     private function get_quiz_availability(object $statusobj, int $now): object {
         
-        if ($statusobj->quizopens > $now) {
-            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        if ($statusobj->quizopens) {
+            if ($statusobj->quizopens > $now) {
+                $statusobj->hasfuturestartdate = true;
+                $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+
+                // No further checks should be necessary if the quiz hasn't opened yet.
+                return $statusobj;
+            }
+
+            if ($statusobj->quizopens < $now) {
+                $statusobj->isavailable = true;
+            }
+        }
+
+        if ($statusobj->quizcloses) {
+            if (($statusobj->quizcloses + $statusobj->graceperiod) > $now) {
+                $statusobj->isavailable = true;
+            }
         }
 
         return $statusobj;
@@ -348,68 +364,66 @@ class quiz_activity extends base {
         global $DB;
 
         $now = usertime(time());
+        $quizinstance = $this->quiz->get_quiz();
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
-        $quizinstance = $this->quiz->get_quiz();
         $statusobj->grade_status = '';
         $statusobj->status_text = '';
         $statusobj->status_class = '';
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $statusobj->grade_class = false;
         $statusobj->due_date = $this->get_formattedduedate($quizinstance->timeclose);
         $statusobj->raw_due_date = $quizinstance->timeclose;
-        $statusobj->gradecolumn = false;
-        $statusobj->grade_class = false;
-        $statusobj->feedbackcolumn = false;
         $statusobj->grade_date = '';
+        $statusobj->gradecolumn = false;
+        $statusobj->feedbackcolumn = false;
         $statusobj->quizopens = $quizinstance->timeopen;
         $statusobj->quizcloses = $quizinstance->timeclose;
         $statusobj->attemptsallowed = $quizinstance->attempts;
-
         // This is measured in seconds.
-        $graceperiod = $quizinstance->graceperiod;
+        $statusobj->graceperiod = $quizinstance->graceperiod;
+        $statusobj->hasfuturestartdate = false;
+        $statusobj->isavailable = false;
 
+        // We're following the layout in the settings page, checking for any dates (available, overrides etc) 
+        // first, this seems to make more sense as these properties become necessary further on.
         $statusobj = self::has_group_override($statusobj, $quizinstance->id, $userid);
         $statusobj = self::has_override($statusobj, $quizinstance->id, $userid);
         $statusobj = self::get_quiz_availability($statusobj, $now);
 
-        if ($statusobj->grade_status == '') {
-            // Start by saying the student can submit this quiz.
+        if ($statusobj->hasfuturestartdate) {
+            return $statusobj;
+        }
+
+        if ($statusobj->isavailable) {  
+
+            // Begin by saying this quiz can potentially be submitted.
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
             $statusobj->status_link = $statusobj->assessment_url;
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        }
 
-            $unfinishedattempts = quiz_get_user_attempts($quizinstance->id, $userid, 'unfinished', true);
+        $unfinishedattempts = quiz_get_user_attempts($quizinstance->id, $userid, 'unfinished', true);
 
-            if ($unfinishedattempts) {
-                if ($statusobj->quizcloses != 0 && ($statusobj->quizcloses + $graceperiod) > $now) {
-                    foreach ($unfinishedattempts as $unfinishedattempt) {
-                        // With this activity still in progress, we should class it as still submissible.
-                        if ($unfinishedattempt->state == 'inprogress') {
-                            return $statusobj;
-                        }
-                        // With this activity overdue, we should class it as still submissible.
-                        if ($unfinishedattempt->state == 'overdue') {
-                            $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
-                            $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
-                            $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-                            return $statusobj;
-                        }
+        if ($unfinishedattempts) {
+            if ($statusobj->quizcloses != 0 && ($statusobj->quizcloses + $statusobj->graceperiod) > $now) {
+                foreach ($unfinishedattempts as $unfinishedattempt) {
+                    // With this activity still in progress, we should class it as still submissible.
+                    if ($unfinishedattempt->state == 'inprogress') {
+                        return $statusobj;
                     }
-
-                    if ($now > ($statusobj->quizcloses + $graceperiod)) {
-                        $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-                        $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-                        $statusobj->status_class = '';
-                        $statusobj->status_link = '';
-                        $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-                        $statusobj->grade_class = false;
+                    // With this activity overdue, we should class it as still submissible.
+                    if ($unfinishedattempt->state == 'overdue') {
+                        $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
+                        $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
+                        $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
                         return $statusobj;
                     }
                 }
-                if ($statusobj->quizcloses != 0 && $now > ($statusobj->quizcloses + $graceperiod)) {
+
+                if ($now > ($statusobj->quizcloses + $statusobj->graceperiod)) {
                     $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                     $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                     $statusobj->status_class = '';
@@ -419,93 +433,102 @@ class quiz_activity extends base {
                     return $statusobj;
                 }
             }
-
-            $finishedattempts = quiz_get_user_attempts($quizinstance->id, $userid, 'finished', true);
-
-            if ($finishedattempts) {
-                // Given that there can be 1 to multiple attempts for a given quiz, pick off the last one
-                // here to see whether it's been abandoned or has since received a grade if its finished.
-                $finishedattempt = end($finishedattempts);
-
-                if ($finishedattempt->state == 'abandoned') {
-                    if ($statusobj->attemptsallowed > 0 && ($finishedattempt->attempt >= $statusobj->attemptsallowed)) {
-                        $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-                        $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-                        $statusobj->status_class = '';
-                        $statusobj->status_link = '';
-                        return $statusobj;
-                    }
-                }
-                if ($finishedattempt->state == 'finished') {
-
-                    $finishedattempt = null;
-                    switch ($quizinstance->grademethod) {
-                        case QUIZ_ATTEMPTFIRST:
-                            $finishedattempt = reset($finishedattempts);
-                            break;
-                        case QUIZ_ATTEMPTLAST:
-                        case QUIZ_GRADEAVERAGE:
-                            $finishedattempt = end($finishedattempts);
-                            break;
-                        case QUIZ_GRADEHIGHEST:
-                            $maxmark = 0;
-                            foreach ($finishedattempts as $at) {
-                                // Operator >=, since we want to most recent relevant attempt.
-                                if ((float) $at->sumgrades >= $maxmark) {
-                                    $maxmark = $at->sumgrades;
-                                    $finishedattempt = $at;
-                                }
-                            }
-                            break;
-                    }
-
-                    // Quiz setup has a feature which controls the visibility of grades.
-                    // We need to check this here also.
-                    // Work out if we can display the grade, taking account what data is available in each attempt.
-                    $attempts[] = $finishedattempt;
-                    list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quizinstance, $attempts);
-                    $statusobj->gradecolumn = $someoptions->marks >= \question_display_options::MARK_AND_MAX &&
-                    quiz_has_grades($quizinstance);
-                    $statusobj->feedbackcolumn = quiz_has_feedback($quizinstance) && $alloptions->overallfeedback;
-
-                    $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
-                    $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
-                    $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
-
-                    // There ^should^ be just one record. Using IGNORE_MISSING now as it's possible
-                    // that a record may not exist - if the quiz has been set up not to autosubmit for example.
-                    $quizgrade = $DB->get_record('quiz_grades', ['quiz' => $quizinstance->id, 'userid' => $userid], '*',
-                    IGNORE_MISSING);
-                    if ($quizgrade) {
-                        $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
-                        $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
-                        $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');
-                        $statusobj->status_link = '';
-                        // If the user is able to view the grade...
-                        if ($statusobj->gradecolumn) {
-                            $statusobj->grade_class = true;
-                            $statusobj->grade_to_display = $quizgrade->grade;
-                        }
-
-                        $statusobj->grade_date = $quizgrade->timemodified;
-
-                        if ($statusobj->feedbackcolumn) {
-                            $statusobj->feedbackcolumn = true;
-                        }
-                    }
-                    return $statusobj;
-                }
-            }
-
-            // If no finished or unfinished attempts were found, for a final check, lets see if this quiz is still available.
-            if ($now > ($statusobj->quizcloses + $graceperiod)) {
+            if ($statusobj->quizcloses != 0 && $now > ($statusobj->quizcloses + $statusobj->graceperiod)) {
                 $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_class = '';
                 $statusobj->status_link = '';
                 $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
                 $statusobj->grade_class = false;
+                return $statusobj;
             }
+        }
+
+        $finishedattempts = quiz_get_user_attempts($quizinstance->id, $userid, 'finished', true);
+
+        if ($finishedattempts) {
+            // Given that there can be 1 to multiple attempts for a given quiz, pick off the last one
+            // here to see whether it's been abandoned or has since received a grade if its finished.
+            $finishedattempt = end($finishedattempts);
+
+            if ($finishedattempt->state == 'abandoned') {
+                if ($statusobj->attemptsallowed > 0 && ($finishedattempt->attempt >= $statusobj->attemptsallowed)) {
+                    $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
+                    $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
+                    $statusobj->status_class = '';
+                    $statusobj->status_link = '';
+                    return $statusobj;
+                }
+            }
+            if ($finishedattempt->state == 'finished') {
+
+                $finishedattempt = null;
+                switch ($quizinstance->grademethod) {
+                    case QUIZ_ATTEMPTFIRST:
+                        $finishedattempt = reset($finishedattempts);
+                        break;
+                    case QUIZ_ATTEMPTLAST:
+                    case QUIZ_GRADEAVERAGE:
+                        $finishedattempt = end($finishedattempts);
+                        break;
+                    case QUIZ_GRADEHIGHEST:
+                        $maxmark = 0;
+                        foreach ($finishedattempts as $at) {
+                            // Operator >=, since we want to most recent relevant attempt.
+                            if ((float) $at->sumgrades >= $maxmark) {
+                                $maxmark = $at->sumgrades;
+                                $finishedattempt = $at;
+                            }
+                        }
+                        break;
+                }
+
+                // Quiz setup has a feature which controls the visibility of grades.
+                // We need to check this here also.
+                // Work out if we can display the grade, taking account what data is available in each attempt.
+                $attempts[] = $finishedattempt;
+                list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quizinstance, $attempts);
+                $statusobj->gradecolumn = $someoptions->marks >= \question_display_options::MARK_AND_MAX &&
+                quiz_has_grades($quizinstance);
+                $statusobj->feedbackcolumn = quiz_has_feedback($quizinstance) && $alloptions->overallfeedback;
+
+                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
+
+                // There ^should^ be just one record. Using IGNORE_MISSING now as it's possible
+                // that a record may not exist - if the quiz has been set up not to autosubmit for example.
+                $quizgrade = $DB->get_record('quiz_grades', ['quiz' => $quizinstance->id, 'userid' => $userid], '*',
+                IGNORE_MISSING);
+                if ($quizgrade) {
+                    $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
+                    $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
+                    $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');
+                    $statusobj->status_link = '';
+                    // If the user is able to view the grade...
+                    if ($statusobj->gradecolumn) {
+                        $statusobj->grade_class = true;
+                        $statusobj->grade_to_display = $quizgrade->grade;
+                    }
+
+                    $statusobj->grade_date = $quizgrade->timemodified;
+
+                    if ($statusobj->feedbackcolumn) {
+                        $statusobj->feedbackcolumn = true;
+                    }
+                }
+                return $statusobj;
+            }
+        }
+
+        // The quiz is not, or no longer available. No finished/unfinished attempts were found. Treat it as not submitted.
+        if ($now > ($statusobj->quizcloses + $statusobj->graceperiod)) {
+            $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_class = '';
+            $statusobj->status_link = '';
+            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+            $statusobj->grade_class = false;
         }
 
         return $statusobj;
@@ -571,21 +594,6 @@ class quiz_activity extends base {
         // This is measured in seconds. If set, we add it to the 'due date' value.
         $graceperiod = $quizobj->graceperiod;
 
-        // Check if any individual overrides have been set up for this user.
-        $overrides = $DB->get_record('quiz_overrides', ['quiz' => $quizobj->id, 'userid' => $USER->id]);
-        if (!empty($overrides)) {
-            // If any of these fields are NULL, the override is using the default activity settings.
-            if ($overrides->timeopen != null) {
-                $quizopens = $overrides->timeopen;
-            }
-            if ($overrides->timeclose != null) {
-                $quizcloses = $overrides->timeclose;
-            }
-            if ($overrides->attempts != null) {
-                $attemptsallowed = $overrides->attempts;
-            }
-        }
-
         // Check if any group overrides exist for this quiz.
         $groupselect = 'quiz = :quiz AND groupid IS NOT NULL AND userid IS NULL AND timeopen BETWEEN :lastmonth AND :now AND
         timeclose > :tnow';
@@ -608,6 +616,21 @@ class quiz_activity extends base {
                         $attemptsallowed = $groupoverride->attempts;
                     }
                 }
+            }
+        }
+
+        // Check if any individual overrides have been set up for this user.
+        $overrides = $DB->get_record('quiz_overrides', ['quiz' => $quizobj->id, 'userid' => $USER->id]);
+        if (!empty($overrides)) {
+            // If any of these fields are NULL, the override is using the default activity settings.
+            if ($overrides->timeopen != null) {
+                $quizopens = $overrides->timeopen;
+            }
+            if ($overrides->timeclose != null) {
+                $quizcloses = $overrides->timeclose;
+            }
+            if ($overrides->attempts != null) {
+                $attemptsallowed = $overrides->attempts;
             }
         }
 

@@ -189,10 +189,10 @@ class attendance_activity extends base {
         $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $statusobj->grade_class = false;
         $statusobj->due_date = $this->get_formattedduedate($this->attendance->sessions->sessdate);
         $statusobj->raw_due_date = $this->attendance->sessions->sessdate;
         $statusobj->gradecolumn = false;
-        $statusobj->grade_class = false;
         $statusobj->feedbackcolumn = false;
         $statusobj->grade_date = '';
 

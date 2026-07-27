@@ -158,20 +158,18 @@ class lti_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
-        $ltiinstance = $this->lti;
         $statusobj->grade_status = get_string('status_tobeconfirmed', 'block_newgu_spdetails');
-        $statusobj->status_text = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');;
-        $statusobj->status_class = '';
-        $statusobj->status_link = '';
+        $statusobj->status_text = get_string('status_text_checkfordetails', 'block_newgu_spdetails');;
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');;
+        $statusobj->status_link = $statusobj->assessment_url;
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $statusobj->grade_class = false;
         $statusobj->due_date = 'N/A'; // LTI's don't have due dates.
         $statusobj->raw_due_date = 0;
         $statusobj->grade_date = '';
-        $statusobj->grade_class = false;
 
         return $statusobj;
     }

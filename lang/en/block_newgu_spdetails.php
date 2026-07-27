@@ -162,6 +162,7 @@ $string['status_submissionnotopen'] = 'submissionnotopen';
 $string['status_submissionunavailable'] = 'submissionunavailable';
 $string['status_submit'] = 'submit';
 $string['status_submitted'] = 'submitted';
+$string['status_text_checkfordetails'] = 'Check for details';
 $string['status_text_dueby'] = 'Due {$a}';
 $string['status_text_graded'] = 'Graded';
 $string['status_text_hidden'] = 'Hidden';
