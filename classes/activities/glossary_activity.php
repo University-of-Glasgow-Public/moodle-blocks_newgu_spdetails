@@ -31,7 +31,6 @@ use cache;
  * Implementation for a glossary activity.
  */
 class glossary_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class glossary_activity extends base {
     private $glossary;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_glossaryduesoon:';
 
@@ -150,8 +151,6 @@ class glossary_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
-
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
         $statusobj->grade_date = '';
@@ -160,7 +159,6 @@ class glossary_activity extends base {
         $statusobj->grade_class = false;
 
         return $statusobj;
-
     }
 
     /**
@@ -221,5 +219,4 @@ class glossary_activity extends base {
 
         return $glossarydata;
     }
-
 }

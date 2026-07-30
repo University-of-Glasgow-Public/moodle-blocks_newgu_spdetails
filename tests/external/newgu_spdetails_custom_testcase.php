@@ -26,8 +26,8 @@
 
 namespace block_newgu_spdetails\external;
 
-use \core_external\external_api;
-use \local_gugrades\external\import_grades_users;
+use core_external\external_api;
+use local_gugrades\external\import_grades_users;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -56,7 +56,7 @@ class newgu_spdetails_custom_testcase extends \block_newgu_spdetails\external\ne
     protected function setUp(): void {
         parent::setUp();
     }
-    
+
     /**
      * Process schema json (recursive)
      * $gradeitemid specifies where to put new grade items

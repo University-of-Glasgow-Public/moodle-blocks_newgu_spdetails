@@ -31,7 +31,6 @@ use checklist_class;
  * Implementation for a checklist activity type.
  */
 class checklist_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -172,5 +171,4 @@ class checklist_activity extends base {
         return [];
 
     }
-
 }

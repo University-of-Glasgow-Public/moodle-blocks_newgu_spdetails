@@ -31,7 +31,6 @@ use cache;
  * Implementation for a peerwork activity.
  */
 class peerwork_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class peerwork_activity extends base {
     private $peerwork;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_peerworkduesoon:';
 
@@ -159,82 +160,146 @@ class peerwork_activity extends base {
     }
 
     /**
+     * Have any peerwork submission attempts been made.
+     *
+     * @param object $statusobj
+     * @param int $userid
+     * @param int $now
+     * @return object
+     */
+    private function check_attempts_made(object $statusobj, int $userid, int $now): object {
+        global $DB;
+
+        // Begin by saying this activity can be submitted.
+        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
+        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
+        $statusobj->status_link = $statusobj->assessment_url;
+
+        $peerworksubmission = $DB->get_record('peerwork_submission', ['peerworkid' => $this->peerwork->id,
+            'userid' => $userid]);
+
+        if (!empty($peerworksubmission)) {
+            if ($peerworksubmission->releasedby == null) {
+                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+
+                return $statusobj;
+            }
+        }
+
+        // Using raw_due_date as due_date was formatted earlier, which we now can't use here.
+        if (($statusobj->raw_due_date != 0) && ($now > $statusobj->raw_due_date)) {
+            $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_link = '';
+
+            if ($statusobj->allowlatesubmissions) {
+                $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
+                $statusobj->status_link = $statusobj->assessment_url;
+                $statusobj->grade_to_display = get_string('status_text_overdue', 'block_newgu_spdetails');
+            }
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Is the activity open.
+     *
+     * @param object $statusobj
+     * @param int $now
+     * @return object
+     */
+    private function get_peerwork_availability(object $statusobj, int $now): object {
+
+        if ($statusobj->availablefrom) {
+            if ($statusobj->availablefrom > $now) {
+                $statusobj->hasfuturestartdate = true;
+                $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+                // No further checks should be necessary if the lesson isn't available yet.
+                return $statusobj;
+            }
+
+            if ($statusobj->availablefrom < $now) {
+                $statusobj->isavailable = true;
+            }
+        }
+
+        if ($statusobj->due_date) {
+            $statusobj->isavailable = false;
+
+            if ($statusobj->due_date > $now) {
+                $statusobj->isavailable = true;
+            }
+
+            if ($statusobj->allowlatesubmissions == 1) {
+                $statusobj->isavailable = true;
+            }
+
+            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+            return $statusobj;
+        }
+
+        if (!$statusobj->due_date) {
+            $statusobj->due_date = self::get_formattedduedate();
+        }
+
+        return $statusobj;
+    }
+
+    /**
      * Method to return the current status of the assessment item.
      *
      * @param int $userid
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
+        $now = usertime(time());
+        $peerworkinstance = $this->peerwork;
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
-        $peerworkinstance = $this->peerwork;
-        $allowsubmissionsfromdate = $peerworkinstance->fromdate;
         $statusobj->grade_status = '';
         $statusobj->status_text = '';
         $statusobj->status_class = '';
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-        $statusobj->due_date = $peerworkinstance->duedate;
-        $statusobj->raw_due_date = $peerworkinstance->duedate;
-        $statusobj->grade_date = '';
         $statusobj->grade_class = false;
+        $statusobj->grade_date = '';
+        $statusobj->availablefrom = (int) $peerworkinstance->fromdate;
+        $statusobj->due_date = (int) $peerworkinstance->duedate;
+        $statusobj->raw_due_date = (int) $peerworkinstance->duedate;
+        $statusobj->allowlatesubmissions = (int) $peerworkinstance->allowlatesubmissions;
+        $statusobj->hasfuturestartdate = false;
+        $statusobj->isavailable = false;
 
-        $now = usertime(time());
-        if ($allowsubmissionsfromdate > $now) {
-            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        $statusobj = self::get_peerwork_availability($statusobj, $now);
+
+        if ($statusobj->hasfuturestartdate) {
+            return $statusobj;
         }
 
-        if ($statusobj->grade_status == '') {
-            $peerworksubmission = $DB->get_record('peerwork_submission', ['peerworkid' => $peerworkinstance->id,
-            'userid' => $userid]);
+        if ($statusobj->isavailable) {
+            $statusobj = self::check_attempts_made($statusobj, $userid, $now);
+            return $statusobj;
+        }
 
+        // The Overdue state for a peerwork activity is dependent on if late submissions are allowed.
+        if (!$statusobj->isavailable) {
             $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-
-            if (!empty($peerworksubmission)) {
-                $statusobj->grade_status = $peerworksubmission->releasedby;
-
-                if ($statusobj->grade_status == null) {
-                    $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
-                    $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
-                    $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
-                }
-
-            } else {
-                $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
-                $statusobj->status_link = $statusobj->assessment_url;
-
-                if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
-                    $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-                    $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-                    $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-                    $statusobj->status_link = '';
-
-                    if ($peerworkinstance->allowlatesubmissions) {
-                        $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
-                        $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-                        $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
-                        $statusobj->status_link = $statusobj->assessment_url;
-                        $statusobj->grade_to_display = get_string('status_text_overdue', 'block_newgu_spdetails');
-                    }
-                }
-            }
-        }
-
-        // Formatting this here as the integer format for the date is no longer needed for testing against.
-        if ($statusobj->due_date != 0) {
-            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
-            $statusobj->raw_due_date = $this->get_rawduedate();
-        } else {
-            $statusobj->due_date = 'N/A';
-            $statusobj->raw_due_date = 0;
+            $statusobj->status_link = '';
         }
 
         return $statusobj;
@@ -304,5 +369,4 @@ class peerwork_activity extends base {
 
         return $peerworkdata;
     }
-
 }

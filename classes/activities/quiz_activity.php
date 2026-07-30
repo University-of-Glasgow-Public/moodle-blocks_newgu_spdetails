@@ -31,7 +31,6 @@ use cache;
  * Implementation for a quiz activity.
  */
 class quiz_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -235,6 +234,7 @@ class quiz_activity extends base {
     public function get_formattedduedate(int|null $unformatteddate = null): string {
         $quizinstance = $this->quiz->get_quiz();
         $rawdate = $quizinstance->timeclose;
+
         if ($unformatteddate) {
             $rawdate = $unformatteddate;
         }
@@ -327,7 +327,7 @@ class quiz_activity extends base {
      * @return object
      */
     private function get_quiz_availability(object $statusobj, int $now): object {
-        
+
         if ($statusobj->quizopens) {
             if ($statusobj->quizopens > $now) {
                 $statusobj->hasfuturestartdate = true;
@@ -354,13 +354,12 @@ class quiz_activity extends base {
     }
 
     /**
-     * Method to return the current status of the assessment item.
+     * Method to return the current status of the quiz.
      *
      * @param int $userid
      * @return object
      */
     public function get_status(int $userid): object {
-
         global $DB;
 
         $now = usertime(time());
@@ -373,20 +372,20 @@ class quiz_activity extends base {
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $statusobj->grade_class = false;
-        $statusobj->due_date = $this->get_formattedduedate($quizinstance->timeclose);
-        $statusobj->raw_due_date = $quizinstance->timeclose;
+        $statusobj->due_date = $this->get_formattedduedate((int) $quizinstance->timeclose);
+        $statusobj->raw_due_date = (int) $quizinstance->timeclose;
         $statusobj->grade_date = '';
         $statusobj->gradecolumn = false;
         $statusobj->feedbackcolumn = false;
-        $statusobj->quizopens = $quizinstance->timeopen;
-        $statusobj->quizcloses = $quizinstance->timeclose;
+        $statusobj->quizopens = (int) $quizinstance->timeopen;
+        $statusobj->quizcloses = (int) $quizinstance->timeclose;
         $statusobj->attemptsallowed = $quizinstance->attempts;
         // This is measured in seconds.
         $statusobj->graceperiod = $quizinstance->graceperiod;
         $statusobj->hasfuturestartdate = false;
         $statusobj->isavailable = false;
 
-        // We're following the layout in the settings page, checking for any dates (available, overrides etc) 
+        // We're following the layout in the settings page, checking for any dates (available, overrides etc)
         // first, this seems to make more sense as these properties become necessary further on.
         $statusobj = self::has_group_override($statusobj, $quizinstance->id, $userid);
         $statusobj = self::has_override($statusobj, $quizinstance->id, $userid);
@@ -396,7 +395,7 @@ class quiz_activity extends base {
             return $statusobj;
         }
 
-        if ($statusobj->isavailable) {  
+        if ($statusobj->isavailable) {
 
             // Begin by saying this quiz can potentially be submitted.
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
@@ -448,7 +447,7 @@ class quiz_activity extends base {
 
         if ($finishedattempts) {
             // Given that there can be 1 to multiple attempts for a given quiz, pick off the last one
-            // here to see whether it's been abandoned or has since received a grade if its finished.
+            // here to see whether it's been abandoned or has since received a grade if it's finished.
             $finishedattempt = end($finishedattempts);
 
             if ($finishedattempt->state == 'abandoned') {
@@ -587,9 +586,9 @@ class quiz_activity extends base {
         // We are calling the quiz object's get_quiz method here, not our local method.
         $quizobj = $this->quiz->get_quiz();
 
-        // Begin by using the main quiz settings.
-        $quizopens = $quizobj->timeopen;
-        $quizcloses = $quizobj->timeclose;
+        // Begin by using the main quiz settings. Oddly these next values are strings initially.
+        $quizopens = (int) $quizobj->timeopen;
+        $quizcloses = (int) $quizobj->timeclose;
         $attemptsallowed = $quizobj->attempts;
         // This is measured in seconds. If set, we add it to the 'due date' value.
         $graceperiod = $quizobj->graceperiod;
@@ -729,5 +728,4 @@ class quiz_activity extends base {
 
         return $quizdata;
     }
-
 }

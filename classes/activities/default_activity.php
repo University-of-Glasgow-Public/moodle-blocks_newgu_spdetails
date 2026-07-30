@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a default activity type.
  */
 class default_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -141,7 +140,6 @@ class default_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
@@ -166,7 +164,5 @@ class default_activity extends base {
      */
     public function get_assessmentsdue(): array {
         return [];
-
     }
-
 }

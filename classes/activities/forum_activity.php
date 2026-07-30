@@ -31,7 +31,6 @@ use cache;
  * Implementation for a forum activity.
  */
 class forum_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class forum_activity extends base {
     private $forum;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_forumduesoon:';
 
@@ -145,6 +146,7 @@ class forum_activity extends base {
     public function get_formattedduedate(int|null $unformatteddate = null): string {
         $dateinstance = $this->forum;
         $rawdate = $dateinstance->duedate;
+
         if ($unformatteddate) {
             $rawdate = $unformatteddate;
         }
@@ -307,7 +309,8 @@ class forum_activity extends base {
         $forum = $this->forum;
 
         if (!array_key_exists($forum->id, $forumsubmissions)) {
-            if ($forum->duedate != 0 && $forum->duedate > $now) {
+            // For the assessments due chart, we're only interested in if there's a due date essentially.
+            if (($forum->duedate != 0) && ($forum->duedate > $now)) {
                 // If we don't have the optional cutoff date set.
                 if ($forum->cutoffdate == 0) {
                     $obj = new \stdClass();
@@ -325,5 +328,4 @@ class forum_activity extends base {
 
         return $forumdata;
     }
-
 }

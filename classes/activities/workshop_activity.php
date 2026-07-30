@@ -37,7 +37,6 @@ use workshop;
  * Implementation for a workshop activity.
  */
 class workshop_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -49,7 +48,9 @@ class workshop_activity extends base {
     private $workshop;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_workshopduesoon:';
 
@@ -142,6 +143,7 @@ class workshop_activity extends base {
     public function get_rawduedate(): int {
         $workshopphase = $this->gradeitem->itemnumber;
         $workshopduedate = 0;
+
         switch($workshopphase) {
             case 0:
                 $workshopduedate = $this->workshop->submissionend;
@@ -470,5 +472,4 @@ class workshop_activity extends base {
 
         return $workshopdata;
     }
-
 }

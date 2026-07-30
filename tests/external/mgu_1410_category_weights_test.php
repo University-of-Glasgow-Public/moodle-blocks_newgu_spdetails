@@ -23,16 +23,16 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace block_newgu_spdetails\external;
- 
+namespace block_newgu_spdetails\external;
+
 use core_external\external_api;
-use \local_gugrades\external\release_grades;
-use \local_gugrades\external\get_alter_weight_form;
-use \local_gugrades\external\save_altered_weights;
+use local_gugrades\external\release_grades;
+use local_gugrades\external\get_alter_weight_form;
+use local_gugrades\external\save_altered_weights;
 
 use stdClass;
 
- defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
@@ -107,7 +107,7 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $gradeitem->courseid = $this->gradeitemobj->courseid;
         $this->gradeitemobj->items[] = $gradeitem;
 
-        // Same calculation as used in course::return_weight()
+        // Same calculation as used in course::return_weight().
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = ($weight > 0) ? round($weight, 2) : 0;
@@ -126,7 +126,6 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
 
         // Get gradeitem object for category "Workshop Tests".
         $this->gradeitemobj = $this->get_gradeitem_from_grade_category('Workshop Tests');
-
 
         // Create items array for changing the weight of the grade category.
         $saveitems = [
@@ -173,7 +172,7 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $gradeitem->courseid = $this->gradeitemobj->courseid;
         $this->gradeitemobj->items[] = $gradeitem;
 
-        // Same calculation as used in course::return_weight()
+        // Same calculation as used in course::return_weight().
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = ($weight > 0) ? round($weight, 2) : 0;
@@ -181,9 +180,9 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
             $this->gradeitemobj->id, $this->student1->id, 'current', 'summative');
         $this->assertEquals($expected, $data['courseitems'][0]->raw_category_weight);
     }
-    
+
     /**
-     * Test that a course with a released grade category returns the category weight from the 
+     * Test that a course with a released grade category returns the category weight from the
      * default settings - this is effectively whatever has been set in Gradebook.
      *
      * @covers \blocks\newgu_spdetails\classes\activity
@@ -230,7 +229,7 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $this->gradeitemobj->items[] = $gradeitem3;
         $this->gradeitemobj->items[] = $gradeitem4;
 
-        // Same calculation as used in course::return_weight()
+        // Same calculation as used in course::return_weight().
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = (($weight > 0) ? round($weight, 2) : 0) . "%";
@@ -251,7 +250,6 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
 
         // Get gradeitem object for category "Workshop Tests".
         $this->gradeitemobj = $this->get_gradeitem_from_grade_category('Workshop Tests');
-
 
         // Create items array for changing the weight of the grade category.
         $saveitems = [

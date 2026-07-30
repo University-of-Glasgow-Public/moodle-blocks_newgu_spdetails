@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a HVP activity type.
  */
 class hvp_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -170,5 +169,4 @@ class hvp_activity extends base {
         return [];
 
     }
-
 }

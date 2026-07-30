@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a database activity type.
  */
 class data_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -113,6 +112,7 @@ class data_activity extends base {
     public function get_formattedduedate(int|null $unformatteddate = null): string {
         $dateinstance = $this->database;
         $rawdate = $dateinstance->timeavailableto;
+
         if ($unformatteddate) {
             $rawdate = $unformatteddate;
         }
@@ -133,7 +133,6 @@ class data_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
@@ -168,5 +167,4 @@ class data_activity extends base {
         return [];
 
     }
-
 }

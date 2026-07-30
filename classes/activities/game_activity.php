@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a checklist activity type.
  */
 class game_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -111,6 +110,7 @@ class game_activity extends base {
 
         // Just pull the grade from the game related grade tables.
         require_once($CFG->dirroot . '/mod/game/lib.php');
+
         if ($grade = game_get_user_grades($this->game, $userid)) {
             // We want access to other properties, hence the returns...
             if ($grade[0]->finalgrade != null && $grade[0]->finalgrade > 0) {
@@ -162,8 +162,6 @@ class game_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
-
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
         $statusobj->grade_status = get_string('status_tobeconfirmed', 'block_newgu_spdetails');
@@ -186,7 +184,5 @@ class game_activity extends base {
      */
     public function get_assessmentsdue(): array {
         return [];
-
     }
-
 }

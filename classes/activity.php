@@ -873,6 +873,15 @@ class activity {
      */
     public static function sort_course_items($courseitems) {
         uasort($courseitems, function($a, $b) {
+            if ((isset($a->raw_due_date)) && isset(($b->raw_due_date))) {
+                if (is_int($a->raw_due_date) && is_int($b->raw_due_date)) {
+                    if ($a->raw_due_date == $b->raw_due_date) {
+                        return 0;
+                    }
+                    return ($a->raw_due_date < $b->raw_due_date) ? -1 : 1;
+                }
+            }
+
             return strnatcmp($a->sortorder, $b->sortorder);
         });
 

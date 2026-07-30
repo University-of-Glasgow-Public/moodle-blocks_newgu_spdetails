@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a LTI activity.
  */
 class lti_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -184,5 +183,4 @@ class lti_activity extends base {
         return $ltidata;
 
     }
-
 }

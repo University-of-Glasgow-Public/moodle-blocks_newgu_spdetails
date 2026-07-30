@@ -31,7 +31,6 @@ use cache;
  * Implementation for a Kaltura Video activity.
  */
 class kalvidassign_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class kalvidassign_activity extends base {
     private $kalvidassign;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_kalvidassignmentsduesoon:';
 
@@ -304,17 +305,15 @@ class kalvidassign_activity extends base {
         $kalvidassignment = $this->kalvidassign[2];
 
         if (!in_array($kalvidassignment->id, $kalvidsubmissions)) {
-            if ($kalvidassignment->timeavailable < $now) {
-                if ($kalvidassignment->timedue != 0 && $kalvidassignment->timedue > $now) {
-                    $obj = new \stdClass();
-                    $obj->name = $kalvidassignment->name;
-                    $obj->duedate = $kalvidassignment->timedue;
-                    $kalviddata[] = $obj;
-                }
+            // For the assessments due chart, we're only interested in if there's a due date essentially.
+            if (($kalvidassignment->timedue != 0) && ($kalvidassignment->timedue > $now)) {
+                $obj = new \stdClass();
+                $obj->name = $kalvidassignment->name;
+                $obj->duedate = $kalvidassignment->timedue;
+                $kalviddata[] = $obj;
             }
         }
 
         return $kalviddata;
     }
-
 }

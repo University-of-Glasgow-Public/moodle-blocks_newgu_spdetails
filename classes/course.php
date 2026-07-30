@@ -867,7 +867,7 @@ class course {
                                         $isreleased = \local_gugrades\grades::get_released_grade($activity->courseid, $activity->id,
                                                 $USER->id);
                                         if ((!$isgradehidden) && ($isreleased != false)) {
-                                            // Don't count this activity twice if the grading has already been done in MyGrades.                                        
+                                            // Don't count this activity twice if the grading has already been done in MyGrades.
                                             $marked++;
                                             $skiprecord = true;
                                         }
@@ -892,12 +892,12 @@ class course {
                                                 $totalupcoming++;
                                             break;
 
-                                            case get_string('status_submitted', 'block_newgu_spdetails'):
-                                                $totalsubmissions++;
-                                            break;
-
                                             case get_string('status_overdue', 'block_newgu_spdetails'):
                                                 $totaloverdue++;
+                                            break;
+
+                                            case get_string('status_submitted', 'block_newgu_spdetails'):
+                                                $totalsubmissions++;
                                             break;
 
                                             case get_string('status_graded', 'block_newgu_spdetails'):
@@ -968,21 +968,21 @@ class course {
                 $option = get_string('status_text_overdue', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
                 $whichstatus = [
-                    get_string('status_overdue', 'block_newgu_spdetails')
+                    get_string('status_overdue', 'block_newgu_spdetails'),
                 ];
                 break;
             case 3:
                 $option = get_string('status_text_submitted', 'block_newgu_spdetails');
                 $dateheader = get_string('header_duedate', 'block_newgu_spdetails');
                 $whichstatus = [
-                    get_string('status_submitted', 'block_newgu_spdetails')
+                    get_string('status_submitted', 'block_newgu_spdetails'),
                 ];
                 break;
             case 4:
                 $option = get_string('status_text_graded', 'block_newgu_spdetails');
                 $dateheader = get_string('header_dategraded', 'block_newgu_spdetails');
                 $whichstatus = [
-                    get_string('status_graded', 'block_newgu_spdetails')
+                    get_string('status_graded', 'block_newgu_spdetails'),
                 ];
                 $showgradecolumn = true;
                 break;
@@ -1198,7 +1198,7 @@ class course {
                                 $date = '';
                                 $rawduedate = '';
 
-                                if (in_array($status,$whichstatus) && ($cm->uservisible || $releasednadnothidden)) {
+                                if (in_array($status, $whichstatus) && ($cm->uservisible || $releasednadnothidden)) {
                                     if ($cm->visible) {
                                         $itemicon = '';
                                         $iconalt = '';

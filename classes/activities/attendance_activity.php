@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for an attendance activity.
  */
 class attendance_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -82,7 +81,6 @@ class attendance_activity extends base {
         $attendance->coursemodulecontext = $coursemodulecontext;
 
         return $attendance;
-
     }
 
     /**
@@ -124,7 +122,6 @@ class attendance_activity extends base {
         }
 
         return false;
-
     }
 
     /**
@@ -143,6 +140,7 @@ class attendance_activity extends base {
      */
     public function get_rawduedate(): int {
         $rawdate = 0;
+
         if ($dateinstance = $this->attendance->sessions) {
             $rawdate = $dateinstance->sessdate;
         }
@@ -159,12 +157,15 @@ class attendance_activity extends base {
     public function get_formattedduedate(int|null $unformatteddate = null): string {
         $duedate = '';
         $rawdate = null;
+
         if ($dateinstance = $this->attendance->sessions) {
             $rawdate = $dateinstance->sessdate;
         }
+
         if ($unformatteddate) {
             $rawdate = $unformatteddate;
         }
+
         if ($rawdate > 0) {
             $duedate = userdate($rawdate, get_string('strftimedate', 'core_langconfig'));
         } else {
@@ -181,7 +182,6 @@ class attendance_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
         $statusobj->grade_status = get_string('status_tobeconfirmed', 'block_newgu_spdetails');
@@ -197,7 +197,6 @@ class attendance_activity extends base {
         $statusobj->grade_date = '';
 
         return $statusobj;
-
     }
 
     /**
@@ -212,7 +211,5 @@ class attendance_activity extends base {
         $attendancedata = [];
 
         return $attendancedata;
-
     }
-
 }

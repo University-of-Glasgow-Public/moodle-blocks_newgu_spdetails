@@ -31,7 +31,6 @@ use cache;
  * Implementation for a SCORM activity type.
  */
 class scorm_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class scorm_activity extends base {
     private $scorm;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_scormduesoon:';
 
@@ -171,6 +172,7 @@ class scorm_activity extends base {
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
+
         $dateinstance = $this->scorm;
         $rawdate = $dateinstance->timeclose;
         if ($unformatteddate) {
@@ -187,73 +189,121 @@ class scorm_activity extends base {
     }
 
     /**
-     * Default implementation for returning the status of
-     * a SCORM activity.
+     * Is the SCORM activity available.
+     *
+     * @param object $statusobj
+     * @param int $now
+     * @return object
+     */
+    private function get_scorm_availability(object $statusobj, int $now): object {
+
+        if ($statusobj->availablefrom) {
+            if ($statusobj->availablefrom > $now) {
+                $statusobj->hasfuturestartdate = true;
+                $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+                // No further checks should be necessary if the activity isn't available yet.
+                return $statusobj;
+            }
+
+            if ($statusobj->availablefrom < $now) {
+                $statusobj->isavailable = true;
+            }
+        }
+
+        if ($statusobj->due_date) {
+            $statusobj->isavailable = false;
+            if ($statusobj->due_date > $now) {
+                $statusobj->isavailable = true;
+            }
+
+            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+            return $statusobj;
+        }
+
+        if (!$statusobj->due_date) {
+            $statusobj->due_date = self::get_formattedduedate();
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Have any SCORM submission attempts been made.
+     *
+     * @param object $statusobj;
+     * @param int $userid
+     * @return object
+     */
+    private function check_attempts_made(object $statusobj, int $userid): object {
+
+        // Begin by saying this activity can potentially be submitted.
+        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
+        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
+        $statusobj->status_link = $statusobj->assessment_url;
+
+        $scormsubmission = scorm_get_last_completed_attempt($this->scorm->id, $userid);
+
+        // If no completed attempts have been made yet, 1 is returned for first attempt.
+        if ($scormsubmission != '1') {
+            $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
+            $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+            $statusobj->status_link = '';
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Default implementation for returning the status of a SCORM activity.
      *
      * @param int $userid
      * @return object
      */
     public function get_status(int $userid): object {
 
+        $now = usertime(time());
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
-        $allowsubmissionsfromdate = $this->scorm->timeopen;
         $statusobj->grade_status = '';
         $statusobj->status_text = '';
         $statusobj->status_class = '';
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $statusobj->grade_class = false;
-        $statusobj->due_date = 'N/A';
-        $statusobj->raw_due_date = 0;
+        $statusobj->due_date = $this->scorm->timeclose;
+        $statusobj->raw_due_date = $this->get_rawduedate();
         $statusobj->grade_date = '';
+        $statusobj->availablefrom = $this->scorm->timeopen;
+        $statusobj->hasfuturestartdate = false;
+        $statusobj->isavailable = false;
 
-        $now = usertime(time());
-        if ($allowsubmissionsfromdate > $now) {
-            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+        // We're following the layout in the settings page, checking for any dates first (overrides aren't a thing tho),
+        // this seems to make more sense as these properties become necessary further on.
+        $statusobj = self::get_scorm_availability($statusobj, $now);
+
+        if ($statusobj->hasfuturestartdate) {
+            return $statusobj;
         }
 
-        if ($now > $this->scorm->timeclose) {
-            $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-            $statusobj->status_link = '';
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-            $statusobj->due_date = $this->scorm->timeclose;
-            $statusobj->raw_due_date = $this->get_rawduedate();
+        if ($statusobj->isavailable) {
+            $statusobj = self::check_attempts_made($statusobj, $userid);
+            return $statusobj;
+
         }
 
-        if ($statusobj->grade_status == '') {
-            $scormsubmission = scorm_get_last_completed_attempt($this->scorm->id, $userid);
-
+        // There is no Overdue state with a SCORM activity, just "available to".
+        if (!$statusobj->isavailable) {
             $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-            $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-            $statusobj->due_date = $this->scorm->timeclose;
-            $statusobj->raw_due_date = $this->scorm->timeclose;
-
-            if (!empty($scormsubmission) && $scormsubmission != '1') {
-                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
-                $statusobj->status_link = '';
-            } else {
-                $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
-                $statusobj->status_link = $statusobj->assessment_url;
-            }
-        }
-
-        // Formatting this here as the integer format for the date is no longer needed for testing against.
-        if ($statusobj->due_date != 0) {
-            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
-            $statusobj->raw_due_date = $this->get_rawduedate();
-        } else {
-            $statusobj->due_date = 'N/A';
-            $statusobj->raw_due_date = 0;
+            $statusobj->status_link = '';
         }
 
         return $statusobj;
@@ -311,20 +361,16 @@ class scorm_activity extends base {
         if (!array_key_exists($scorm->id, $scormsubmissions) ||
             (array_key_exists($scorm->id, $scormsubmissions) &&
             (is_object($scormsubmissions[$scorm->id]) &&
-            property_exists($scormsubmissions[$scorm->id], 'value') &&
-            $scormsubmissions[$scorm->id]->value == 'incomplete'))) {
-            if ($scorm->timeopen != 0 && $scorm->timeopen < $now) {
-                if ($scorm->timeclose != 0 && $scorm->timeclose > $now) {
-                    $obj = new \stdClass();
-                    $obj->name = $scorm->name;
-                    $obj->duedate = $scorm->timeclose;
-                    $scormdata[] = $obj;
-                }
+            property_exists($scormsubmissions[$scorm->id], 'value') && $scormsubmissions[$scorm->id]->value == 'incomplete'))) {
+            // For the assessments due chart, we're only interested in if there's a due date essentially.
+            if (($scorm->timeclose != 0) && ($scorm->timeclose > $now)) {
+                $obj = new \stdClass();
+                $obj->name = $scorm->name;
+                $obj->duedate = $scorm->timeclose;
+                $scormdata[] = $obj;
             }
         }
 
         return $scormdata;
-
     }
-
 }

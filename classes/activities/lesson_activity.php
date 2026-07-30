@@ -236,6 +236,7 @@ class lesson_activity extends base {
                 $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
                 $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
 
                 // No further checks should be necessary if the lesson isn't available yet.
                 return $statusobj;
@@ -247,22 +248,71 @@ class lesson_activity extends base {
         }
 
         if ($statusobj->due_date) {
+            $statusobj->isavailable = false;
             if ($statusobj->due_date > $now) {
                 $statusobj->isavailable = true;
             }
+
+            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+            return $statusobj;
+        }
+
+        if (!$statusobj->due_date) {
+            $statusobj->due_date = self::get_formattedduedate();
         }
 
         return $statusobj;
     }
 
     /**
-     * Method to return the current status of the assessment item.
+     * Have any lesson attempts been made.
+     *
+     * @param object $statusobj;
+     * @param int $userid
+     * @return object
+     */
+    private function check_attempts_made(object $statusobj, int $userid): object {
+        global $DB;
+
+        // Begin by saying this lesson can be submitted.
+        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
+        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
+        $statusobj->status_link = $statusobj->assessment_url;
+
+        $lessonattempts = $DB->count_records('lesson_attempts', ['lessonid' => $this->lesson->id, 'userid' => $userid]);
+
+        if ($lessonattempts > 0) {
+            $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+            $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
+
+            // Now query the specialist table for this activity.
+            if ($lessongrades = $DB->get_record('lesson_grades', ['lessonid' => $this->lesson->id, 'userid' => $userid,
+            'completed' => 1])) {
+                $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
+                $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');
+                $statusobj->grade_to_display = $lessongrades->grade;
+
+                return $statusobj;
+            }
+
+            return $statusobj;
+
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Method to return the current status of the lesson.
      *
      * @param int $userid
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $now = usertime(time());
         $statusobj = new \stdClass();
@@ -276,11 +326,11 @@ class lesson_activity extends base {
         $statusobj->grade_date = '';
         $statusobj->availablefrom = $this->lesson->available;
         $statusobj->due_date = $this->lesson->deadline;
-        $statusobj->raw_due_date = $this->lesson->deadline;
+        $statusobj->raw_due_date = $this->get_rawduedate();
         $statusobj->hasfuturestartdate = false;
         $statusobj->isavailable = false;
 
-        // We're following the layout in the settings page, checking for any dates (available, overrides etc) 
+        // We're following the layout in the settings page, checking for any dates (available, overrides etc)
         // first, this seems to make more sense as these properties become necessary further on.
         $statusobj = self::has_group_override($statusobj, $this->lesson->id, $userid);
         $statusobj = self::has_override($statusobj, $this->lesson->id, $userid);
@@ -291,49 +341,20 @@ class lesson_activity extends base {
         }
 
         if ($statusobj->isavailable) {
-
-            // Begin by saying this lesson can be submitted.
-            $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
-            $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
-            $statusobj->status_link = $statusobj->assessment_url;
-
-            $lessonattempts = $DB->count_records('lesson_attempts', ['lessonid' => $this->lesson->id, 'userid' => $userid]);
-
-            if ($lessonattempts > 0) {
-                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
-
-                if ($lessongrades = $DB->get_record('lesson_grades', ['lessonid' => $this->lesson->id, 'userid' => $userid,
-                'completed' => 1])) {
-                    $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
-                    $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
-                    $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');
-                    $statusobj->grade_to_display = $lessongrades->grade;
-                }
-
-            }
-
-            // There is no Overdue state with a lesson activity.
-            if ($now > $statusobj->due_date) {
-                $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-                $statusobj->status_link = '';
-            }
+            $statusobj = self::check_attempts_made($statusobj, $userid);
+            return $statusobj;
         }
 
-        // Formatting this here as the integer format for the date is no longer needed for testing against.
-        if ($statusobj->due_date != 0) {
-            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
-            $statusobj->raw_due_date = $this->get_rawduedate();
-        } else {
-            $statusobj->due_date = 'N/A';
-            $statusobj->raw_due_date = 0;
+        // There is no Overdue state with a lesson activity, just a "deadline".
+        if (!$statusobj->isavailable) {
+            $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
+            $statusobj->status_link = '';
         }
 
         return $statusobj;
+
     }
 
     /**
@@ -387,12 +408,14 @@ class lesson_activity extends base {
             $timedlessonsubmissions = $cachedata[$cachekey][0]['timedlessonsubmissions'];
         }
 
+        // We have to set availablefrom and raw_due_date even though we don't need them.
         $lesson = $this->lesson;
         $statusobj = new \stdClass();
         $statusobj->availablefrom = $lesson->available;
-        $statusobj->deadline = $lesson->deadline;
+        $statusobj->due_date = $lesson->deadline;
+        $statusobj->raw_due_date = $lesson->deadline;
 
-        // We're following the layout in the settings page, checking for any dates (available, overrides etc) 
+        // We're following the layout in the settings page, checking for any dates (available, overrides etc)
         // first, this seems to make more sense as these properties become necessary further on.
         $statusobj = self::has_group_override($statusobj, $lesson->id, $USER->id);
         $statusobj = self::has_override($statusobj, $lesson->id, $USER->id);
@@ -402,10 +425,11 @@ class lesson_activity extends base {
         (array_key_exists($lesson->id, $timedlessonsubmissions) &&
         (is_object($timedlessonsubmissions[$lesson->id]) && property_exists($timedlessonsubmissions[$lesson->id], 'completed') &&
         $timedlessonsubmissions[$lesson->id]->completed == 0))) {
-            if ($statusobj->deadline > $now) {
+            // For the assessments due chart, we're only interested in if there's a due date essentially.
+            if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                 $obj = new \stdClass();
                 $obj->name = $lesson->name;
-                $obj->duedate = $statusobj->deadline;
+                $obj->duedate = $statusobj->due_date;
                 $lessondata[] = $obj;
             }
         }

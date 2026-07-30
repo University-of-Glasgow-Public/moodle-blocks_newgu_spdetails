@@ -31,7 +31,6 @@ use cache;
  * Implementation for a h5p activity.
  */
 class h5pactivity_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -43,7 +42,9 @@ class h5pactivity_activity extends base {
     private $h5pactivity;
 
     /**
-     * @var constant CACHE_KEY
+     * The cache key name for this activity type.
+     *
+     * @var string
      */
     const CACHE_KEY = 'studentid_h5pduesoon:';
 
@@ -74,6 +75,7 @@ class h5pactivity_activity extends base {
         $course = $DB->get_record('course', ['id' => $this->courseid], '*', MUST_EXIST);
         $h5pactivities = get_all_instances_in_course('h5pactivity', $course);
         $instance = null;
+
         foreach ($h5pactivities as $h5pactivity) {
             if ($this->gradeitem->iteminstance == $h5pactivity->id) {
                 $instance = $h5pactivity;
@@ -209,5 +211,4 @@ class h5pactivity_activity extends base {
     public function get_assessmentsdue(): array {
         return [];
     }
-
 }

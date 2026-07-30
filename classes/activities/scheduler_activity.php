@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a scheduler activity type.
  */
 class scheduler_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -116,7 +115,6 @@ class scheduler_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
@@ -140,7 +138,5 @@ class scheduler_activity extends base {
      */
     public function get_assessmentsdue(): array {
         return [];
-
     }
-
 }

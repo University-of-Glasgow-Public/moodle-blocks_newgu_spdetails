@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for a hsuforum activity type.
  */
 class hsuforum_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -177,7 +176,5 @@ class hsuforum_activity extends base {
      */
     public function get_assessmentsdue(): array {
         return [];
-
     }
-
 }
