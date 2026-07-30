@@ -86,10 +86,10 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertEquals(1, $stats[0]['upcoming']);
         $this->assertArrayHasKey('overdue', $stats[0]);
         $this->assertEquals(0, $stats[0]['overdue']);
-        $this->assertArrayHasKey('submitted', $stats[0]);
-        $this->assertEquals(0, $stats[0]['submitted']);
-        $this->assertArrayHasKey('graded', $stats[0]);
-        $this->assertEquals(0, $stats[0]['graded']);
+        $this->assertArrayHasKey('sub_assess', $stats[0]);
+        $this->assertEquals(0, $stats[0]['sub_assess']);
+        $this->assertArrayHasKey('assess_marked', $stats[0]);
+        $this->assertEquals(0, $stats[0]['assess_marked']);
 
         $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
         $this->mygradessummativesubcategory->id);
@@ -98,7 +98,7 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertCount(1, $gradeitems['coursedata']['courseitems']);
 
         // Check for the status.
-        $this->assertStringContainsString(get_string('status_text_upcoming', 'block_newgu_spdetails'),
+        $this->assertStringContainsString(get_string('status_upcoming', 'block_newgu_spdetails'),
         $gradeitems['coursedata']['courseitems'][0]->grade_status);
     }
 
@@ -146,10 +146,10 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertEquals(0, $stats[0]['upcoming']);
         $this->assertArrayHasKey('overdue', $stats[0]);
         $this->assertEquals(0, $stats[0]['overdue']);
-        $this->assertArrayHasKey('submitted', $stats[0]);
-        $this->assertEquals(0, $stats[0]['submitted']);
-        $this->assertArrayHasKey('graded', $stats[0]);
-        $this->assertEquals(0, $stats[0]['graded']);
+        $this->assertArrayHasKey('sub_assess', $stats[0]);
+        $this->assertEquals(0, $stats[0]['sub_assess']);
+        $this->assertArrayHasKey('assess_marked', $stats[0]);
+        $this->assertEquals(0, $stats[0]['assess_marked']);
 
         $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
         $this->mygradessummativesubcategory->id);
@@ -159,11 +159,11 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
 
         // Check for the status.
         $this->assertStringContainsString(get_string('status_text_notyetgraded', 'block_newgu_spdetails'),
-        $gradeitems['coursedata']['courseitems'][0]->grade_status);
+        $gradeitems['coursedata']['courseitems'][0]->status_text);
     }
 
     /**
-     * Test that for an assignment set up to not accept submissions, upcoming match.
+     * Test that for an assignment set up to not accept submissions, Graded match.
      *
      * @covers \blocks\newgu_spdetails\classes\external\get_assessmentsoverview
      */
@@ -216,10 +216,10 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertEquals(0, $stats[0]['upcoming']);
         $this->assertArrayHasKey('overdue', $stats[0]);
         $this->assertEquals(0, $stats[0]['overdue']);
-        $this->assertArrayHasKey('submitted', $stats[0]);
-        $this->assertEquals(0, $stats[0]['submitted']);
-        $this->assertArrayHasKey('graded', $stats[0]);
-        $this->assertEquals(1, $stats[0]['graded']);
+        $this->assertArrayHasKey('sub_assess', $stats[0]);
+        $this->assertEquals(0, $stats[0]['sub_assess']);
+        $this->assertArrayHasKey('assess_marked', $stats[0]);
+        $this->assertEquals(1, $stats[0]['assess_marked']);
 
         $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
         $this->mygradessummativesubcategory->id);
@@ -228,7 +228,7 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertCount(1, $gradeitems['coursedata']['courseitems']);
 
         // Check for the status.
-        $this->assertStringContainsString(get_string('status_text_notyetgraded', 'block_newgu_spdetails'),
+        $this->assertStringContainsString(get_string('status_graded', 'block_newgu_spdetails'),
         $gradeitems['coursedata']['courseitems'][0]->grade_status);
     }
 

@@ -125,7 +125,7 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
 
         // Some dates for our mock course.
         $startdate = mktime(0, 0, 0, 0, 1, date("Y"));
-        $enddate  = mktime(0, 0, 0, date("m"), date("d"), date("Y") + 1);
+        $enddate  = mktime(0, 0, 0, date("m"), date("d"), date("Y") + 2);
 
         // Create the base MyGrades type course.
         $mygradescourse = $this->getDataGenerator()->create_course([
