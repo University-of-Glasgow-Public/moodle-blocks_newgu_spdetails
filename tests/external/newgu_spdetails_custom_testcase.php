@@ -55,6 +55,7 @@ class newgu_spdetails_custom_testcase extends \block_newgu_spdetails\external\ne
      */
     protected function setUp(): void {
         parent::setUp();
+        $this->resetAfterTest(true);
     }
 
     /**

@@ -173,9 +173,9 @@ class kalvidassign_activity extends base {
         $statusobj->status_link = $statusobj->assessment_url;
         $now = usertime(time());
         // We don't have a 'cutoff date' per se, 'Prevent late submissions' appears to be the equivalent.
-        if ($statusobj->preventlatesubmissions > 0) {
+        if ($statusobj->preventlatesubmissions == 1) {
             // If the student has exceeded the due date (with this setting enabled) then we can no longer submit anything.
-            if ($statusobj->due_date != 0 && ($now > $statusobj->due_date)) {
+            if ($statusobj->raw_due_date != 0 && ($now > $statusobj->raw_due_date)) {
                 $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
@@ -183,11 +183,98 @@ class kalvidassign_activity extends base {
             }
         } else {
             // The student can still (potentially) submit if they have exceeded only the due date at this point.
-            if ($statusobj->due_date != 0 && $now > $statusobj->due_date) {
+            if (($statusobj->raw_due_date != 0) && ($now > $statusobj->raw_due_date)) {
                 $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
             }
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Is the Kaltura Video Assignment activity available.
+     *
+     * @param object $statusobj
+     * @param int $now
+     * @return object
+     */
+    private function get_kalvidassign_availability(object $statusobj, int $now): object {
+
+        if ($statusobj->availablefrom) {
+            if ($statusobj->availablefrom > $now) {
+                $statusobj->hasfuturestartdate = true;
+                $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+                $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+                // No further checks should be necessary if the activity isn't available yet.
+                return $statusobj;
+            }
+
+            if ($statusobj->availablefrom < $now) {
+                $statusobj->isavailable = true;
+            }
+        }
+
+        if ($statusobj->due_date) {
+            $statusobj->isavailable = false;
+
+            if ($statusobj->due_date > $now) {
+                $statusobj->isavailable = true;
+            }
+
+            if ($statusobj->preventlatesubmissions == 0) {
+                $statusobj->isavailable = true;
+            }
+
+            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
+
+            return $statusobj;
+        }
+
+        if (!$statusobj->due_date) {
+            $statusobj->due_date = self::get_formattedduedate();
+        }
+
+        return $statusobj;
+    }
+
+    /**
+     * Have any video assignment submission attempts been made.
+     *
+     * @param object $statusobj
+     * @param int $userid
+     * @param int $now
+     * @return object
+     */
+    private function check_attempts_made(object $statusobj, int $userid, int $now): object {
+        global $DB;
+
+        // Begin by saying this activity can be submitted.
+        $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
+        $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
+        $statusobj->status_link = $statusobj->assessment_url;
+
+        $kalvidassignsubmission = $DB->get_record('kalvidassign_submission', [
+            'vidassignid' => $this->kalvidassign[2]->id,
+            'userid' => $userid,
+        ]);
+
+        if (!empty($kalvidassignsubmission)) {
+            $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
+            $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+            $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
+
+            // Do we allow resubmissions. See the Prevent submissions tooltip in settings for further information.
+            if ($statusobj->allowresubmissions == 0) {
+                $statusobj->status_link = '';
+            }
+        } else {
+            $this->set_displaystate($statusobj);
         }
 
         return $statusobj;
@@ -200,55 +287,45 @@ class kalvidassign_activity extends base {
      * @return object
      */
     public function get_status(int $userid): object {
-        global $DB;
 
+        $now = usertime(time());
+        $kalvidinstance = $this->kalvidassign;
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
-        $kalvidinstance = $this->kalvidassign;
-        $availablefrom = $kalvidinstance[2]->timeavailable;
         $statusobj->grade_status = '';
         $statusobj->status_text = '';
         $statusobj->status_class = '';
         $statusobj->status_link = '';
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $statusobj->grade_class = false;
-        $statusobj->due_date = $kalvidinstance[2]->timedue;
-        $statusobj->raw_due_date = $kalvidinstance[2]->timedue;
-        $statusobj->preventlatesubmissions = $kalvidinstance[2]->preventlate;
         $statusobj->grade_date = '';
+        $statusobj->availablefrom = (int) $kalvidinstance[2]->timeavailable;
+        $statusobj->due_date = (int) $kalvidinstance[2]->timedue;
+        $statusobj->raw_due_date = (int) $kalvidinstance[2]->timedue;
+        $statusobj->preventlatesubmissions = (int) $kalvidinstance[2]->preventlate;
+        $statusobj->allowresubmissions = (int) $kalvidinstance[2]->resubmit;
+        $statusobj->hasfuturestartdate = false;
+        $statusobj->isavailable = false;
 
-        $now = usertime(time());
-        if ($availablefrom > $now) {
-            $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
-            $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
+        // We're following the layout in the settings page, checking for any dates first (overrides aren't a thing tho),
+        // this seems to make more sense as these properties become necessary further on.
+        $statusobj = self::get_kalvidassign_availability($statusobj, $now);
+
+        if ($statusobj->hasfuturestartdate) {
+            return $statusobj;
         }
 
-        if ($statusobj->grade_status == '') {
-            $kalvidassignsubmission = $DB->get_record('kalvidassign_submission', [
-                'vidassignid' => $kalvidinstance[2]->id,
-                'userid' => $userid,
-            ]);
+        if ($statusobj->isavailable) {
+            $statusobj = self::check_attempts_made($statusobj, $userid, $now);
+            return $statusobj;
+        }
 
+        // The Overdue state for this activity is dependent on if prevent late submissions are allowed.
+        if (!$statusobj->isavailable) {
             $statusobj->grade_status = get_string('status_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_notsubmitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_notsubmitted', 'block_newgu_spdetails');
-
-            if (!empty($kalvidassignsubmission)) {
-                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
-                $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
-                $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
-            } else {
-                $this->set_displaystate($statusobj);
-            }
-        }
-
-        // Formatting this here as the integer format for the date is no longer needed for testing against.
-        if ($statusobj->due_date != 0) {
-            $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
-            $statusobj->raw_due_date = $this->get_rawduedate();
-        } else {
-            $statusobj->due_date = 'N/A';
-            $statusobj->raw_due_date = 0;
+            $statusobj->status_link = '';
         }
 
         return $statusobj;

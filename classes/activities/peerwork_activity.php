@@ -184,6 +184,7 @@ class peerwork_activity extends base {
                 $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
+                $statusobj->status_link = '';
 
                 return $statusobj;
             }
@@ -225,7 +226,7 @@ class peerwork_activity extends base {
                 $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
                 $statusobj->due_date = $this->get_formattedduedate($statusobj->due_date);
 
-                // No further checks should be necessary if the lesson isn't available yet.
+                // No further checks should be necessary if the activity isn't available yet.
                 return $statusobj;
             }
 
