@@ -343,7 +343,12 @@ async function fetchAssessmentsDueSoon() {
                     },
                     format: '<span style="color:{color}">\u25CF</span>' + duesoon_tooltip_preamble
                     + '{key}: <b>{y}</b><br/>',
-                    shared: true
+                    hideDelay: 100,
+                    fixed: true,
+                    outside: true,
+                    position: {
+                        y: 230
+                    }
                 },
                 series: [{
                     data: [{
