@@ -619,7 +619,7 @@ class course {
             return $stats;
         }
 
-        $now = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d"), date("Y")));
+        $now = usertime(time());
         $next24hours = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 1, date("Y")));
         $next7days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 7, date("Y")));
         $next14days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 14, date("Y")));

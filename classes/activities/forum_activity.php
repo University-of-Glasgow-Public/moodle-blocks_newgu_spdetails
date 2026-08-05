@@ -314,11 +314,13 @@ class forum_activity extends base {
                 // If we don't have the optional cutoff date set.
                 if ($forum->cutoffdate == 0) {
                     $obj = new \stdClass();
+                    $obj->id = $forum->id;
                     $obj->name = $forum->name;
                     $obj->duedate = $forum->duedate;
                     $forumdata[] = $obj;
                 } else if ($forum->cutoffdate != 0 && $forum->cutoffdate > $now) {
                     $obj = new \stdClass();
+                    $obj->id = $forum->id;
                     $obj->name = $forum->name;
                     $obj->duedate = $forum->duedate;
                     $forumdata[] = $obj;

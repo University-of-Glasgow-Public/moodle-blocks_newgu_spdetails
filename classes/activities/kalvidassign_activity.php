@@ -385,6 +385,7 @@ class kalvidassign_activity extends base {
             // For the assessments due chart, we're only interested in if there's a due date essentially.
             if (($kalvidassignment->timedue != 0) && ($kalvidassignment->timedue > $now)) {
                 $obj = new \stdClass();
+                $obj->id = $kalvidassignment->id;
                 $obj->name = $kalvidassignment->name;
                 $obj->duedate = $kalvidassignment->timedue;
                 $kalviddata[] = $obj;

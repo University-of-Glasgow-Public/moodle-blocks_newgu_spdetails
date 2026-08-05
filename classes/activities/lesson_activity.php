@@ -429,6 +429,7 @@ class lesson_activity extends base {
             // For the assessments due chart, we're only interested in if there's a due date essentially.
             if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                 $obj = new \stdClass();
+                $obj->id = $lesson->id;
                 $obj->name = $lesson->name;
                 $obj->duedate = $statusobj->due_date;
                 $lessondata[] = $obj;

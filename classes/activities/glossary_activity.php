@@ -211,6 +211,7 @@ class glossary_activity extends base {
         if (!in_array($this->glossary->id, $glossarysubmissions)) {
             if ($this->glossary->assessed == 1 && $this->glossary->assesstimestart > $now) {
                 $obj = new \stdClass();
+                $obj->id = $this->glossary->id;
                 $obj->name = $this->glossary->name;
                 $obj->duedate = $this->glossary->assesstimefinish;
                 $glossarydata[] = $obj;

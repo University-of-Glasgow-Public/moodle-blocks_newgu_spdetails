@@ -358,12 +358,20 @@ class peerwork_activity extends base {
         if (!in_array($peerworkassignment->id, $peerworksubmissions)) {
             // Where allowlatesubmissions has been checked, include this in the list of things considered due.
             if ($peerworkassignment->allowlatesubmissions == 1) {
-                $peerworkdata[] = $peerworkassignment;
+                $obj = new \stdClass();
+                $obj->id = $peerworkassignment->id;
+                $obj->name = $peerworkassignment->name;
+                $obj->duedate = $peerworkassignment->duedate;
+                $peerworkdata[] = $obj;
             }
 
             if (($peerworkassignment->allowlatesubmissions == 0) && ($peerworkassignment->fromdate < $now)) {
                 if ($peerworkassignment->duedate > $now) {
-                    $peerworkdata[] = $peerworkassignment;
+                    $obj = new \stdClass();
+                    $obj->id = $peerworkassignment->id;
+                    $obj->name = $peerworkassignment->name;
+                    $obj->duedate = $peerworkassignment->duedate;
+                    $peerworkdata[] = $obj;
                 }
             }
         }

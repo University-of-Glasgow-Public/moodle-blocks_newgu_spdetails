@@ -366,7 +366,7 @@ class scorm_activity extends base {
             if (($scorm->timeclose != 0) && ($scorm->timeclose > $now)) {
                 $obj = new \stdClass();
                 $obj->name = $scorm->name;
-                $obj->duedate = $scorm->timeclose;
+                $obj->duedate = (int) $scorm->timeclose;
                 $scormdata[] = $obj;
             }
         }
