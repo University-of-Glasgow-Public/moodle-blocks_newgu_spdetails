@@ -54,12 +54,12 @@ jobs:
 
       - name: Install moodle-plugin-ci
         run: |
-          moodle-plugin-ci add-plugin University-of-Glasgow-Public/moodle-local_gugrades
+          moodle-plugin-ci add-plugin University-of-Glasgow-Public/moodle-local_gugrades.git
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
           moodle-plugin-ci add-config 'define("QTYPE_STACK_TEST_CONFIG_PLATFORM", "none");'
         env:
           DB: ${{ matrix.database }}
-          MOODLE_REPO: https://github.com/University-of-Glasgow-Public/moodle
+          MOODLE_REPO: https://github.com/University-of-Glasgow-Public/moodle.git
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
           IGNORE_NAMES: '*_test.php, *_testcase.php'
 
