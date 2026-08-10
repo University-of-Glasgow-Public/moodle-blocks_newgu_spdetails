@@ -199,8 +199,8 @@ class assign_activity extends base {
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this assignment exists - is our user a member of the group?
-                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                    'userid' => $userid])) {
+                $groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid, 'userid' => $userid]);
+                if ($groupmembers === true) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->allowsubmissionsfromdate != null) {
                         $statusobj->allowsubmissionsfromdate = $groupoverride->allowsubmissionsfromdate;
@@ -276,12 +276,10 @@ class assign_activity extends base {
      * Is the assignment open.
      *
      * @param object $statusobj
-     * @param object $assigninstance
      * @param int $now
-     * @param int $userid
      * @return object
      */
-    private function get_assignment_availability(object $statusobj, object $assigninstance, int $now, int $userid): object {
+    private function get_assignment_availability(object $statusobj, int $now): object {
 
         if ($statusobj->allowsubmissionsfromdate) {
             if ($statusobj->allowsubmissionsfromdate > $now) {
@@ -336,12 +334,12 @@ class assign_activity extends base {
         // Now determine if we process this activity for this student, as a group or as an individual submission.
         if ($assigninstance->teamsubmission) {
             $cansubmitassessment = true;
-            $checkanyteammembersubmission = false;
-            $checkallteammembersubmissions = false;
+            $anyteammembersubmits = false;
+            $allteammemberssubmit = false;
 
             // MGU-1239 - Group submissions by any students were still displaying as overdue, even if a submission was made.
             if (!$assigninstance->submissiondrafts) {
-                $checkanyteammembersubmission = true;
+                $anyteammembersubmits = true;
             }
 
             // The submission as part of a group is determined by a combination of the 'Require student to click...' option
@@ -349,11 +347,11 @@ class assign_activity extends base {
             // can be set to 'Yes' but also 'disabled' in the settings page - so we need to check that this isn't the case.
             if ($assigninstance->submissiondrafts) {
                 if ($assigninstance->requireallteammemberssubmit) {
-                    [$checkallteammembersubmissions, $statusobj] = self::submit_as_group($statusobj, $userid);
+                    [$allteammemberssubmit, $statusobj] = self::submit_as_group($statusobj, $userid);
                 }
 
                 if (!$assigninstance->requireallteammemberssubmit) {
-                    $checkanyteammembersubmission = true;
+                    $anyteammembersubmits = true;
                 }
             }
 
@@ -368,7 +366,7 @@ class assign_activity extends base {
             }
 
             if ($cansubmitassessment) {
-                if ($checkanyteammembersubmission) {
+                if ($anyteammembersubmits) {
                     $assignsubmission = self::any_team_member_submits($assigninstance->id);
                 }
             } else {
@@ -376,8 +374,8 @@ class assign_activity extends base {
             }
         }
 
-        if (!$assigninstance->teamsubmission || (isset($checkallteammembersubmissions) &&
-            $checkallteammembersubmissions == true)) {
+        if (!$assigninstance->teamsubmission || (isset($allteammemberssubmit) &&
+            $allteammemberssubmit == true)) {
             $assignsubmission = $DB->get_record('assign_submission', [
                 'assignment' => $assigninstance->id,
                 'userid' => $userid,
@@ -506,12 +504,12 @@ class assign_activity extends base {
         array $assignmentdata): array {
         // Now determine if we process this activity for this student, as a group or as an individual submission.
         $cansubmitassessment = true;
-        $checkanyteammembersubmission = false;
-        $checkallteammembersubmissions = false;
+        $anyteammembersubmits = false;
+        $allteammemberssubmit = false;
 
         // MGU-1239 - Group submissions by any students were still displaying as overdue, even if a submission was made.
         if (!$assigninstance->submissiondrafts) {
-            $checkanyteammembersubmission = true;
+            $anyteammembersubmits = true;
         }
 
         // The submission as part of a group is determined by a combination of the 'Require student to click...' option
@@ -519,10 +517,10 @@ class assign_activity extends base {
         // can be set to 'Yes' but also 'disabled' in the settings page - so we need to check that this isn't the case.
         if ($assigninstance->submissiondrafts) {
             if ($assigninstance->requireallteammemberssubmit) {
-                [$checkallteammembersubmissions, $statusobj] = self::submit_as_group($statusobj, $userid);
+                [$allteammemberssubmit, $statusobj] = self::submit_as_group($statusobj, $userid);
             }
             if (!$assigninstance->requireallteammemberssubmit) {
-                $checkanyteammembersubmission = true;
+                $anyteammembersubmits = true;
             }
         }
 
@@ -537,7 +535,7 @@ class assign_activity extends base {
         }
 
         if ($cansubmitassessment) {
-            if ($checkanyteammembersubmission) {
+            if ($anyteammembersubmits) {
                 $assignmentsubmitted = self::any_team_member_submits($assigninstance->id);
                 if (!$assignmentsubmitted) {
                     if ($statusobj->due_date > $now) {
@@ -551,7 +549,7 @@ class assign_activity extends base {
             }
         }
 
-        return [$checkallteammembersubmissions, $assignmentdata];
+        return [$allteammemberssubmit, $assignmentdata];
     }
 
     /**
@@ -563,13 +561,13 @@ class assign_activity extends base {
     private function any_team_member_submits(int $assignid): object|bool {
         global $DB;
 
-        $anyassignmentsubmissions = $DB->get_records('assign_submission', ['assignment' => $assignid]);
+        $assignsubmissions = $DB->get_records('assign_submission', ['assignment' => $assignid]);
 
-        if ($anyassignmentsubmissions != false) {
+        if ($assignsubmissions != false) {
             // If any submission has been made and is in a 'submitted' state, then
             // we can class this activity as having been submitted by the group.
             $assignmentsubmitted = false;
-            foreach ($anyassignmentsubmissions as $assignmentsubmission) {
+            foreach ($assignsubmissions as $assignmentsubmission) {
                 if ($assignmentsubmission->status == get_string('status_submitted', 'block_newgu_spdetails')) {
                     $assignmentsubmitted = true;
                     break;
@@ -768,7 +766,7 @@ class assign_activity extends base {
 
         if ($submissionrequired === true) {
 
-            $statusobj = self::get_assignment_availability($statusobj, $assigninstance, $now, $userid);
+            $statusobj = self::get_assignment_availability($statusobj, $now);
 
             if ($statusobj->hasfuturestartdate) {
                 return $statusobj;
@@ -848,18 +846,18 @@ class assign_activity extends base {
 
         // If no submission is required for this activity, then we only need to check its due date further on.
         if ($submissionrequired === false) {
-            $checkallteammembersubmissions = true;
+            $allteammemberssubmit = true;
         }
 
         if ($submissionrequired === true) {
             if ($assigninstance->teamsubmission) {
-                [$checkallteammembersubmissions, $assignmentdata] = self::submit_as_team($assigninstance, $statusobj, $USER->id,
+                [$allteammemberssubmit, $assignmentdata] = self::submit_as_team($assigninstance, $statusobj, $USER->id,
                     $now, $assignmentdata);
             }
         }
 
         if (!$assigninstance->teamsubmission ||
-            (isset($checkallteammembersubmissions) && $checkallteammembersubmissions == true)) {
+            (isset($allteammemberssubmit) && $allteammemberssubmit == true)) {
             // Looks like when visiting an activity, you end up with a submission entry by default.
             if (!array_key_exists($assigninstance->id, $assignmentsubmissions) ||
                 (array_key_exists($assigninstance->id, $assignmentsubmissions) &&

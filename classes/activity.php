@@ -193,8 +193,8 @@ class activity {
 
                 // Initially, lets see if we can get it from the $gradedata->parent property.
                 if ($item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradedata['parent']->gradeitemid])) {
-                    $tmpweighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
-                    $weighttowardscourse = $tmpweighttowardscourse->grade_category_weight;
+                    $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
+                    $weighttowardscourse = $tmpwtc->grade_category_weight;
                 }
 
                 // MGU-1153 - Reinstate the label for the category grade.
@@ -257,8 +257,8 @@ class activity {
             $weighttowardscourse->grade_category_weight = 0;
             if ($item = \grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $activityitems->category->id,
             'itemtype' => 'category'])) {
-                $tmpweighttowardscourse = course::get_grade_category_weight($item, $activityitems->category);
-                $weighttowardscourse->grade_category_weight = $tmpweighttowardscourse->grade_category_weight;
+                $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
+                $weighttowardscourse->grade_category_weight = $tmpwtc->grade_category_weight;
             }
             $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
@@ -271,7 +271,7 @@ class activity {
 
             if ($activityitems->items) {
                 $activitydata = [];
-                $displayweights = self::get_display_activity_item_weights($weighttowardscourse, $activityitems->category);
+                $displayweights = self::display_activity_item_weights($weighttowardscourse, $activityitems->category);
                 $activitydata = self::process_default_items($activityitems->items, $activetab, $assessmenttype, $displayweights);
                 $data['courseitems'] = array_merge((array) ((!empty($data['courseitems'])) ? $data['courseitems'] : []), (array)
                     $activitydata);
@@ -315,7 +315,7 @@ class activity {
                 $cm = null;
                 $modinfo = null;
                 $cms = null;
-                $processasgradebookitem = false;
+                $isagradebookitem = false;
                 if ($tmpgradeitems[$index]->itemtype != 'manual') {
                     $cm = get_coursemodule_from_instance($tmpgradeitems[$index]->itemmodule, $tmpgradeitems[$index]->iteminstance,
                     $tmpgradeitems[$index]->courseid);
@@ -387,9 +387,9 @@ class activity {
                         $activityduedate = 0;
                         if ($cm) {
                             $activityduedate = \block_newgu_spdetails\api::get_activity_end_date_name(
-                                                                            $cm,
-                                                                            $tmpgradeitems[$index]->itemnumber
-                                                                        );
+                                $cm,
+                                $tmpgradeitems[$index]->itemnumber
+                            );
                         }
                         // MGU-1025 - Due Dates not showing Correctly on Your Assessment details.
                         if ($activityduedate > 0) {
@@ -485,13 +485,13 @@ class activity {
 
                         $mygradesdata[] = $mygradesactivityitem;
                     } else {
-                        $processasgradebookitem = true;
+                        $isagradebookitem = true;
                     }
                 } else if ($mygradesitem['released'] == false) {
-                    $processasgradebookitem = true;
+                    $isagradebookitem = true;
                 }
 
-                if ($processasgradebookitem) {
+                if ($isagradebookitem) {
                     // Fallback to processing this as a regular Gradebook grade item. The item may have been released,
                     // but for this student there may not have been any MyGrades processing completed, or the item may
                     // not even be applicable to them.
@@ -514,7 +514,7 @@ class activity {
 
                         $displayweights = false;
                         if ($tmpgradecategory = \grade_category::fetch(['id' => $tmpgradeitem->categoryid, 'hidden' => 0])) {
-                            $displayweights = self::get_display_activity_item_weights($gradecategoryweight, $tmpgradecategory);
+                            $displayweights = self::display_activity_item_weights($gradecategoryweight, $tmpgradecategory);
                         }
                         $tmp = self::process_default_items([$tmpgradeitem], $activetab, $assessmenttype, $displayweights);
                         // We need to check if we do indeed get a valid record back before adding it back to the return data.
@@ -723,7 +723,7 @@ class activity {
         // This hidden property is the global setting for the item and applies to all students.
         // It can also include a restriction on the item also.
         if ($manualgradeitem->hidden == 0 || ($manualgradeitem->hidden > 1 && $manualgradeitem->hidden < $now)) {
-            $processedmanualgradeitem = new \stdClass();
+            $isamanualgradeitem = new \stdClass();
             $rawassessmentweight = course::return_weight($manualgradeitem->aggregationcoef);
             $assessmentweight = (($rawassessmentweight > 0) ? $rawassessmentweight . "%" : "-");
             $grade = '';
@@ -761,42 +761,42 @@ class activity {
                 $gradefeedback = $gradestatobj->grade_feedback;
                 $gradefeedbacklink = $gradestatobj->grade_feedback_link;
 
-                $processedmanualgradeitem->id = $manualgradeitem->id;
-                $processedmanualgradeitem->sortorder = $manualgradeitem->sortorder;
-                $processedmanualgradeitem->assessment_url = $assessmenturl;
-                $processedmanualgradeitem->item_icon = '';
-                $processedmanualgradeitem->icon_alt = get_string('manualitem', 'grades');
-                $processedmanualgradeitem->item_name = $manualgradeitem->itemname;
-                $processedmanualgradeitem->assessment_type = $assessmenttype;
-                $processedmanualgradeitem->assessment_weight = $assessmentweight;
-                $processedmanualgradeitem->raw_assessment_weight = $rawassessmentweight;
-                $processedmanualgradeitem->due_date = $duedate;
-                $processedmanualgradeitem->raw_due_date = $rawduedate;
-                $processedmanualgradeitem->grade_status = $gradestatus;
-                $processedmanualgradeitem->status_link = $statuslink;
-                $processedmanualgradeitem->status_class = $statusclass;
-                $processedmanualgradeitem->status_text = $statustext;
-                $processedmanualgradeitem->grade = $grade;
-                $processedmanualgradeitem->grade_class = $gradeclass;
-                $processedmanualgradeitem->grade_provisional = $gradeprovisional;
-                $processedmanualgradeitem->grade_feedback = $gradefeedback;
-                $processedmanualgradeitem->grade_feedback_link = $gradefeedbacklink;
+                $isamanualgradeitem->id = $manualgradeitem->id;
+                $isamanualgradeitem->sortorder = $manualgradeitem->sortorder;
+                $isamanualgradeitem->assessment_url = $assessmenturl;
+                $isamanualgradeitem->item_icon = '';
+                $isamanualgradeitem->icon_alt = get_string('manualitem', 'grades');
+                $isamanualgradeitem->item_name = $manualgradeitem->itemname;
+                $isamanualgradeitem->assessment_type = $assessmenttype;
+                $isamanualgradeitem->assessment_weight = $assessmentweight;
+                $isamanualgradeitem->raw_assessment_weight = $rawassessmentweight;
+                $isamanualgradeitem->due_date = $duedate;
+                $isamanualgradeitem->raw_due_date = $rawduedate;
+                $isamanualgradeitem->grade_status = $gradestatus;
+                $isamanualgradeitem->status_link = $statuslink;
+                $isamanualgradeitem->status_class = $statusclass;
+                $isamanualgradeitem->status_text = $statustext;
+                $isamanualgradeitem->grade = $grade;
+                $isamanualgradeitem->grade_class = $gradeclass;
+                $isamanualgradeitem->grade_provisional = $gradeprovisional;
+                $isamanualgradeitem->grade_feedback = $gradefeedback;
+                $isamanualgradeitem->grade_feedback_link = $gradefeedbacklink;
 
-                return $processedmanualgradeitem;
+                return $isamanualgradeitem;
             }
 
             // To get us around the problem of not having a hidden manual item appear for the student in Student MyGrades,
             // but, have this appear in Student MyGrades Staff View, we need to carry out the following trick shot.
             if ($gradestatobj->hidden == 1 && ($userid != null && $userid != $USER->id)) {
-                $processedmanualgradeitem = new \stdClass();
+                $isamanualgradeitem = new \stdClass();
                 $icontext = get_string('manual_grade_item_hidden_icon_alt_text', 'block_newgu_spdetails');
                 $iconalt = "<i class='icon fa fa-eye-slash fa-fw' title='" . $icontext . "' alt='" . $icontext
                 . "' aria-hidden='true' role='img' aria-label='" . $icontext . "'></i>";
-                $processedmanualgradeitem->item_name = $iconalt . $manualgradeitem->itemname;
-                $processedmanualgradeitem->grade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-                $processedmanualgradeitem->grade_feedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $isamanualgradeitem->item_name = $iconalt . $manualgradeitem->itemname;
+                $isamanualgradeitem->grade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+                $isamanualgradeitem->grade_feedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
 
-                return $processedmanualgradeitem;
+                return $isamanualgradeitem;
             }
 
             return null;
@@ -805,14 +805,14 @@ class activity {
         // To get us around the problem of not having a hidden manual item appear for the student in Student MyGrades,
         // but, have this appear in Student MyGrades Staff View, we need to carry out the following hack.
         if ($manualgradeitem->hidden == 1 && ($userid != null && $userid != $USER->id)) {
-            $processedmanualgradeitem = new \stdClass();
+            $isamanualgradeitem = new \stdClass();
             $icontext = get_string('manual_grade_item_hidden_icon_alt_text', 'block_newgu_spdetails');
             $iconalt = "<i class='icon fa fa-eye-slash fa-fw' title='" . $icontext . "' alt='" . $icontext
                 . "' aria-hidden='true' role='img' aria-label='" . $icontext . "'></i>";
-            $processedmanualgradeitem->item_name = $iconalt . $manualgradeitem->itemname;
-            $processedmanualgradeitem->grade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
+            $isamanualgradeitem->item_name = $iconalt . $manualgradeitem->itemname;
+            $isamanualgradeitem->grade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
 
-            return $processedmanualgradeitem;
+            return $isamanualgradeitem;
         }
 
         return null;
@@ -848,7 +848,7 @@ class activity {
      * @param object $gradecategory
      * @return bool
      */
-    public static function get_display_activity_item_weights(object $gradecategoryweight,
+    public static function display_activity_item_weights(object $gradecategoryweight,
         object|null $gradecategory = null): bool {
         $displayweights = false;
 

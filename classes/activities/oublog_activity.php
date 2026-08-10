@@ -75,10 +75,9 @@ class oublog_activity extends base {
      * An OU blog activity doesn't appear to end up in the Gradebook.
      * Simply return false for now.
      *
-     * @param int $userid
      * @return mixed object|bool
      */
-    public function get_grade(int $userid): object|bool {
+    public function get_grade(): object|bool {
         return false;
     }
 

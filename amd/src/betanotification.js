@@ -25,6 +25,7 @@
 "use strict";
 
 import {get_string as getString} from 'core/str';
+import * as Log from 'core/log';
 
 const Selectors = {
     PAGE_HEADER_CONTENT: '#page-header>div',
@@ -35,8 +36,12 @@ const Selectors = {
  */
 const insertBetaNotification = () => {
     let tempPanel = document.querySelector(Selectors.PAGE_HEADER_CONTENT);
-    getString('beta_notification', 'block_newgu_spdetails').then((str) => tempPanel.insertAdjacentHTML("afterend",
-        "<div class='alert alert-info'>" + str + "</div>"));
+    getString('beta_notification', 'block_newgu_spdetails') .then((str) => {
+        tempPanel.insertAdjacentHTML("afterend", "<div class='alert alert-info'>" + str + "</div>");
+    })
+    .catch((err) => {
+        Log.debug(err); return;
+    });
 };
 
 /**

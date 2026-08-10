@@ -222,10 +222,11 @@ class api extends external_api {
      * Gak - I thought there might have been an easier way to match and return said
      * key from a source array of keys - looks like we've got to go the old skool way.
      *
+     * @param int $itemnumber
      * @param object $cm - The course module object. Our key 'customdata' is an array.
      * @return int
      */
-    public static function get_activity_end_date_name(object $cm, $itemnumber): int {
+    public static function get_activity_end_date_name(object $cm, int $itemnumber): int {
         $activitydate = 0;
         if ($itemnumber == 0) {
             $keys = [

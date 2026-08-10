@@ -267,8 +267,8 @@ class quiz_activity extends base {
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this quiz exists - is our user a member of the group?
-                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                    'userid' => $userid])) {
+                $groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid, 'userid' => $userid]);
+                if ($groupmembers === true) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->timeopen != null) {
                         $statusobj->quizopens = $groupoverride->timeopen;
@@ -602,8 +602,9 @@ class quiz_activity extends base {
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this quiz exists - is our user a member of the group?
-                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                    'userid' => $USER->id])) {
+                $groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
+                'userid' => $USER->id]);
+                if ($groupmembers === true) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->timeopen != null) {
                         $quizopens = $groupoverride->timeopen;

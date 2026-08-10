@@ -247,10 +247,9 @@ class kalvidassign_activity extends base {
      *
      * @param object $statusobj
      * @param int $userid
-     * @param int $now
      * @return object
      */
-    private function check_attempts_made(object $statusobj, int $userid, int $now): object {
+    private function check_attempts_made(object $statusobj, int $userid): object {
         global $DB;
 
         // Begin by saying this activity can be submitted.
@@ -259,12 +258,12 @@ class kalvidassign_activity extends base {
         $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
         $statusobj->status_link = $statusobj->assessment_url;
 
-        $kalvidassignsubmission = $DB->get_record('kalvidassign_submission', [
+        $vidassignsubmission = $DB->get_record('kalvidassign_submission', [
             'vidassignid' => $this->kalvidassign[2]->id,
             'userid' => $userid,
         ]);
 
-        if (!empty($kalvidassignsubmission)) {
+        if (!empty($vidassignsubmission)) {
             $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
@@ -316,7 +315,7 @@ class kalvidassign_activity extends base {
         }
 
         if ($statusobj->isavailable) {
-            $statusobj = self::check_attempts_made($statusobj, $userid, $now);
+            $statusobj = self::check_attempts_made($statusobj, $userid);
             return $statusobj;
         }
 

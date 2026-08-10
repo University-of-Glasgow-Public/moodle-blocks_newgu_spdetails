@@ -28,7 +28,6 @@
  * Block class for plugin.
  */
 class block_newgu_spdetails extends block_base {
-
     /**
      * Initialize block instance.
      *
@@ -55,7 +54,7 @@ class block_newgu_spdetails extends block_base {
      * @throws dml_exception
      */
     public function get_content(): object {
-        global $USER, $OUTPUT;
+        global $OUTPUT;
 
         if ($this->content !== null) {
             return $this->content;

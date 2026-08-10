@@ -31,7 +31,6 @@ use cache;
  * Implementation for a lesson activity.
  */
 class lesson_activity extends base {
-
     /**
      * @var object $cm
      */
@@ -176,13 +175,17 @@ class lesson_activity extends base {
         // We first check if any group overrides have been created for this lesson.
         $groupselect = 'lessonid = :lessonid AND groupid IS NOT NULL AND userid IS NULL';
         $groupparams = ['lessonid' => $lessonid];
-        $groupoverrides = $DB->get_records_select('lesson_overrides', $groupselect, $groupparams, '',
-        'groupid, available, deadline');
+        $groupoverrides = $DB->get_records_select(
+            'lesson_overrides',
+            $groupselect,
+            $groupparams, '',
+            'groupid, available, deadline'
+        );
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this lesson exists - is our user a member of the group?
-                if ($groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                    'userid' => $userid])) {
+                $groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid, 'userid' => $userid]);
+                if ($groupmembers === true) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->available != null) {
                         $statusobj->availablefrom = $groupoverride->available;
@@ -390,12 +393,12 @@ class lesson_activity extends base {
             ];
             // This table seems to be the only practical table to query for submission deadlines. lesson_attempts only stores when
             // an attempt was made.
-            $timedlessonsubmissions = $DB->get_records_select('lesson_timer', $select, $params, '', 'lessonid, starttime,
+            $timedsubmissions = $DB->get_records_select('lesson_timer', $select, $params, '', 'lessonid, starttime,
             completed');
 
             $submissionsdata = [
                 'updated' => $currenttime,
-                'timedlessonsubmissions' => $timedlessonsubmissions,
+                'timedlessonsubmissions' => $timedsubmissions,
             ];
 
             $cachedata = [
@@ -406,7 +409,7 @@ class lesson_activity extends base {
             $cache->set_many($cachedata);
         } else {
             $cachedata = $cache->get_many([$cachekey]);
-            $timedlessonsubmissions = $cachedata[$cachekey][0]['timedlessonsubmissions'];
+            $timedsubmissions = $cachedata[$cachekey][0]['timedlessonsubmissions'];
         }
 
         // We have to set availablefrom and raw_due_date even though we don't need them.
@@ -422,10 +425,10 @@ class lesson_activity extends base {
         $statusobj = self::has_override($statusobj, $lesson->id, $USER->id);
 
         // Much like activity type Assignment, we end up with a 'submission' that we now need to check if it's 'completed'.
-        if (!array_key_exists($lesson->id, $timedlessonsubmissions) ||
-        (array_key_exists($lesson->id, $timedlessonsubmissions) &&
-        (is_object($timedlessonsubmissions[$lesson->id]) && property_exists($timedlessonsubmissions[$lesson->id], 'completed') &&
-        $timedlessonsubmissions[$lesson->id]->completed == 0))) {
+        if (!array_key_exists($lesson->id, $timedsubmissions) ||
+        (array_key_exists($lesson->id, $timedsubmissions) &&
+        (is_object($timedsubmissions[$lesson->id]) && property_exists($timedsubmissions[$lesson->id], 'completed') &&
+        $timedsubmissions[$lesson->id]->completed == 0))) {
             // For the assessments due chart, we're only interested in if there's a due date essentially.
             if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                 $obj = new \stdClass();
@@ -438,5 +441,4 @@ class lesson_activity extends base {
 
         return $lessondata;
     }
-
 }

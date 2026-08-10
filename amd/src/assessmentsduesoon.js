@@ -62,26 +62,26 @@ async function fetchAssessmentsDueSoon() {
         {key: 'duesoon_accessibility_description', component: 'block_newgu_spdetails'},
         {key: 'duesoon_tooltip_preamble', component: 'block_newgu_spdetails'}
     ];
-    let loading_text = '';
-    let chart_24hrs = '';
-    let chart_7days = '';
-    let chart_14days = '';
-    let chart_1mth = '';
-    let chart_count = '';
-    let aria_label_text = '';
-    let accessibility_description = '';
-    let duesoon_tooltip_preamble = '';
+    let loadingText = '';
+    let chart24Hrs = '';
+    let chart7Days = '';
+    let chart14Days = '';
+    let chart1Mth = '';
+    let chartCount = '';
+    let ariaLabelText = '';
+    let accessibilityDescription = '';
+    let duesoonTooltipPreamble = '';
 
     await getStrings(requiredStrings).then((result) => {
-        loading_text = result[0];
-        chart_24hrs = result[1];
-        chart_7days = result[2];
-        chart_14days = result[3];
-        chart_1mth = result[4];
-        chart_count = result[5];
-        aria_label_text = result[6];
-        accessibility_description = result[7];
-        duesoon_tooltip_preamble = result[8];
+        loadingText = result[0];
+        chart24Hrs = result[1];
+        chart7Days = result[2];
+        chart14Days = result[3];
+        chart1Mth = result[4];
+        chartCount = result[5];
+        ariaLabelText = result[6];
+        accessibilityDescription = result[7];
+        duesoonTooltipPreamble = result[8];
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -91,17 +91,17 @@ async function fetchAssessmentsDueSoon() {
     let tempPanel = document.querySelector(Selectors.DUESOON_BLOCK);
 
     tempPanel.insertAdjacentHTML("afterbegin", "<div class='loader d-flex justify-content-center'>\n" +
-        "<div class='spinner-border' role='status'><span class='hidden'>" + loading_text + "...</span></div></div>");
+        "<div class='spinner-border' role='status'><span class='hidden'>" + loadingText + "...</span></div></div>");
 
     ajax.call([{
         methodname: 'block_newgu_spdetails_get_assessmentsduesoon',
         args: {},
     }])[0].done(function(response) {
         document.querySelector('.loader').remove();
-        let duein24hours = response[0]['duein24hours'];
-        let duein7days = response[0]['duein7days'];
-        let duein14days = response[0]['duein14days'];
-        let duein1month = response[0]['duein1month'];
+        let duein24hours = response[0].duein24hours;
+        let duein7days = response[0].duein7days;
+        let duein14days = response[0].duein14days;
+        let duein1month = response[0].duein1month;
 
         // Set specific colours/fonts/weights etc for the Highcharts config object.
         let backgroundColour = '#FFFFFF';
@@ -115,24 +115,24 @@ async function fetchAssessmentsDueSoon() {
             backgroundColour = '#274163';
             tooltipBackgroundColour = '#132030';
             tooltipFontColour = '#95B7E6';
-            document.querySelector('.alert.alert-info a').style.color='#95B7E6';
+            document.querySelector('.alert.alert-info a').style.color = '#95B7E6';
         }
         if (document.querySelector('.hillhead40-contrast-wb')) {
             tmpFontColour = '#eee';
             backgroundColour = '#000000';
             tooltipBackgroundColour = '#000000';
             tooltipFontColour = '#FFFFFF';
-            document.querySelector('.alert.alert-info a').style.color='#eee';
+            document.querySelector('.alert.alert-info a').style.color = '#eee';
         }
         if (document.querySelector('.hillhead40-contrast-yb')) {
             tmpFontColour = '#ee6';
             backgroundColour = '#000000';
             tooltipBackgroundColour = '#000000';
             tooltipFontColour = '#ee6';
-            document.querySelector('.alert.alert-info a').style.color='#ee6';
+            document.querySelector('.alert.alert-info a').style.color = '#ee6';
         }
         if (document.querySelector('.hillhead40-contrast-by')) {
-            document.querySelector('.alert.alert-info a').style.color='#000';
+            document.querySelector('.alert.alert-info a').style.color = '#000';
             backgroundColour = '#ee6';
             tooltipBackgroundColour = '#ee6';
         }
@@ -141,22 +141,22 @@ async function fetchAssessmentsDueSoon() {
             backgroundColour = '#666';
             tooltipBackgroundColour = '#666';
             tooltipFontColour = '#eee';
-            document.querySelector('.alert.alert-info a').style.color='#eee';
+            document.querySelector('.alert.alert-info a').style.color = '#eee';
         }
         if (document.querySelector('.hillhead40-contrast-br')) {
             backgroundColour = '#EEB9B9';
             tooltipBackgroundColour = '#EEB9B9';
-            document.querySelector('.alert.alert-info a').style.color='#000';
+            document.querySelector('.alert.alert-info a').style.color = '#000';
         }
         if (document.querySelector('.hillhead40-contrast-bb')) {
             backgroundColour = '#B9D9EE';
             tooltipBackgroundColour = '#B9D9EE';
-            document.querySelector('.alert.alert-info a').style.color='#000';
+            document.querySelector('.alert.alert-info a').style.color = '#000';
         }
         if (document.querySelector('.hillhead40-contrast-bw')) {
             backgroundColour = '#F6F6F6';
             tooltipBackgroundColour = '#F6F6F6';
-            document.querySelector('.alert.alert-info a').style.color='#000';
+            document.querySelector('.alert.alert-info a').style.color = '#000';
         }
         // Check for the font setting
         let tmpFontFamily = "'Hillhead', 'Ubuntu', 'Trebuchet MS', 'Arial', sans-serif";
@@ -221,7 +221,7 @@ async function fetchAssessmentsDueSoon() {
 
         tempPanel.insertAdjacentHTML("afterbegin", "<figure><div id='assessmentsDueSoonChart' width='" + tmpWidth +
             "' height='" + tmpHeight + "'" +
-            " aria-live='assertive' aria-atomic='true' aria-label='" + aria_label_text + "'></div></figure>");
+            " aria-live='assertive' aria-atomic='true' aria-label='" + ariaLabelText + "'></div></figure>");
 
         // We can hook into require.js, which is dead handy.
         require.config({
@@ -237,7 +237,7 @@ async function fetchAssessmentsDueSoon() {
             'highcharts',
             'highcharts/modules/no-data-to-display',
             'highcharts/modules/accessibility'
-        ], function (Highcharts) {
+        ], function(Highcharts) {
             Highcharts.chart('assessmentsDueSoonChart', {
                 chart: {
                     type: 'bar',
@@ -257,7 +257,7 @@ async function fetchAssessmentsDueSoon() {
                     enabled: false
                 },
                 accessibility: {
-                    description: accessibility_description,
+                    description: accessibilityDescription,
                 },
                 legend: {
                     align: 'center',
@@ -276,7 +276,7 @@ async function fetchAssessmentsDueSoon() {
                         textDecoration: 'underline',
                     },
                     events: {
-                        itemClick: function (e) {
+                        itemClick: function(e) {
                             // This prevents the strikethrough and column from being removed from the chart.
                             e.preventDefault();
                             let index = e.legendItem.index;
@@ -300,7 +300,7 @@ async function fetchAssessmentsDueSoon() {
                         }],
                         showInLegend: true,
                         events: {
-                            click: function (event) {
+                            click: function(event) {
                                 // Prevent the column from greying out when clicked.
                                 let index = event.point.category;
                                 viewAssessmentsDueByChartType(index);
@@ -325,7 +325,7 @@ async function fetchAssessmentsDueSoon() {
                 },
                 yAxis: {
                     title: {
-                        text: chart_count,
+                        text: chartCount,
                     },
                     tickInterval: 1,
                     gridLineWidth: 1,
@@ -341,7 +341,7 @@ async function fetchAssessmentsDueSoon() {
                     style: {
                         color: tooltipFontColour
                     },
-                    format: '<span style="color:{color}">\u25CF</span>' + duesoon_tooltip_preamble
+                    format: '<span style="color:{color}">\u25CF</span>' + duesoonTooltipPreamble
                     + '{key}: <b>{y}</b><br/>',
                     hideDelay: 100,
                     fixed: true,
@@ -352,32 +352,32 @@ async function fetchAssessmentsDueSoon() {
                 },
                 series: [{
                     data: [{
-                        name: chart_24hrs,
+                        name: chart24Hrs,
                         y: duein24hours
                     }],
                     color: 'rgba(255, 49, 49, 1)',
-                    name: chart_24hrs,
+                    name: chart24Hrs,
                 }, {
                     data: [{
-                        name: chart_7days,
+                        name: chart7Days,
                         y: duein7days
                     }],
                     color: 'rgba(255, 145, 77, 1)',
-                    name: chart_7days
+                    name: chart7Days
                 }, {
                     data: [{
-                        name: chart_14days,
+                        name: chart14Days,
                         y: duein14days
                     }],
                     color: 'rgba(255, 222, 89, 1)',
-                    name: chart_14days
+                    name: chart14Days
                 }, {
                     data: [{
-                        name: chart_1mth,
+                        name: chart1Mth,
                         y: duein1month
                     }],
                     color: 'rgba(0, 191, 99, 1)',
-                    name: chart_1mth
+                    name: chart1Mth
                 }]
             });
         });

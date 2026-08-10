@@ -65,24 +65,24 @@ async function fetchAssessmentsOverview() {
         {key: 'overview_accessibility_description', component: 'block_newgu_spdetails'},
         {key: 'overview_tooltip_preamble', component: 'block_newgu_spdetails'}
     ];
-    let loading_text = '';
-    let status_text_upcoming = '';
-    let status_text_overdue = '';
-    let status_text_submitted = '';
-    let status_text_graded = '';
-    let aria_label_text = '';
-    let accessibility_description = '';
-    let overview_tooltip_preamble = '';
+    let loadingText = '';
+    let statusTextUpcoming = '';
+    let statusTextOverdue = '';
+    let statusTextSubmitted = '';
+    let statusTextGraded = '';
+    let ariaLabelText = '';
+    let accessibilityDescription = '';
+    let overviewTooltipPreamble = '';
 
     await getStrings(requiredStrings).then((result) => {
-        loading_text = result[0];
-        status_text_upcoming = result[1];
-        status_text_overdue = result[2];
-        status_text_submitted = result[3];
-        status_text_graded = result[4];
-        aria_label_text = result[5];
-        accessibility_description = result[6];
-        overview_tooltip_preamble = result[7];
+        loadingText = result[0];
+        statusTextUpcoming = result[1];
+        statusTextOverdue = result[2];
+        statusTextSubmitted = result[3];
+        statusTextGraded = result[4];
+        ariaLabelText = result[5];
+        accessibilityDescription = result[6];
+        overviewTooltipPreamble = result[7];
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -92,7 +92,7 @@ async function fetchAssessmentsOverview() {
     let tempPanel = document.querySelector(Selectors.SUMMARY_BLOCK);
 
     tempPanel.insertAdjacentHTML("afterbegin", "<div class='loader d-flex justify-content-center'>\n" +
-        "<div class='spinner-border' role='status'><span class='hidden'>" + loading_text + "...</span></div></div>");
+        "<div class='spinner-border' role='status'><span class='hidden'>" + loadingText + "...</span></div></div>");
 
     ajax.call([{
         methodname: 'block_newgu_spdetails_get_assessmentsoverview',
@@ -108,7 +108,7 @@ async function fetchAssessmentsOverview() {
         const dataobject = [];
         if (upcoming > 0) {
             dataobject.push({
-                name: status_text_upcoming + ': <strong>' + upcoming + '</strong>',
+                name: statusTextUpcoming + ': <strong>' + upcoming + '</strong>',
                 id: '0',
                 y: upcoming,
                 color: 'rgba(255, 222, 89, 1)',
@@ -116,7 +116,7 @@ async function fetchAssessmentsOverview() {
         }
         if (overdue > 0) {
             dataobject.push({
-                name: status_text_overdue + ': <strong>' + overdue + '</strong>',
+                name: statusTextOverdue + ': <strong>' + overdue + '</strong>',
                 id: '2',
                 y: overdue,
                 color: 'rgba(255, 49, 49, 1)',
@@ -124,7 +124,7 @@ async function fetchAssessmentsOverview() {
         }
         if (submitted > 0) {
             dataobject.push({
-                name: status_text_submitted + ': <strong>' + submitted + '</strong>',
+                name: statusTextSubmitted + ': <strong>' + submitted + '</strong>',
                 id: '3',
                 y: submitted,
                 color: 'rgba(0, 191, 99, 1)',
@@ -132,7 +132,7 @@ async function fetchAssessmentsOverview() {
         }
         if (graded > 0) {
             dataobject.push({
-                name: status_text_graded + ': <strong>' + graded + '</strong>',
+                name: statusTextGraded + ': <strong>' + graded + '</strong>',
                 id: '4',
                 y: graded,
                 color: 'rgba(56, 182, 255, 1)',
@@ -264,7 +264,7 @@ async function fetchAssessmentsOverview() {
 
         tempPanel.insertAdjacentHTML("afterbegin", "<figure><div id='assessmentSummaryChart' width='" + tmpWidth +
             "' height='" + tmpHeight + "'" +
-            " aria-live='assertive' aria-atomic='true' aria-label='" + aria_label_text + "'></div></figure>");
+            " aria-live='assertive' aria-atomic='true' aria-label='" + ariaLabelText + "'></div></figure>");
 
         // We can hook into require.js, which is dead handy.
         require.config({
@@ -280,7 +280,7 @@ async function fetchAssessmentsOverview() {
             'highcharts',
             'highcharts/modules/no-data-to-display',
             'highcharts/modules/accessibility'
-        ], function (Highcharts) {
+        ], function(Highcharts) {
             Highcharts.chart('assessmentSummaryChart', {
                 chart: {
                     type: 'pie',
@@ -301,7 +301,7 @@ async function fetchAssessmentsOverview() {
                     enabled: false
                 },
                 accessibility: {
-                    description: accessibility_description,
+                    description: accessibilityDescription,
                 },
                 legend: {
                     align: 'right',
@@ -321,7 +321,7 @@ async function fetchAssessmentsOverview() {
                         textDecoration: 'underline',
                     },
                     events: {
-                        itemClick: function (e) {
+                        itemClick: function(e) {
                             // This prevents the strikethrough and segment from being removed from the pie.
                             e.preventDefault();
                             // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
@@ -345,7 +345,7 @@ async function fetchAssessmentsOverview() {
                         }],
                         showInLegend: true,
                         events: {
-                            click: function (e) {
+                            click: function(e) {
                                 // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
                                 let pointIndex = e.point.id;
                                 viewAssessmentsOverviewByChartType(pointIndex);
@@ -358,7 +358,7 @@ async function fetchAssessmentsOverview() {
                     style: {
                         color: tooltipFontColour
                     },
-                    format: '<span style="color:{color}">\u25CF</span>' + overview_tooltip_preamble + '{key}<br/>',
+                    format: '<span style="color:{color}">\u25CF</span>' + overviewTooltipPreamble + '{key}<br/>',
                     shared: true
                 },
                 series: [{
@@ -384,9 +384,9 @@ const viewAssessmentsOverviewByChartType = function(index) {
     const loadingString = [
         {key: 'loading_text', component: 'block_newgu_spdetails'},
     ];
-    let loading_text = '';
+    let loadingText = '';
     getString(loadingString).then((result) => {
-        loading_text = result;
+        loadingText = result;
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -410,7 +410,7 @@ const viewAssessmentsOverviewByChartType = function(index) {
     assessmentsDueBlock.classList.remove('hidden-container');
 
     assessmentsDueContents.insertAdjacentHTML("afterbegin", "<div class='loader d-flex justify-content-center'>\n" +
-        "<div class='spinner-border' role='status'><span class='hidden'>" + loading_text + "...</span></div></div>");
+        "<div class='spinner-border' role='status'><span class='hidden'>" + loadingText + "...</span></div></div>");
 
     ajax.call([{
         methodname: 'block_newgu_spdetails_get_assessmentsoverviewbytype',

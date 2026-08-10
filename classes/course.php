@@ -447,82 +447,6 @@ class course {
     }
 
     /**
-     * This method returns all courses a user is currently enrolled in.
-     * Courses can be filtered by course type and user type.
-     *
-     * @param int $userid
-     * @param string $coursetype
-     * @param string $usertype
-     * @return array|void
-     * @throws dml_exception
-     */
-    public static function return_enrolledcourses(int $userid, string $coursetype, string $usertype = "student"): array {
-
-        $currentdate = time();
-        $coursetypewhere = "";
-
-        global $DB;
-
-        $fields = "c.id, c.fullname as coursename";
-        $fieldwhere = "c.visible = 1 AND c.visibleold = 1";
-
-        if ($coursetype == "past") {
-            $coursetypewhere = " AND ( c.enddate + (86400 * 30) <=" . $currentdate . " AND c.enddate!=0 )";
-        }
-
-        if ($coursetype == "current") {
-            $coursetypewhere = " AND ( c.enddate + (86400 * 30) >" . $currentdate . " OR c.enddate=0 )";
-        }
-
-        if ($coursetype == "all") {
-            $coursetypewhere = "";
-        }
-
-        $enrolmentselect = "SELECT DISTINCT e.courseid FROM {enrol} e
-                            JOIN {user_enrolments} ue
-                            ON (ue.enrolid = e.id AND ue.userid = ?)";
-
-        $enrolmentjoin = "JOIN ($enrolmentselect) en ON (en.courseid = c.id)";
-
-        $sql = "SELECT $fields FROM {course} c $enrolmentjoin
-                WHERE $fieldwhere $coursetypewhere";
-
-        $param = [$userid];
-
-        $results = $DB->get_records_sql($sql, $param);
-
-        if ($results) {
-            $studentcourses = [];
-            $staffcourses = [];
-            foreach ($results as $courseid => $courseobject) {
-
-                $coursename = $courseobject->coursename;
-
-                if (\block_newgu_spdetails\api::return_isstudent($courseid, $userid)) {
-                    array_push($studentcourses, $courseid);
-
-                } else {
-                    $cntstaff = \block_newgu_spdetails\api::checkrole($userid, $courseid);
-                    if ($cntstaff != 0) {
-                        array_push($staffcourses, ["courseid" => $courseid, "coursename" => $coursename]);
-                    }
-                }
-            }
-
-            if ($usertype == "student") {
-                return $studentcourses;
-            }
-
-            if ($usertype == "staff") {
-                return $staffcourses;
-            }
-
-        } else {
-            return [];
-        }
-    }
-
-    /**
      * Return a list of the activities for a given course id.
      * Make sure we only return activities that belong within a Grade Category.
      *
@@ -988,7 +912,7 @@ class course {
                 break;
         }
 
-        $assessmentsummaryheader = get_string('header_assessmentsummary', 'block_newgu_spdetails', $option);
+        $summaryheader = get_string('header_assessmentsummary', 'block_newgu_spdetails', $option);
 
         $assessmentdata = [];
         foreach ($courses as $course) {
@@ -1267,7 +1191,7 @@ class course {
             }
         }
 
-        $assessmentsdue['chart_header'] = $assessmentsummaryheader;
+        $assessmentsdue['chart_header'] = $summaryheader;
 
         if (!$assessmentdata) {
             return $assessmentsdue;

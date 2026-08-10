@@ -222,13 +222,13 @@ class workshop_activity extends base {
 
         switch ($this->gradeitem->itemnumber) {
             case 0:
-                $allowsubmissionsfromdate = $workshopinstance->submissionstart;
+                $submissionstart = $workshopinstance->submissionstart;
                 $statusobj->due_date = $workshopinstance->submissionend;
                 $statusobj->raw_due_date = $workshopinstance->submissionend;
                 $workshopactivitytype = 'submission';
             break;
             case 1:
-                $allowsubmissionsfromdate = $workshopinstance->assessmentstart;
+                $submissionstart = $workshopinstance->assessmentstart;
                 $statusobj->due_date = $workshopinstance->assessmentend;
                 $statusobj->raw_due_date = $workshopinstance->assessmentend;
                 $workshopactivitytype = 'assessment';
@@ -246,10 +246,10 @@ class workshop_activity extends base {
             case \workshop::PHASE_SUBMISSION:
                 if ($workshopactivitytype == 'submission') {
                     // The submission phase is not open yet.
-                    if ($allowsubmissionsfromdate > $now) {
+                    if ($submissionstart > $now) {
                         $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-                    } else if ($allowsubmissionsfromdate <= $now && $workshopinstance->submissionend > $now) {
+                    } else if ($submissionstart <= $now && $workshopinstance->submissionend > $now) {
                         // The submission phase is open.
                         $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
@@ -266,10 +266,10 @@ class workshop_activity extends base {
             case \workshop::PHASE_ASSESSMENT:
                 if ($workshopactivitytype == 'assessment') {
                     // The assessment phase is not open yet.
-                    if ($allowsubmissionsfromdate > $now) {
+                    if ($submissionstart > $now) {
                         $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-                    } else if ($allowsubmissionsfromdate <= $now && $workshopinstance->assessmentend > $now) {
+                    } else if ($submissionstart <= $now && $workshopinstance->assessmentend > $now) {
                         // The assessment phase is open.
                         $statusobj->grade_status = get_string('status_submissionunavailable', 'block_newgu_spdetails');
                         $statusobj->status_text = get_string('status_text_submissionunavailable', 'block_newgu_spdetails');
@@ -320,7 +320,7 @@ class workshop_activity extends base {
             empty($pendingassessments) &&
             empty($assessmentsbyuser) &&
             $workshopinstance->phase > \workshop::PHASE_SUBMISSION &&
-            ($allowsubmissionsfromdate <= $now && $workshopinstance->assessmentend > $now)
+            ($submissionstart <= $now && $workshopinstance->assessmentend > $now)
             ) {
             $statusobj->grade_status = get_string('status_unavailable', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submissionunavailable', 'block_newgu_spdetails');
@@ -332,7 +332,7 @@ class workshop_activity extends base {
         if ($workshopactivitytype == 'assessment' &&
             !empty($pendingassessments) &&
             $workshopinstance->phase > \workshop::PHASE_SUBMISSION &&
-            ($allowsubmissionsfromdate <= $now && $workshopinstance->assessmentend > $now)
+            ($submissionstart <= $now && $workshopinstance->assessmentend > $now)
             ) {
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
@@ -381,13 +381,13 @@ class workshop_activity extends base {
         $cachedata = $cache->get_many([$cachekey]);
         $workshopdata = [];
 
-        $workshopactivityphase = $this->gradeitem->itemnumber;
+        $activityphase = $this->gradeitem->itemnumber;
 
         // We're treating itemnumber 0 as the submission and 1 as the assessment.
 
         if (!$cachedata[$cachekey] || $cachedata[$cachekey][0]['updated'] < $fiveminutes) {
             $lastmonth = usertime(mktime(date('H'), date('i'), date('s'), date('m') - 1, date('d'), date('Y')));
-            if ($workshopactivityphase == 0) {
+            if ($activityphase == 0) {
                 $sql = 'authorid = :userid AND ((timecreated BETWEEN :lastmonth AND :now) OR (timemodified BETWEEN :tlastmonth AND
                 :tnow))';
                 $params = [
@@ -405,9 +405,9 @@ class workshop_activity extends base {
                 ];
 
             }
-            if ($workshopactivityphase == 1) {
+            if ($activityphase == 1) {
                 // Here we'll need to join the assessments against the submission table using the submissionid.
-                $tmpworkshopsubmissions = $DB->get_recordset_sql(
+                $tmpsubmissions = $DB->get_recordset_sql(
                     'SELECT workshopid FROM {workshop_submissions} ws INNER JOIN {workshop_assessments} wa ON
                     wa.submissionid = ws.id WHERE wa.reviewerid = :userid AND ((wa.timecreated BETWEEN :lastmonth AND :now) OR
                     (wa.timemodified BETWEEN :tlastmonth AND :tnow))',
@@ -421,8 +421,8 @@ class workshop_activity extends base {
                 );
                 // We need to turn this back into a regular array.
                 $workshopsubmissions = [];
-                if ($tmpworkshopsubmissions) {
-                    foreach ($tmpworkshopsubmissions as $workshopsubmission) {
+                if ($tmpsubmissions) {
+                    foreach ($tmpsubmissions as $workshopsubmission) {
                         $workshopsubmissions[] = $workshopsubmission->workshopid;
                     }
                 }
@@ -447,7 +447,7 @@ class workshop_activity extends base {
         $workshop = $this->workshop;
 
         if (!in_array($this->gradeitem->iteminstance, $workshopsubmissions)) {
-            if ($workshopactivityphase == 0) {
+            if ($activityphase == 0) {
                 if ($workshop->submissionstart != 0 && $workshop->submissionstart < $now) {
                     if ($workshop->submissionend != 0 && $workshop->submissionend > $now) {
                         $obj = new \stdClass();
@@ -457,7 +457,7 @@ class workshop_activity extends base {
                     }
                 }
             }
-            if ($workshopactivityphase == 1) {
+            if ($activityphase == 1) {
                 if ($workshop->assessmentstart != 0 && $workshop->assessmentstart < $now) {
                     if ($workshop->assessmentend != 0 && $workshop->assessmentend > $now) {
                         $obj = new \stdClass();

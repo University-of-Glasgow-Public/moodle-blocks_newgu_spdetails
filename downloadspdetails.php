@@ -85,16 +85,16 @@ if ($coursestype) {
             $strcoursestype = get_string('currentcourses', 'block_newgu_spdetails');
             $courses = \local_gugrades\api::dashboard_get_courses($USER->id, true, false, $sortstring);
             $cellwidth = 157;
-        break;
+            break;
         case "past":
             $strcoursestype = get_string('pastcourses', 'block_newgu_spdetails');
             $courses = \local_gugrades\api::dashboard_get_courses($USER->id, false, true, $sortstring);
             $cellwidth = 148;
-        break;
+            break;
         default:
             $strcoursestype = get_string('currentcourses', 'block_newgu_spdetails');
             $courses = \local_gugrades\api::dashboard_get_courses($USER->id, true, false, $sortstring);
-        break;
+            break;
     }
 
     $spdetailspdf = "<table width=100%>";
@@ -117,7 +117,6 @@ if ($coursestype) {
     foreach ($courses as $course) {
         // Make sure we are enrolled as a student on this course.
         if (\block_newgu_spdetails\api::return_isstudent($course->id, $USER->id)) {
-
             $mygradesenabled = \block_newgu_spdetails\course::is_type_mygrades($course->id);
             $activitydata = [];
             // MGU-1368 The call to api::get_aggregation_dashboard_user() further on might not return data.
@@ -144,8 +143,11 @@ if ($coursestype) {
                     foreach ($course->firstlevel as $firstlevel) {
                         $firstlevelid = 0;
                         $firstlevelid = $firstlevel['id'];
-                        if ($mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user($course->id, $firstlevelid,
-                            $USER->id)) {
+                        if ($mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user(
+                            $course->id,
+                            $firstlevelid,
+                            $USER->id
+                            )) {
                             $tmpitems = $mygradesdata->fields;
                             foreach ($tmpitems as $tmpitem) {
                                 if ($tmpitem['iscategory'] == true) {
@@ -198,8 +200,9 @@ if ($coursestype) {
                         $tmpactivities[] = $activity;
                     }
                     $activities = $tmpactivities;
-                    $activitydata = \block_newgu_spdetails\activity::process_mygrades_items($mygradeitems, $activities,
-                        $coursestype, '');
+                    $activitydata = \block_newgu_spdetails\activity::process_mygrades_items(
+                        $mygradeitems, $activities, $coursestype, ''
+                    );
                 }
             }
 
@@ -304,7 +307,6 @@ if ($coursestype) {
 }
 
 if ($spdetailstype == "pdf" && $spdetailspdf != "" && $strcoursestype != "") {
-
     require_once($CFG->libdir . '/pdflib.php');
 
     $doc = new pdf();
@@ -489,5 +491,4 @@ if ($spdetailstype == "excel" && $spdetailspdf != "" && $strcoursestype != "") {
     }
     ob_end_clean();
     $workbook->close();
-
 }
