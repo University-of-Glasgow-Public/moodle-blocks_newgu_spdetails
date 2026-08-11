@@ -34,7 +34,6 @@ use core_external\external_value;
  * This class provides the web service description for returning assessments, otherwise known as activities.
  */
 class get_assessments extends external_api {
-
     /**
      * Returns description of method parameters
      * @return external_function_parameters
@@ -59,16 +58,23 @@ class get_assessments extends external_api {
      * @param int|null $subcategory
      * @return array of assessments, grouped by course.
      */
-    public static function execute(string $activetab, int $page, string $sortby, string $sortorder,
-    int|null $subcategory = null): array {
-        $params = self::validate_parameters(self::execute_parameters(),
+    public static function execute(
+        string $activetab,
+        int $page,
+        string $sortby,
+        string $sortorder,
+        int|null $subcategory = null
+    ): array {
+        $params = self::validate_parameters(
+            self::execute_parameters(),
             [
                 'activetab' => $activetab,
                 'page' => $page,
                 'sortby' => $sortby,
                 'sortorder' => $sortorder,
                 'subcategory' => $subcategory,
-            ]);
+            ]
+        );
         return [
             'result' => json_encode(
                 \block_newgu_spdetails\api::get_assessments(
@@ -77,7 +83,8 @@ class get_assessments extends external_api {
                     $params['sortby'],
                     $params['sortorder'],
                     $params['subcategory']
-            )),
+                )
+            ),
         ];
     }
 

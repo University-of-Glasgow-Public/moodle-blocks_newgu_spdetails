@@ -43,7 +43,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Class containing setUp, activities and other utility methods.
  */
 class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
-
     /**
      * @var object $mygradesassignment1
      */

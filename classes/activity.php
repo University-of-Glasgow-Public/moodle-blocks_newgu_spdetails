@@ -52,7 +52,6 @@ define('ITEM_SCRIPT', '/view.php?id=');
  * then be used to provide further functionality.
  */
 class activity {
-
     /**
      * @var array $excludedactivities
      * @see MGU-975 - we're now restricting a number of activity types that no longer
@@ -144,8 +143,14 @@ class activity {
             $activitydata['coursedata'] = $coursedata;
         } else {
             $activities = $getactivities[0];
-            $activitiesdata = self::process_get_activities($activities, $course->id, $subcategoryid, $userid, $activetab,
-            $assessmenttype);
+            $activitiesdata = self::process_get_activities(
+                $activities,
+                $course->id,
+                $subcategoryid,
+                $userid,
+                $activetab,
+                $assessmenttype
+            );
             $coursedata['courseitems'] = ((array_key_exists('courseitems', $activitiesdata)) ? $activitiesdata['courseitems'] : '');
             $coursedata['hasdata'] = ((!empty($activitiesdata['courseitems']) ? true : false));
             $coursedata['mygradesenabled'] = ((!empty($activitiesdata['mygradesenabled']) ? true : false));
@@ -173,8 +178,14 @@ class activity {
      * @param string $assessmenttype
      * @return array
      */
-    public static function process_get_activities(object $activityitems, int $courseid, int $subcategory, int $userid,
-    string $activetab, string $assessmenttype): array {
+    public static function process_get_activities(
+        object $activityitems,
+        int $courseid,
+        int $subcategory,
+        int $userid,
+        string $activetab,
+        string $assessmenttype
+    ): array {
         $data = [];
         // We've lost all knowledge at this point of the course type - fetch it again.
         $mygradesenabled = course::is_type_mygrades($courseid);
@@ -201,12 +212,16 @@ class activity {
                 if (is_object($gradedata['parent'])) {
                     if ($gradedata['parent']->released) {
                         $data['hascategorygrade'] = true;
-                        $data['categorygrade'] = grade::is_admin_or_generic_grade($gradedata['parent']->admingrade,
-                            $gradedata['parent']->displaygrade);
+                        $data['categorygrade'] = grade::is_admin_or_generic_grade(
+                            $gradedata['parent']->admingrade,
+                            $gradedata['parent']->displaygrade
+                        );
 
                         // MGU-1410 - Check for the correct weighting.
                         [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
-                            $gradedata['parent']->gradeitemid, $userid);
+                            $gradedata['parent']->gradeitemid,
+                            $userid
+                        );
                         if ($isaltered) {
                             $weighttowardscourse = course::return_weight($alteredweight) . '%';
                         } else {
@@ -230,16 +245,24 @@ class activity {
 
                 if ($gradecategories) {
                     $categorydata = [];
-                    $categorydata = course::process_mygrades_subcategories($courseid, $gradecategories, $activityitems->categories,
-                        $assessmenttype, $userid);
+                    $categorydata = course::process_mygrades_subcategories(
+                        $courseid,
+                        $gradecategories,
+                        $activityitems->categories,
+                        $assessmenttype,
+                        $userid
+                    );
                     $data['courseitems'] = $categorydata;
                     $data['hasgradecategory'] = true;
                 }
                 if ($gradeitems) {
                     $activitydata = [];
                     $activitydata = self::process_mygrades_items($gradeitems, $activityitems->items, $activetab, $assessmenttype);
-                    $data['courseitems'] = array_merge((array) ((!empty($data['courseitems'])) ? $data['courseitems'] : []),
-                        (array) $activitydata);
+                    $data['courseitems'] = array_merge(
+                        (array) (
+                        (!empty($data['courseitems'])) ? $data['courseitems'] : []),
+                        (array) $activitydata
+                    );
                     $data['hascourseitems'] = true;
                 }
 
@@ -254,8 +277,12 @@ class activity {
             // value of the grade item, this needs to have been set in Gradebook Setup however.
             $weighttowardscourse = new stdClass();
             $weighttowardscourse->grade_category_weight = 0;
-            if ($item = \grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $activityitems->category->id,
-            'itemtype' => 'category', ])) {
+            if (
+                $item = \grade_item::fetch([
+                    'courseid' => $courseid,
+                    'iteminstance' => $activityitems->category->id,
+                    'itemtype' => 'category', ])
+            ) {
                 $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
                 $weighttowardscourse->grade_category_weight = $tmpwtc->grade_category_weight;
             }
@@ -300,14 +327,17 @@ class activity {
      * @param string $assessmenttype
      * @return array
      */
-    public static function process_mygrades_items(array $mygradesitems, array $tmpgradeitems, string $activetab,
-    string $assessmenttype): array {
+    public static function process_mygrades_items(
+        array $mygradesitems,
+        array $tmpgradeitems,
+        string $activetab,
+        string $assessmenttype
+    ): array {
 
         global $CFG;
         $mygradesdata = [];
 
         if ($mygradesitems && count($mygradesitems) > 0) {
-
             // While processing each item, we will need to 'key into' $tmpgradeitems for help with things along the way.
             $index = 0;
             foreach ($mygradesitems as $mygradesitem) {
@@ -316,8 +346,11 @@ class activity {
                 $cms = null;
                 $isagradebookitem = false;
                 if ($tmpgradeitems[$index]->itemtype != 'manual') {
-                    $cm = get_coursemodule_from_instance($tmpgradeitems[$index]->itemmodule, $tmpgradeitems[$index]->iteminstance,
-                    $tmpgradeitems[$index]->courseid);
+                    $cm = get_coursemodule_from_instance(
+                        $tmpgradeitems[$index]->itemmodule,
+                        $tmpgradeitems[$index]->iteminstance,
+                        $tmpgradeitems[$index]->courseid
+                    );
                     $modinfo = get_fast_modinfo($tmpgradeitems[$index]->courseid);
                     $cms = $modinfo->get_cms();
                 }
@@ -404,9 +437,12 @@ class activity {
                             // MGU-1176 - Don't display the activity item's weight if an admin grade has been entered.
                             if (!$mygradesitem['isadmin']) {
                                 $rawassessmentweight = (
-                                ($mygradesitem['normalisedweight'] != null) ? course::return_weight(
-                                    $mygradesitem['normalisedweight']) : (($mygradesitem['weight'] != null) ?
-                                    course::return_weight($mygradesitem['weight']) : '-'));
+                                    ($mygradesitem['normalisedweight'] != null) ? course::return_weight(
+                                        $mygradesitem['normalisedweight']
+                                    ) : (
+                                        ($mygradesitem['weight'] != null) ? course::return_weight($mygradesitem['weight']) : '-'
+                                    )
+                                );
                                 $assessmentweight = (($rawassessmentweight > 0) ? $rawassessmentweight . "%" : "-");
                             }
                         }
@@ -424,8 +460,10 @@ class activity {
                         $mygradesactivityitem->icon_hidden = $iconhidden;
                         $mygradesactivityitem->item_name = $tmpgradeitems[$index]->itemname;
                         $mygradesactivityitem->reassessment = $reassessment;
-                        $mygradesactivityitem->reassessment_text = $reassessment ? get_string('reassessment',
-                            'block_newgu_spdetails') : '';
+                        $mygradesactivityitem->reassessment_text = $reassessment ? get_string(
+                            'reassessment',
+                            'block_newgu_spdetails'
+                        ) : '';
                         $mygradesactivityitem->assessment_type = $assessmenttype;
                         $mygradesactivityitem->assessment_weight = $assessmentweight;
                         $mygradesactivityitem->raw_assessment_weight = $rawassessmentweight;
@@ -435,8 +473,10 @@ class activity {
                         $mygradesactivityitem->status_link = '';
                         $mygradesactivityitem->status_class = '';
                         $mygradesactivityitem->status_text = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
-                        $mygradesactivityitem->grade = get_string('status_text_tobeconfirmed',
-                        'block_newgu_spdetails');
+                        $mygradesactivityitem->grade = get_string(
+                            'status_text_tobeconfirmed',
+                            'block_newgu_spdetails'
+                        );
                         $mygradesactivityitem->grade_class = false;
                         $mygradesactivityitem->grade_provisional = false;
                         $mygradesactivityitem->grade_feedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
@@ -450,18 +490,23 @@ class activity {
                                     // MGU-1004 - Account for whether this is an Admin grade or just a regular grade.
                                     $mygradesactivityitem->grade = grade::is_admin_or_generic_grade(
                                         $mygradesitem['releasegrade']->admingrade,
-                                        $mygradesitem['releasegrade']->displaygrade);
+                                        $mygradesitem['releasegrade']->displaygrade
+                                    );
                                     $mygradesactivityitem->grade_class = true;
-                                    $mygradesactivityitem->status_class = get_string('status_class_graded',
-                                        'block_newgu_spdetails');
+                                    $mygradesactivityitem->status_class = get_string(
+                                        'status_class_graded',
+                                        'block_newgu_spdetails'
+                                    );
                                     $mygradesactivityitem->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
 
                                     // See MGU-1230 - Student MyGrades / Staff View.
                                     if ($cm) {
                                         if ($cm->uservisible) {
                                             if ($cm->visibleoncoursepage) {
-                                                $mygradesactivityitem->grade_feedback = get_string('status_text_viewfeedback',
-                                                'block_newgu_spdetails');
+                                                $mygradesactivityitem->grade_feedback = get_string(
+                                                    'status_text_viewfeedback',
+                                                    'block_newgu_spdetails'
+                                                );
                                                 $mygradesactivityitem->grade_feedback_link = $CFG->wwwroot .
                                                 '/grade/report/index.php?id=' .
                                                 $tmpgradeitems[$index]->courseid;
@@ -505,9 +550,15 @@ class activity {
                         // MGU-1065 - We need to get a reference to this category first,
                         // we don't have access to it when processing "mygrades" items.
                         $gradecategoryweight = 0;
-                        if ($item = \grade_item::fetch(['courseid' => $tmpgradeitem->courseid,
-                            'itemname' => $tmpgradeitem->itemname, 'itemtype' => 'mod', 'itemmodule' => $tmpgradeitem->itemmodule,
-                            'iteminstance' => $tmpgradeitem->iteminstance, 'itemnumber' => $tmpgradeitem->itemnumber, ])) {
+                        if (
+                            $item = \grade_item::fetch([
+                                'courseid' => $tmpgradeitem->courseid,
+                                'itemname' => $tmpgradeitem->itemname,
+                                'itemtype' => 'mod',
+                                'itemmodule' => $tmpgradeitem->itemmodule,
+                                'iteminstance' => $tmpgradeitem->iteminstance,
+                                'itemnumber' => $tmpgradeitem->itemnumber, ])
+                        ) {
                             $gradecategoryweight = course::get_grade_category_weight($item, $tmpgradeitem);
                         }
 
@@ -544,8 +595,13 @@ class activity {
      * @param int|null $userid - this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
      * @return array
      */
-    public static function process_default_items(array $defaultitems, string $activetab, string $assessmenttype,
-        bool $displayweights, int|null $userid = null): array {
+    public static function process_default_items(
+        array $defaultitems,
+        string $activetab,
+        string $assessmenttype,
+        bool $displayweights,
+        int|null $userid = null
+    ): array {
 
         global $USER;
         $whichuser = null;
@@ -558,7 +614,6 @@ class activity {
         $defaultdata = [];
 
         if ($defaultitems && count($defaultitems) > 0) {
-
             foreach ($defaultitems as $defaultitem) {
                 // MGU-1181 - $defaultactivityitem needs to be reset after each iteration, to prevent is being added inadvertantly.
                 $defaultactivityitem = null;
@@ -570,8 +625,11 @@ class activity {
                             $defaultdata[] = $manualgradeitem;
                         }
                     } else {
-                        $cm = get_coursemodule_from_instance($defaultitem->itemmodule, $defaultitem->iteminstance,
-                        $defaultitem->courseid);
+                        $cm = get_coursemodule_from_instance(
+                            $defaultitem->itemmodule,
+                            $defaultitem->iteminstance,
+                            $defaultitem->courseid
+                        );
                         $modinfo = get_fast_modinfo($defaultitem->courseid);
                         $cms = $modinfo->get_cms();
                         if (array_key_exists($cm->id, $cms)) {
@@ -599,7 +657,8 @@ class activity {
                             $statuslink = '';
                             $gradefeedback = '';
                             $gradefeedbacklink = '';
-                            $gradestatobj = grade::get_grade_status_and_feedback($defaultitem->courseid,
+                            $gradestatobj = grade::get_grade_status_and_feedback(
+                                $defaultitem->courseid,
                                 $defaultitem->id,
                                 $whichuser,
                                 $defaultitem->gradetype,
@@ -664,8 +723,10 @@ class activity {
                                 $defaultactivityitem->raw_due_date = 0;
                                 $defaultactivityitem->grade_status = get_string('status_text_restricted', 'block_newgu_spdetails');
                                 $defaultactivityitem->status_link = '';
-                                $defaultactivityitem->status_class = get_string('status_class_restricted',
-                                    'block_newgu_spdetails');
+                                $defaultactivityitem->status_class = get_string(
+                                    'status_class_restricted',
+                                    'block_newgu_spdetails'
+                                );
                                 $defaultactivityitem->status_text = get_string('status_text_restricted', 'block_newgu_spdetails');
                                 $defaultactivityitem->grade = $grade;
                                 $defaultactivityitem->grade_class = $gradeclass;
@@ -686,11 +747,15 @@ class activity {
                     }
                 }
                 // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
-                if (isset($defaultactivityitem)) {
+                if (
+                    isset($defaultactivityitem)
+                ) {
                     $reassessment = \local_gugrades\grades::is_resit_gradeitem($defaultitem->id);
                     $defaultactivityitem->reassessment = $reassessment;
-                    $defaultactivityitem->reassessment_text = $reassessment ? get_string('reassessment',
-                        'block_newgu_spdetails') : '';
+                    $defaultactivityitem->reassessment_text = $reassessment ? get_string(
+                        'reassessment',
+                        'block_newgu_spdetails'
+                    ) : '';
                 }
             }
         }
@@ -703,11 +768,14 @@ class activity {
      *
      * @param object $manualgradeitem
      * @param string $assessmenttype
-     * @param int|null $userid - when this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
+     * @param int|null $userid - passed in from Student MyGrades Staff View - $USER would actually be the teacher here.
      * @return object or null
      */
-    public static function process_manual_grade_item(object $manualgradeitem, string $assessmenttype,
-    int|null $userid = null): object|null {
+    public static function process_manual_grade_item(
+        object $manualgradeitem,
+        string $assessmenttype,
+        int|null $userid = null
+    ): object|null {
 
         global $USER;
         $whichuser = null;
@@ -721,7 +789,9 @@ class activity {
         $now = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d"), date("Y")));
         // This hidden property is the global setting for the item and applies to all students.
         // It can also include a restriction on the item also.
-        if ($manualgradeitem->hidden == 0 || ($manualgradeitem->hidden > 1 && $manualgradeitem->hidden < $now)) {
+        if (
+            $manualgradeitem->hidden == 0 || ($manualgradeitem->hidden > 1 && $manualgradeitem->hidden < $now)
+        ) {
             $isamanualgradeitem = new \stdClass();
             $rawassessmentweight = course::return_weight($manualgradeitem->aggregationcoef);
             $assessmentweight = (($rawassessmentweight > 0) ? $rawassessmentweight . "%" : "-");
@@ -735,7 +805,8 @@ class activity {
             $gradefeedback = '';
             $gradefeedbacklink = '';
 
-            $gradestatobj = grade::get_manual_grade_item_grade_status_and_feedback($manualgradeitem->courseid,
+            $gradestatobj = grade::get_manual_grade_item_grade_status_and_feedback(
+                $manualgradeitem->courseid,
                 $manualgradeitem->id,
                 $whichuser,
                 $manualgradeitem->gradetype,
@@ -847,12 +918,16 @@ class activity {
      * @param object|null $gradecategory
      * @return bool
      */
-    public static function display_activity_item_weights(object $gradecategoryweight,
-        object|null $gradecategory = null): bool {
+    public static function display_activity_item_weights(
+        object $gradecategoryweight,
+        object|null $gradecategory = null
+    ): bool {
         $displayweights = false;
 
-        if (($gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
-            $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)) {
+        if (
+            ($gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
+            $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)
+        ) {
             if ((int) $gradecategoryweight->grade_category_weight > 0) {
                 $displayweights = true;
             }
@@ -871,7 +946,7 @@ class activity {
      * @return array
      */
     public static function sort_course_items($courseitems) {
-        uasort($courseitems, function($a, $b) {
+        uasort($courseitems, function ($a, $b) {
             if ((isset($a->raw_due_date)) && isset(($b->raw_due_date))) {
                 if (is_int($a->raw_due_date) && is_int($b->raw_due_date)) {
                     if ($a->raw_due_date == $b->raw_due_date) {
@@ -911,5 +986,4 @@ class activity {
             return new default_activity($gradeitemid, $courseid, $groupid);
         }
     }
-
 }

@@ -295,7 +295,6 @@ class scorm_activity extends base {
         if ($statusobj->isavailable) {
             $statusobj = self::check_attempts_made($statusobj, $userid);
             return $statusobj;
-
         }
 
         // There is no Overdue state with a SCORM activity, just "available to".
@@ -327,7 +326,6 @@ class scorm_activity extends base {
         $scormdata = [];
 
         if (!$cachedata[$cachekey] || $cachedata[$cachekey][0]['updated'] < $fiveminutes) {
-
             $lastmonth = usertime(mktime(date('H'), date('i'), date('s'), date('m') - 1, date('d'), date('Y')));
 
             $params = [
@@ -338,7 +336,8 @@ class scorm_activity extends base {
             $scormsubmissions = $DB->get_records_sql(
                 'SELECT scormid, value FROM {scorm_attempt} sa INNER JOIN {scorm_scoes_value} ssv ON ssv.attemptid = sa.id
                 WHERE sa.userid = :userid AND ssv.timemodified BETWEEN :lastmonth AND :now',
-                $params);
+                $params
+            );
 
             $submissionsdata = [
                 'updated' => $currenttime,
@@ -358,10 +357,12 @@ class scorm_activity extends base {
 
         $scorm = $this->scorm;
 
-        if (!array_key_exists($scorm->id, $scormsubmissions) ||
+        if (
+            !array_key_exists($scorm->id, $scormsubmissions) ||
             (array_key_exists($scorm->id, $scormsubmissions) &&
             (is_object($scormsubmissions[$scorm->id]) &&
-            property_exists($scormsubmissions[$scorm->id], 'value') && $scormsubmissions[$scorm->id]->value == 'incomplete'))) {
+            property_exists($scormsubmissions[$scorm->id], 'value') && $scormsubmissions[$scorm->id]->value == 'incomplete'))
+        ) {
             // For the assessments due chart, we're only interested in if there's a due date essentially.
             if (($scorm->timeclose != 0) && ($scorm->timeclose > $now)) {
                 $obj = new \stdClass();

@@ -29,14 +29,13 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot .'/blocks/moodleblock.class.php');
+require_once($CFG->dirroot . '/blocks/moodleblock.class.php');
 require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdetails_advanced_testcase.php');
 
 /**
  * Unit tests for gradable activities.
  */
 final class gradable_activities_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that only current course activities are returned.
      *
@@ -79,8 +78,13 @@ final class gradable_activities_test extends \block_newgu_spdetails\external\new
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         // Fake some more due dates.
         $duedate2 = mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 5, date("Y"));
@@ -112,11 +116,21 @@ final class gradable_activities_test extends \block_newgu_spdetails\external\new
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 35,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment2->id,
+            $this->student1->id,
+            $this->teacher->id,
+            35,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
-        $activities = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
-            $mygradessummativesubcategoryid);
+        $activities = $this->api->get_gradable_activities(
+            'current',
+            $this->student1->id,
+            'duedate',
+            'asc',
+            $mygradessummativesubcategoryid
+        );
 
         $this->assertIsArray($activities);
         $this->assertArrayHasKey('coursedata', $activities);
@@ -193,11 +207,21 @@ final class gradable_activities_test extends \block_newgu_spdetails\external\new
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($pastassignment1->id, $this->student1->id, $this->teacher->id, 30,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $pastassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            30,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
-        $activities = $this->api->get_gradable_activities('past', $this->student1->id, 'duedate', 'asc',
-            $pastsummativesubcategoryid);
+        $activities = $this->api->get_gradable_activities(
+            'past',
+            $this->student1->id,
+            'duedate',
+            'asc',
+            $pastsummativesubcategoryid
+        );
 
         $this->assertIsArray($activities);
         $this->assertArrayHasKey('coursedata', $activities);

@@ -35,7 +35,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for admin grades.
  */
 final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test of the general admin grades that can be returned.
      *
@@ -77,8 +76,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid = $this->get_grade_item('', 'assign', $mygradesassignment->id);
         $DB->insert_record('grade_grades', [
@@ -105,8 +109,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $admingrade = $this->get_gugrades_grade_item($mygradesgradeitemid, '');
         $expected = get_string('admingcw', 'local_gugrades');
 
-        $this->assertEquals($expected, $this->gradeapi->is_admin_or_generic_grade($admingrade->admingrade,
-            $admingrade->displaygrade));
+        $this->assertEquals(
+            $expected,
+            $this->gradeapi->is_admin_or_generic_grade(
+                $admingrade->admingrade,
+                $admingrade->displaygrade
+            )
+        );
     }
 
     /**
@@ -150,8 +159,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid = $this->get_grade_item('', 'assign', $mygradesassignment->id);
         $DB->insert_record('grade_grades', [
@@ -178,8 +192,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $admingrade = $this->get_gugrades_grade_item($mygradesgradeitemid, '');
         $expected = get_string('adminmv', 'local_gugrades');
 
-        $this->assertEquals($expected, $this->gradeapi->is_admin_or_generic_grade($admingrade->admingrade,
-            $admingrade->displaygrade));
+        $this->assertEquals(
+            $expected,
+            $this->gradeapi->is_admin_or_generic_grade(
+                $admingrade->admingrade,
+                $admingrade->displaygrade
+            )
+        );
 
         // Update the record to MV0.
         $params = [
@@ -191,8 +210,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
 
         $admingrade = $this->get_gugrades_grade_item($mygradesgradeitemid, '');
         $expected = get_string('adminmv0', 'local_gugrades');
-        $this->assertEquals($expected, $this->gradeapi->is_admin_or_generic_grade($admingrade->admingrade,
-            $admingrade->displaygrade));
+        $this->assertEquals(
+            $expected,
+            $this->gradeapi->is_admin_or_generic_grade(
+                $admingrade->admingrade,
+                $admingrade->displaygrade
+            )
+        );
     }
 
     /**
@@ -236,8 +260,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid = $this->get_grade_item('', 'assign', $mygradesassignment->id);
         $DB->insert_record('grade_grades', [
@@ -264,8 +293,13 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
         $admingrade = $this->get_gugrades_grade_item($mygradesgradeitemid, '');
         $expected = get_string('adminns', 'local_gugrades');
 
-        $this->assertEquals($expected, $this->gradeapi->is_admin_or_generic_grade($admingrade->admingrade,
-            $admingrade->displaygrade));
+        $this->assertEquals(
+            $expected,
+            $this->gradeapi->is_admin_or_generic_grade(
+                $admingrade->admingrade,
+                $admingrade->displaygrade
+            )
+        );
 
         // Update the record to MV0.
         $params = [
@@ -277,7 +311,12 @@ final class admin_grade_test extends \block_newgu_spdetails\external\newgu_spdet
 
         $admingrade = $this->get_gugrades_grade_item($mygradesgradeitemid, '');
         $expected = get_string('adminns', 'local_gugrades');
-        $this->assertEquals($expected, $this->gradeapi->is_admin_or_generic_grade($admingrade->admingrade,
-            $admingrade->displaygrade));
+        $this->assertEquals(
+            $expected,
+            $this->gradeapi->is_admin_or_generic_grade(
+                $admingrade->admingrade,
+                $admingrade->displaygrade
+            )
+        );
     }
 }

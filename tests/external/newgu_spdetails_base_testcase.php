@@ -41,7 +41,6 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * categories/sub categories/activities etc.
  */
 class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
-
     /**
      * @var object $api
      */
@@ -213,8 +212,13 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
      * @param float $gradeval
      * @param string $status
      */
-    protected function add_assignment_grade(int $assignid, int $studentid, int $graderid, float $gradeval,
-    string $status = ASSIGN_SUBMISSION_STATUS_NEW) {
+    protected function add_assignment_grade(
+        int $assignid,
+        int $studentid,
+        int $graderid,
+        float $gradeval,
+        string $status = ASSIGN_SUBMISSION_STATUS_NEW
+    ) {
         global $DB;
 
         $submission = new \stdClass();
@@ -261,7 +265,7 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
     protected function custom_course_field(object $mygradescourse, object $context) {
         global $DB;
 
-        $category = new \stdClass;
+        $category = new \stdClass();
         $category->name = 'Student MyGrades';
         $category->descriptionformat = 0;
         $category->sortorder = 0;
@@ -273,7 +277,7 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
         $category->timemodified = time();
         $categoryid = $DB->insert_record('customfield_category', $category);
 
-        $field = new \stdClass;
+        $field = new \stdClass();
         $field->shortname = 'studentmygrades';
         $field->name = 'Enable Student MyGrades';
         $field->type = 'checkbox';
@@ -294,7 +298,7 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
 
         // Find the custom field.
         $field = $DB->get_record('customfield_field', ['shortname' => 'studentmygrades'], '*', MUST_EXIST);
-        $data = new \stdClass;
+        $data = new \stdClass();
         $data->fieldid = $field->id;
         $data->instanceid = $mygradescourse->id;
         $data->intvalue = 1;

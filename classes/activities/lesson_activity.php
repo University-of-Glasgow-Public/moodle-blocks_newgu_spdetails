@@ -178,7 +178,8 @@ class lesson_activity extends base {
         $groupoverrides = $DB->get_records_select(
             'lesson_overrides',
             $groupselect,
-            $groupparams, '',
+            $groupparams,
+            '',
             'groupid, available, deadline'
         );
         if (!empty($groupoverrides)) {
@@ -293,8 +294,12 @@ class lesson_activity extends base {
             $statusobj->status_link = '';
 
             // Now query the specialist table for this activity.
-            if ($lessongrades = $DB->get_record('lesson_grades', ['lessonid' => $this->lesson->id, 'userid' => $userid,
-            'completed' => 1, ])) {
+            if (
+                $lessongrades = $DB->get_record(
+                    'lesson_grades',
+                    ['lessonid' => $this->lesson->id, 'userid' => $userid, 'completed' => 1]
+                )
+            ) {
                 $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');
@@ -304,7 +309,6 @@ class lesson_activity extends base {
             }
 
             return $statusobj;
-
         }
 
         return $statusobj;
@@ -358,7 +362,6 @@ class lesson_activity extends base {
         }
 
         return $statusobj;
-
     }
 
     /**
@@ -425,10 +428,12 @@ class lesson_activity extends base {
         $statusobj = self::has_override($statusobj, $lesson->id, $USER->id);
 
         // Much like activity type Assignment, we end up with a 'submission' that we now need to check if it's 'completed'.
-        if (!array_key_exists($lesson->id, $timedsubmissions) ||
-        (array_key_exists($lesson->id, $timedsubmissions) &&
-        (is_object($timedsubmissions[$lesson->id]) && property_exists($timedsubmissions[$lesson->id], 'completed') &&
-        $timedsubmissions[$lesson->id]->completed == 0))) {
+        if (
+            !array_key_exists($lesson->id, $timedsubmissions) ||
+            (array_key_exists($lesson->id, $timedsubmissions) &&
+            (is_object($timedsubmissions[$lesson->id]) && property_exists($timedsubmissions[$lesson->id], 'completed') &&
+            $timedsubmissions[$lesson->id]->completed == 0))
+        ) {
             // For the assessments due chart, we're only interested in if there's a due date essentially.
             if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                 $obj = new \stdClass();

@@ -145,9 +145,12 @@ if ($coursestype) {
                         $firstlevelid = 0;
                         $firstlevelid = $firstlevel['id'];
                         if (
-                            $mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user($course->id, $firstlevelid,
-                            $USER->id)
-                            ) {
+                            $mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user(
+                                $course->id,
+                                $firstlevelid,
+                                $USER->id
+                            )
+                        ) {
                             $tmpitems = $mygradesdata->fields;
                             foreach ($tmpitems as $tmpitem) {
                                 if ($tmpitem['iscategory'] == true) {
@@ -389,8 +392,23 @@ if ($spdetailstype == "pdf" && $spdetailspdf != "" && $strcoursestype != "") {
     $doc->setFont('helvetica', '', 9);
     $doc->setXY(245, 20);
     $doc->Cell(25, 10, $strcoursestype . " Report Date : " . date("d-m-Y"), 0, $ln = 0, 'C', 0, '', 0, false, 'B', 'B');
-    $doc->writeHTMLCell(80, 175, 110, 100, get_string('report_subheading_text', 'block_newgu_spdetails', $strcoursestype), 0, 1, 0,
-        true, 'C', true);
+    $doc->writeHTMLCell(
+        80,
+        175,
+        110,
+        100,
+        get_string(
+            'report_subheading_text',
+            'block_newgu_spdetails',
+            $strcoursestype
+        ),
+        0,
+        1,
+        0,
+        true,
+        'C',
+        true
+    );
     $doc->setMargins(5, 20, 5);
     $doc->setFont('helvetica', '', 10);
     $doc->setXY(5, 23);

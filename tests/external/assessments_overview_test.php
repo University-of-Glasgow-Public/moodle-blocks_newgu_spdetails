@@ -41,7 +41,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for retrieving the assessments overview chart numbers.
  */
 final class assessments_overview_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that the assessments overview returns the specific key names.
      *
@@ -106,8 +105,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesassignment2 = $this->getDataGenerator()->create_module('assign', [
             'name' => 'October lab 2A',
@@ -135,8 +139,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         ];
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
-        $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 70,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment2->id,
+            $this->student1->id,
+            $this->teacher->id,
+            70,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         // Check that our stats values are returned as expected.
         $stats = get_assessmentsoverview::execute();
@@ -191,8 +200,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         $mygradesassignment2 = $this->getDataGenerator()->create_module('assign', [
             'name' => 'October lab 2A',
@@ -220,8 +234,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         ];
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
-        $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 70,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment2->id,
+            $this->student1->id,
+            $this->teacher->id,
+            70,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         $mygradesassignment3 = $this->getDataGenerator()->create_module('assign', [
             'name' => 'October lab 2A',
@@ -249,8 +268,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         ];
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
-        $this->add_assignment_grade($mygradesassignment3->id, $this->student1->id, $this->teacher->id, 70,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment3->id,
+            $this->student1->id,
+            $this->teacher->id,
+            70,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         // Check that our stats values are returned as expected.
         $stats = get_assessmentsoverview::execute();
@@ -303,8 +327,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         // Check that our stats values are returned as expected.
         $stats = get_assessmentsoverview::execute();
@@ -410,8 +439,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid1 = $this->get_grade_item('', 'assign', $mygradesassignment1->id);
         $DB->insert_record('grade_grades', [
@@ -472,8 +506,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid1 = $this->get_grade_item('', 'assign', $mygradesassignment1->id);
         $DB->insert_record('grade_grades', [
@@ -548,8 +587,13 @@ final class assessments_overview_test extends \block_newgu_spdetails\external\ne
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entry.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $mygradesgradeitemid1 = $this->get_grade_item('', 'assign', $mygradesassignment1->id);
         $DB->insert_record('grade_grades', [

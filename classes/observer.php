@@ -36,7 +36,6 @@ namespace block_newgu_spdetails;
  * flush the cache only at certain points.
  */
 class observer {
-
     /** @var string Our key in the cache. */
     const CACHE_KEY = 'studentid_summary:';
 

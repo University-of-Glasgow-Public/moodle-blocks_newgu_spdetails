@@ -193,8 +193,13 @@ class assign_activity extends base {
         // Check if any group overrides have been created for this assignment.
         $groupselect = 'assignid = :assignid AND groupid IS NOT NULL AND userid IS NULL';
         $groupparams = ['assignid' => $assignid];
-        $groupoverrides = $DB->get_records_select('assign_overrides', $groupselect, $groupparams, '',
-        'groupid, duedate, cutoffdate');
+        $groupoverrides = $DB->get_records_select(
+            'assign_overrides',
+            $groupselect,
+            $groupparams,
+            '',
+            'groupid, duedate, cutoffdate'
+        );
 
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
@@ -374,8 +379,10 @@ class assign_activity extends base {
             }
         }
 
-        if (!$assigninstance->teamsubmission || (isset($allteammemberssubmit) &&
-            $allteammemberssubmit == true)) {
+        if (
+            !$assigninstance->teamsubmission || (isset($allteammemberssubmit) &&
+            $allteammemberssubmit == true)
+        ) {
             $assignsubmission = $DB->get_record('assign_submission', [
                 'assignment' => $assigninstance->id,
                 'userid' => $userid,
@@ -392,8 +399,10 @@ class assign_activity extends base {
             // and an assignment entry is created regardless -i.e. "true" is passed instead of an arg.
             // This will always result in a mdl_assign_submission entry with a status of "new" created.
             // We also have to cater for status 'draft' here as essay 'submissions' begin life in that state.
-            if ($statusobj->grade_status == get_string('status_new', 'block_newgu_spdetails') ||
-                $statusobj->grade_status == get_string('status_draft', 'block_newgu_spdetails')) {
+            if (
+                $statusobj->grade_status == get_string('status_new', 'block_newgu_spdetails') ||
+                $statusobj->grade_status == get_string('status_draft', 'block_newgu_spdetails')
+            ) {
                 $this->set_displaystate($statusobj);
             }
 
@@ -500,8 +509,13 @@ class assign_activity extends base {
      * @param array $assignmentdata
      * @return array
      */
-    private function submit_as_team(object $assigninstance, object $statusobj, int $userid, int $now,
-        array $assignmentdata): array {
+    private function submit_as_team(
+        object $assigninstance,
+        object $statusobj,
+        int $userid,
+        int $now,
+        array $assignmentdata
+    ): array {
         // Now determine if we process this activity for this student, as a group or as an individual submission.
         $cansubmitassessment = true;
         $anyteammembersubmits = false;
@@ -597,7 +611,7 @@ class assign_activity extends base {
         $gtd = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
 
         if ($statusobj->tmpworkflowstate != '') {
-            switch($statusobj->tmpworkflowstate) {
+            switch ($statusobj->tmpworkflowstate) {
                 case "notmarked":
                     $gtd = get_string('notmarked', 'block_newgu_spdetails');
                     break;
@@ -765,7 +779,6 @@ class assign_activity extends base {
         }
 
         if ($submissionrequired === true) {
-
             $statusobj = self::get_assignment_availability($statusobj, $now);
 
             if ($statusobj->hasfuturestartdate) {
@@ -851,19 +864,27 @@ class assign_activity extends base {
 
         if ($submissionrequired === true) {
             if ($assigninstance->teamsubmission) {
-                [$allteammemberssubmit, $assignmentdata] = self::submit_as_team($assigninstance, $statusobj, $USER->id,
-                    $now, $assignmentdata);
+                [$allteammemberssubmit, $assignmentdata] = self::submit_as_team(
+                    $assigninstance,
+                    $statusobj,
+                    $USER->id,
+                    $now,
+                    $assignmentdata
+                );
             }
         }
 
-        if (!$assigninstance->teamsubmission ||
-            (isset($allteammemberssubmit) && $allteammemberssubmit == true)) {
+        if (
+            !$assigninstance->teamsubmission || (isset($allteammemberssubmit) && $allteammemberssubmit == true)
+        ) {
             // Looks like when visiting an activity, you end up with a submission entry by default.
-            if (!array_key_exists($assigninstance->id, $assignsubmissions) ||
+            if (
+                !array_key_exists($assigninstance->id, $assignsubmissions) ||
                 (array_key_exists($assigninstance->id, $assignsubmissions) &&
                 (is_object($assignsubmissions[$assigninstance->id]) &&
                 property_exists($assignsubmissions[$assigninstance->id], 'status') &&
-                $assignsubmissions[$assigninstance->id]->status == 'new'))) {
+                $assignsubmissions[$assigninstance->id]->status == 'new'))
+            ) {
                 // For the assessments due chart, we're only interested in if there's a due date essentially.
                 if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                     $obj = new \stdClass();

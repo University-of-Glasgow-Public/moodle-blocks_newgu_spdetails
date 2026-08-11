@@ -190,7 +190,6 @@ class h5pactivity_activity extends base {
                 $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
                 $statusobj->status_link = '';
             }
-
         } else {
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');

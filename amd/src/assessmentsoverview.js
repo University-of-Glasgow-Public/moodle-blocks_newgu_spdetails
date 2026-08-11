@@ -140,123 +140,29 @@ async function fetchAssessmentsOverview() {
         }
 
         // Set specific colours/fonts/weights etc for the Highcharts config object.
-        let tmpFontColour = '#000';
-        let backgroundColour = '#FFFFFF';
-        let tooltipBackgroundColour = '#FFFFFF';
-        let tooltipFontColour = '';
-        let labelFontSize = '0.7em';
-        let labelDistance = -28;
-        // Check for the contrast setting
-        if (document.querySelector('.hillhead40-night')) {
-            tmpFontColour = '#95B7E6';
-            backgroundColour = '#274163';
-            tooltipBackgroundColour = '#132030';
-            tooltipFontColour = '#95B7E6';
-        }
-        if (document.querySelector('.hillhead40-contrast-wb')) {
-            tmpFontColour = '#eee';
-            backgroundColour = '#000000';
-            tooltipBackgroundColour = '#000000';
-            tooltipFontColour = '#FFFFFF';
-        }
-        if (document.querySelector('.hillhead40-contrast-yb')) {
-            tmpFontColour = '#ee6';
-            backgroundColour = '#000000';
-            tooltipBackgroundColour = '#000000';
-            tooltipFontColour = '#ee6';
-        }
-        if (document.querySelector('.hillhead40-contrast-by')) {
-            backgroundColour = '#ee6';
-            tooltipBackgroundColour = '#ee6';
-        }
-        if (document.querySelector('.hillhead40-contrast-wg')) {
-            tmpFontColour = '#eee';
-            backgroundColour = '#666';
-            tooltipBackgroundColour = '#666';
-            tooltipFontColour = '#eee';
-        }
-        if (document.querySelector('.hillhead40-contrast-br')) {
-            backgroundColour = '#EEB9B9';
-            tooltipBackgroundColour = '#EEB9B9';
-        }
-        if (document.querySelector('.hillhead40-contrast-bb')) {
-            backgroundColour = '#B9D9EE';
-            tooltipBackgroundColour = '#B9D9EE';
-        }
-        if (document.querySelector('.hillhead40-contrast-bw')) {
-            backgroundColour = '#F6F6F6';
-            tooltipBackgroundColour = '#F6F6F6';
-        }
+        let [
+            tmpFontColour,
+            backgroundColour,
+            tooltipBackgroundColour,
+            tooltipFontColour
+        ] = setFontColours();
+
         // Check for the font setting
-        let tmpFontFamily = "'Hillhead', 'Ubuntu', 'Trebuchet MS', 'Arial', sans-serif";
-        let tmpFontSize = 20;
-        if (document.querySelector('.hillhead40-font-modern')) {
-            tmpFontFamily = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
-        }
-        if (document.querySelector('.hillhead40-font-classic')) {
-            tmpFontFamily = "'Palatino', 'Times New Roman', serif";
-        }
-        if (document.querySelector('.hillhead40-font-comic')) {
-            tmpFontFamily = "'Hillhead Comic', 'Chalkboard', 'Comic Sans', 'Comic Sans MS', sans-serif";
-        }
-        if (document.querySelector('.hillhead40-font-mono')) {
-            tmpFontFamily = "'Hillhead Mono', 'Menlo', 'Courier New', monospace";
-        }
-        if (document.querySelector('.hillhead40-font-dyslexic')) {
-            tmpFontFamily = "'OpenDyslexic', 'Helvetica', 'Arial', sans-serif";
-        }
+        let tmpFontFamily = setFontFamily();
+
         // Check for the size setting. We also further control the chart dimensions here.
-        let tmpWidth = 400;
-        let tmpHeight = 300;
-        let tmpCardRem = '33rem';
-        let tmpMarginRight = 200;
-        let tmpX = 0;
-        if (document.querySelector('.hillhead40-size-120')) {
-            tmpFontSize = 'large';
-            labelFontSize = 'large';
-            labelDistance = -33;
-            tmpWidth = 500;
-            tmpHeight = 400;
-            tmpCardRem = '70rem';
-            tmpX = -250;
-        }
-        if (document.querySelector('.hillhead40-size-140')) {
-            tmpFontSize = 'x-large';
-            labelFontSize = 'x-large';
-            labelDistance = -50;
-            tmpWidth = 600;
-            tmpHeight = 450;
-            tmpCardRem = '70rem';
-            tmpX = -150;
-        }
-        if (document.querySelector('.hillhead40-size-160')) {
-            tmpFontSize = 'xx-large';
-            labelFontSize = 'xx-large';
-            labelDistance = -50;
-            tmpWidth = 700;
-            tmpHeight = 500;
-            tmpCardRem = '70rem';
-            tmpMarginRight = 100;
-        }
-        if (document.querySelector('.hillhead40-size-180')) {
-            tmpFontSize = 'xxx-large';
-            labelFontSize = 'xxx-large';
-            labelDistance = -75;
-            tmpWidth = 800;
-            tmpHeight = 600;
-            tmpCardRem = '70rem';
-            tmpMarginRight = 300;
-        }
-        // Check for the bold setting
-        let tmpFontWeight = 'normal';
-        if (document.querySelector('.hillhead40-bold')) {
-            tmpFontWeight = 'bolder';
-        }
-        // Check for the spacing setting
-        let tmpLineHeight = '';
-        if (document.querySelector('.hillhead40-spacing')) {
-            tmpLineHeight = '2rem';
-        }
+        let [
+            tmpFontSize,
+            labelFontSize,
+            labelDistance,
+            tmpWidth,
+            tmpHeight,
+            tmpCardRem,
+            tmpMarginRight,
+            tmpX,
+            tmpFontWeight,
+            tmpLineHeight
+        ] = setFontSize();
 
         // Set the width/height of the card (container) and chart.
         let tempCard = document.querySelector(Selectors.ASSESSMENTSOVERVIEW_CARD);
@@ -471,6 +377,160 @@ const sortingEventHandler = (rows) => {
             'assessment_data_table'));
         });
     }
+};
+
+/**
+ * Set the various font colours for when the Accessibility tool is in use.
+ */
+const setFontColours = () => {
+    let tmpFontColour = '#000';
+    let backgroundColour = '#FFFFFF';
+    let tooltipBackgroundColour = '#FFFFFF';
+    let tooltipFontColour = '';
+    // Check for the contrast setting
+    if (document.querySelector('.hillhead40-night')) {
+        tmpFontColour = '#95B7E6';
+        backgroundColour = '#274163';
+        tooltipBackgroundColour = '#132030';
+        tooltipFontColour = '#95B7E6';
+    }
+    if (document.querySelector('.hillhead40-contrast-wb')) {
+        tmpFontColour = '#eee';
+        backgroundColour = '#000000';
+        tooltipBackgroundColour = '#000000';
+        tooltipFontColour = '#FFFFFF';
+    }
+    if (document.querySelector('.hillhead40-contrast-yb')) {
+        tmpFontColour = '#ee6';
+        backgroundColour = '#000000';
+        tooltipBackgroundColour = '#000000';
+        tooltipFontColour = '#ee6';
+    }
+    if (document.querySelector('.hillhead40-contrast-by')) {
+        backgroundColour = '#ee6';
+        tooltipBackgroundColour = '#ee6';
+    }
+    if (document.querySelector('.hillhead40-contrast-wg')) {
+        tmpFontColour = '#eee';
+        backgroundColour = '#666';
+        tooltipBackgroundColour = '#666';
+        tooltipFontColour = '#eee';
+    }
+    if (document.querySelector('.hillhead40-contrast-br')) {
+        backgroundColour = '#EEB9B9';
+        tooltipBackgroundColour = '#EEB9B9';
+    }
+    if (document.querySelector('.hillhead40-contrast-bb')) {
+        backgroundColour = '#B9D9EE';
+        tooltipBackgroundColour = '#B9D9EE';
+    }
+    if (document.querySelector('.hillhead40-contrast-bw')) {
+        backgroundColour = '#F6F6F6';
+        tooltipBackgroundColour = '#F6F6F6';
+    }
+
+    return [
+        tmpFontColour,
+        backgroundColour,
+        tooltipBackgroundColour,
+        tooltipFontColour
+    ];
+};
+
+/**
+ * Set the font family for if and when the Accessibility tool is in use.
+ */
+const setFontFamily = () => {
+    let tmpFontFamily = "'Hillhead', 'Ubuntu', 'Trebuchet MS', 'Arial', sans-serif";
+    if (document.querySelector('.hillhead40-font-modern')) {
+        tmpFontFamily = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+    }
+    if (document.querySelector('.hillhead40-font-classic')) {
+        tmpFontFamily = "'Palatino', 'Times New Roman', serif";
+    }
+    if (document.querySelector('.hillhead40-font-comic')) {
+        tmpFontFamily = "'Hillhead Comic', 'Chalkboard', 'Comic Sans', 'Comic Sans MS', sans-serif";
+    }
+    if (document.querySelector('.hillhead40-font-mono')) {
+        tmpFontFamily = "'Hillhead Mono', 'Menlo', 'Courier New', monospace";
+    }
+    if (document.querySelector('.hillhead40-font-dyslexic')) {
+        tmpFontFamily = "'OpenDyslexic', 'Helvetica', 'Arial', sans-serif";
+    }
+    return tmpFontFamily;
+};
+
+/**
+ * Set the various font sizes for when the Accessibility tool is in use.
+ */
+const setFontSize = () => {
+    let tmpFontSize = 20;
+    let labelFontSize = '0.7em';
+    let labelDistance = -28;
+    let tmpWidth = 400;
+    let tmpHeight = 300;
+    let tmpCardRem = '33rem';
+    let tmpMarginRight = 200;
+    let tmpX = 0;
+    let tmpFontWeight = 'normal';
+    let tmpLineHeight = '';
+    if (document.querySelector('.hillhead40-size-120')) {
+        tmpFontSize = 'large';
+        labelFontSize = 'large';
+        labelDistance = -33;
+        tmpWidth = 500;
+        tmpHeight = 400;
+        tmpCardRem = '70rem';
+        tmpX = -250;
+    }
+    if (document.querySelector('.hillhead40-size-140')) {
+        tmpFontSize = 'x-large';
+        labelFontSize = 'x-large';
+        labelDistance = -50;
+        tmpWidth = 600;
+        tmpHeight = 450;
+        tmpCardRem = '70rem';
+        tmpX = -150;
+    }
+    if (document.querySelector('.hillhead40-size-160')) {
+        tmpFontSize = 'xx-large';
+        labelFontSize = 'xx-large';
+        labelDistance = -50;
+        tmpWidth = 700;
+        tmpHeight = 500;
+        tmpCardRem = '70rem';
+        tmpMarginRight = 100;
+    }
+    if (document.querySelector('.hillhead40-size-180')) {
+        tmpFontSize = 'xxx-large';
+        labelFontSize = 'xxx-large';
+        labelDistance = -75;
+        tmpWidth = 800;
+        tmpHeight = 600;
+        tmpCardRem = '70rem';
+        tmpMarginRight = 300;
+    }
+    // Check for the bold setting
+    if (document.querySelector('.hillhead40-bold')) {
+        tmpFontWeight = 'bolder';
+    }
+    // Check for the spacing setting
+    if (document.querySelector('.hillhead40-spacing')) {
+        tmpLineHeight = '2rem';
+    }
+
+    return [
+        tmpFontSize,
+        labelFontSize,
+        labelDistance,
+        tmpWidth,
+        tmpHeight,
+        tmpCardRem,
+        tmpMarginRight,
+        tmpX,
+        tmpFontWeight,
+        tmpLineHeight
+    ];
 };
 
 /**

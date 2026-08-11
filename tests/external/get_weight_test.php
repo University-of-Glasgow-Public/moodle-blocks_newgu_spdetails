@@ -35,7 +35,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Test get_weight function.
  */
 final class get_weight_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that a correct weight is returned for a given coefficient.
      *

@@ -28,14 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot .'/blocks/moodleblock.class.php');
-require_once($CFG->dirroot .'/blocks/newgu_spdetails/block_newgu_spdetails.php');
+require_once($CFG->dirroot . '/blocks/moodleblock.class.php');
+require_once($CFG->dirroot . '/blocks/newgu_spdetails/block_newgu_spdetails.php');
 
 /**
  * Unit tests for block_newgu_spdetails
  */
 final class block_newgu_spdetails_test extends \advanced_testcase {
-
     /**
      * @var object $spdetails
      */

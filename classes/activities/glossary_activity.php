@@ -202,7 +202,6 @@ class glossary_activity extends base {
                 ],
             ];
             $cache->set_many($cachedata);
-
         } else {
             $cachedata = $cache->get_many([$cachekey]);
             $glossarysubmissions = $cachedata[$cachekey][0]['glossarysubmissions'];

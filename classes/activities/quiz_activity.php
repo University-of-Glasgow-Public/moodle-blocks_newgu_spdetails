@@ -171,7 +171,7 @@ class quiz_activity extends base {
                 // Work out if we can display the grade, taking account what data is available in each attempt.
                 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
                 $attempts[] = $finishedattempt;
-                list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quizinstance, $attempts);
+                [$someoptions, $alloptions] = quiz_get_combined_reviewoptions($quizinstance, $attempts);
                 $activitygrade->gradecolumn = $someoptions->marks >= \question_display_options::MARK_AND_MAX &&
                 quiz_has_grades($quizinstance);
                 $activitygrade->feedbackcolumn = quiz_has_feedback($quizinstance) && $alloptions->overallfeedback;
@@ -179,9 +179,12 @@ class quiz_activity extends base {
                 // If the user is able to view the grade...
                 if ($activitygrade->gradecolumn) {
                     // We've established earlier if the grade was overridden, no need to repeat that here.
-                    if ($grade = $DB->get_record('grade_grades',
-                    ['itemid' => $this->gradeitemid, 'hidden' => 0, 'userid' => $userid])) {
-
+                    if (
+                        $grade = $DB->get_record(
+                            'grade_grades',
+                            ['itemid' => $this->gradeitemid, 'hidden' => 0, 'userid' => $userid]
+                        )
+                    ) {
                         // We want access to other properties, hence the returns...
                         if ($grade->finalgrade != null && $grade->finalgrade >= 0) {
                             $activitygrade->finalgrade = $grade->finalgrade;
@@ -262,8 +265,13 @@ class quiz_activity extends base {
         // We first check if any group overrides have been created for this quiz.
         $groupselect = 'quiz = :quiz AND groupid IS NOT NULL AND userid IS NULL';
         $groupparams = ['quiz' => $quizid];
-        $groupoverrides = $DB->get_records_select('quiz_overrides', $groupselect, $groupparams, '',
-        'groupid, timeopen, timeclose');
+        $groupoverrides = $DB->get_records_select(
+            'quiz_overrides',
+            $groupselect,
+            $groupparams,
+            '',
+            'groupid, timeopen, timeclose'
+        );
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this quiz exists - is our user a member of the group?
@@ -396,7 +404,6 @@ class quiz_activity extends base {
         }
 
         if ($statusobj->isavailable) {
-
             // Begin by saying this quiz can potentially be submitted.
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
@@ -460,7 +467,6 @@ class quiz_activity extends base {
                 }
             }
             if ($finishedattempt->state == 'finished') {
-
                 $finishedattempt = null;
                 switch ($quizinstance->grademethod) {
                     case QUIZ_ATTEMPTFIRST:
@@ -486,7 +492,7 @@ class quiz_activity extends base {
                 // We need to check this here also.
                 // Work out if we can display the grade, taking account what data is available in each attempt.
                 $attempts[] = $finishedattempt;
-                list($someoptions, $alloptions) = quiz_get_combined_reviewoptions($quizinstance, $attempts);
+                [$someoptions, $alloptions] = quiz_get_combined_reviewoptions($quizinstance, $attempts);
                 $statusobj->gradecolumn = $someoptions->marks >= \question_display_options::MARK_AND_MAX &&
                 quiz_has_grades($quizinstance);
                 $statusobj->feedbackcolumn = quiz_has_feedback($quizinstance) && $alloptions->overallfeedback;
@@ -497,8 +503,12 @@ class quiz_activity extends base {
 
                 // There ^should^ be just one record. Using IGNORE_MISSING now as it's possible
                 // that a record may not exist - if the quiz has been set up not to autosubmit for example.
-                $quizgrade = $DB->get_record('quiz_grades', ['quiz' => $quizinstance->id, 'userid' => $userid], '*',
-                IGNORE_MISSING);
+                $quizgrade = $DB->get_record(
+                    'quiz_grades',
+                    ['quiz' => $quizinstance->id, 'userid' => $userid],
+                    '*',
+                    IGNORE_MISSING
+                );
                 if ($quizgrade) {
                     $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
                     $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
@@ -597,8 +607,13 @@ class quiz_activity extends base {
         $groupselect = 'quiz = :quiz AND groupid IS NOT NULL AND userid IS NULL AND timeopen BETWEEN :lastmonth AND :now AND
         timeclose > :tnow';
         $groupparams = ['quiz' => $quizobj->id, 'lastmonth' => $lastmonth, 'now' => $now, 'tnow' => $now];
-        $groupoverrides = $DB->get_records_select('quiz_overrides', $groupselect, $groupparams, '',
-        'groupid, timeopen, timeclose');
+        $groupoverrides = $DB->get_records_select(
+            'quiz_overrides',
+            $groupselect,
+            $groupparams,
+            '',
+            'groupid, timeopen, timeclose'
+        );
         if (!empty($groupoverrides)) {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this quiz exists - is our user a member of the group?
@@ -671,8 +686,10 @@ class quiz_activity extends base {
         }
 
         // Now deal with if an attempt has been made - what state is that attempt in.
-        if ((array_key_exists($quizobj->id, $quizattempts) && (is_object($quizattempts[$quizobj->id]) &&
-        property_exists($quizattempts[$quizobj->id], 'state')))) {
+        if (
+            (array_key_exists($quizobj->id, $quizattempts) &&
+            (is_object($quizattempts[$quizobj->id]) && property_exists($quizattempts[$quizobj->id], 'state')))
+        ) {
             $obj = new \stdClass();
             $obj->name = $quizobj->name;
 
@@ -687,14 +704,18 @@ class quiz_activity extends base {
                 // In lieu of anything formal to say how this should function, I'm going with a quiz must
                 // have an opening and closing date to be considered for something that could be included
                 // in the "Assements due in the next..." charts.
-                if (($quizopens != 0 && $quizopens < $now) && ($quizcloses != 0 && $quizcloses + $graceperiod > $now)) {
+                if (
+                    ($quizopens != 0 && $quizopens < $now) && ($quizcloses != 0 && $quizcloses + $graceperiod > $now)
+                ) {
                     $obj->duedate = $quizcloses + $graceperiod;
                     // Lets check this only for quizzes that have begun or are in an overdue state.
-                    if (is_object($quizattempts[$quizobj->id]) &&
+                    if (
+                        is_object($quizattempts[$quizobj->id]) &&
                         ($quizattempts[$quizobj->id]->state == 'inprogress' ||
                         $quizattempts[$quizobj->id]->state == 'overdue') &&
                         property_exists($quizattempts[$quizobj->id], 'timecheckstate') &&
-                        $quizattempts[$quizobj->id]->timecheckstate != 0) {
+                        $quizattempts[$quizobj->id]->timecheckstate != 0
+                    ) {
                         // A quiz can also have a time limit set.
                         if ($quizattempts[$quizobj->id]->timecheckstate > $now) {
                             $obj->duedate = $quizattempts[$quizobj->id]->timecheckstate;

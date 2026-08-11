@@ -29,14 +29,13 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once($CFG->dirroot .'/blocks/moodleblock.class.php');
+require_once($CFG->dirroot . '/blocks/moodleblock.class.php');
 require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdetails_advanced_testcase.php');
 
 /**
  * Unit tests for retrieving grade, status and feedback.
  */
 final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * For a MyGrades course - we have the situation where if grades
      * haven't been imported/released, then it defaults to retrieving
@@ -85,8 +84,13 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment1->id, $this->student1->id, $this->teacher->id, 40,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            40,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
         // Fake some more due dates.
         $duedate2 = mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 5, date("Y"));
@@ -118,18 +122,30 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
         $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($mygradesassignment2->id, $this->student1->id, $this->teacher->id, 35,
-        ASSIGN_SUBMISSION_STATUS_NEW);
+        $this->add_assignment_grade(
+            $mygradesassignment2->id,
+            $this->student1->id,
+            $this->teacher->id,
+            35,
+            ASSIGN_SUBMISSION_STATUS_NEW
+        );
 
-        $mygradesgradeditems = $this->api->get_gradable_activities('current', $userid, 'duedate', 'asc',
-        $mygradessummativesubcategoryid);
+        $mygradesgradeditems = $this->api->get_gradable_activities(
+            'current',
+            $userid,
+            'duedate',
+            'asc',
+            $mygradessummativesubcategoryid
+        );
 
         $this->assertIsArray($mygradesgradeditems);
         $this->assertCount(2, $mygradesgradeditems['coursedata']['courseitems']);
 
         // Check for the feedback.
-        $this->assertStringContainsString(get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'),
-        $mygradesgradeditems['coursedata']['courseitems'][0]->grade_feedback);
+        $this->assertStringContainsString(
+            get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'),
+            $mygradesgradeditems['coursedata']['courseitems'][0]->grade_feedback
+        );
 
         // Check for the final grade.
         $this->assertObjectHasProperty('grade_class', $mygradesgradeditems['coursedata']['courseitems'][1]);

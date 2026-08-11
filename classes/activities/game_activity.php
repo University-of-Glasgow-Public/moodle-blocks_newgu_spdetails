@@ -105,7 +105,6 @@ class game_activity extends base {
                 $activitygrade->rawgrade = $grade->rawgrade;
                 return $activitygrade;
             }
-
         }
 
         // Just pull the grade from the game related grade tables.

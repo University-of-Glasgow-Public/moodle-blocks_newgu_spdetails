@@ -30,7 +30,6 @@ namespace block_newgu_spdetails\activities;
  *
  */
 abstract class base {
-
     /**
      * @var int $gradeitemid
      */
@@ -207,12 +206,12 @@ abstract class base {
         $feedbackobj->grade_feedback = '';
         $feedbackobj->grade_feedback_link = '';
 
-        switch($gradestatusobj->grade_status) {
+        switch ($gradestatusobj->grade_status) {
             case get_string('status_submit', 'block_newgu_spdetails'):
             case get_string('status_notopen', 'block_newgu_spdetails'):
             case get_string('status_submissionnotopen', 'block_newgu_spdetails'):
-            case get_string('status_notsubmitted', 'block_newgu_spdetails') :
-            case get_string('status_draft', 'block_newgu_spdetails') :
+            case get_string('status_notsubmitted', 'block_newgu_spdetails'):
+            case get_string('status_draft', 'block_newgu_spdetails'):
             case get_string('status_overdue', 'block_newgu_spdetails'):
             case get_string('status_submitted', 'block_newgu_spdetails'):
                 $feedbackobj->grade_feedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
@@ -220,8 +219,10 @@ abstract class base {
                 // For activity type 'assignment', when Marking Workflow is enabled, feedback becomes available for the
                 // student when the status is set to 'Released', even ^if^ Reveal Identities hasn't been triggered.
                 // Honour this same behaviour here.
-                if (isset($gradestatusobj->markingworkflow) && $gradestatusobj->markingworkflow &&
-                    isset($gradestatusobj->workflowstate) && $gradestatusobj->workflowstate == 'released') {
+                if (
+                    isset($gradestatusobj->markingworkflow) && $gradestatusobj->markingworkflow &&
+                    isset($gradestatusobj->workflowstate) && $gradestatusobj->workflowstate == 'released'
+                ) {
                     $feedbackobj->grade_feedback = get_string('status_text_viewfeedback', 'block_newgu_spdetails');
                     $feedbackobj->grade_feedback_link = $gradestatusobj->assessment_url . '#page-footer';
                 }
@@ -256,5 +257,4 @@ abstract class base {
      * @return array
      */
     abstract public function get_assessmentsdue(): array;
-
 }

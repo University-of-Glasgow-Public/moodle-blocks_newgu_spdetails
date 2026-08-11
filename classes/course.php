@@ -32,7 +32,6 @@ use stdClass;
  * This class provides methods for extracting course attributes.
  */
 class course {
-
     /**
      * Given an array of 1 or more courses, return pertinent information.
      *
@@ -75,7 +74,6 @@ class course {
                         $subcatname = $subcategory['fullname'];
                         $hasitemsorcategories = self::has_items_or_categories($course->id, 'categoryid', $subcatid);
                         if ($hasitemsorcategories) {
-
                             $item = \grade_item::fetch(['courseid' => $course->id, 'iteminstance' => $subcatid,
                             'itemtype' => 'category', ]);
                             $assessmenttype = self::return_assessmenttype($subcatname, $item->aggregationcoef);
@@ -92,7 +90,6 @@ class course {
                     if ($gradecat) {
                         $hasitemsorcategories = self::has_items_or_categories($course->id, 'categoryid', $course->category);
                         if ($hasitemsorcategories) {
-
                             $item = \grade_item::fetch(['courseid' => $course->id, 'itemtype' => 'course']);
                             $assessmenttype = self::return_assessmenttype($course->fullname, $item->aggregationcoef);
                             if (count($gradecat) > 0) {
@@ -132,8 +129,13 @@ class course {
      * @param int $userid
      * @return array
      */
-    public static function process_mygrades_subcategories(int $courseid, array $gradecategories, array $tmpgradecategories,
-    string $assessmenttype, int $userid): array {
+    public static function process_mygrades_subcategories(
+        int $courseid,
+        array $gradecategories,
+        array $tmpgradecategories,
+        string $assessmenttype,
+        int $userid
+    ): array {
         $gradessubcatdata = [];
         $index = 0;
         foreach ($gradecategories as $gradecategory) {
@@ -149,7 +151,8 @@ class course {
                     $item = \grade_item::fetch(['courseid' => $courseid, 'id' => $fieldid, 'itemtype' => 'category']);
                     $rawsubcatweight = (($gradecategory['weight'] != null) ? $gradecategory['weight'] : 0);
                     $subcatweight = (($gradecategory['weight'] != null) ? self::return_weight(
-                        $gradecategory['weight']) . '%' : '-');
+                        $gradecategory['weight']
+                    ) . '%' : '-');
                     $subcat = new \stdClass();
                     // The iteminstance is our grade category id here. $fieldid above is actually from the grade item record.
                     $subcat->id = $item->iteminstance;
@@ -169,8 +172,10 @@ class course {
                         // normalisedweight property as this item was something that was in a "released" state. Now use a more
                         // appropriate method. Tip - watch for weight adjusted categories that haven't been released - this will
                         // make the weight totals not add up when viewing the sub categories.
-                        [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight($item->id,
-                            $userid);
+                        [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
+                            $item->id,
+                            $userid
+                        );
                         if ($isaltered) {
                             $rawsubcatweight = $alteredweight;
                             $subcatweight = self::return_weight($alteredweight) . '%';
@@ -311,8 +316,10 @@ class course {
         $gradecategoryweight = new stdClass();
         $gradecategoryweight->raw_weight = 0;
         $gradecategoryweight->grade_category_weight = '-';
-        if ((isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
-            isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)) {
+        if (
+            (isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
+            isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)
+        ) {
             if ((int) $item->aggregationcoef <= 1) {
                 $gradecategoryweight->raw_weight = self::return_weight($item->aggregationcoef);
                 $gradecategoryweight->grade_category_weight = (($gradecategoryweight->raw_weight > 0) ?
@@ -343,8 +350,10 @@ class course {
         $activityweight->rawassessmentweight = 0;
         $activityweight->assessmentweight = '-';
 
-        if (($category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
-            $category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)) {
+        if (
+            ($category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
+            $category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)
+        ) {
             $rawassessmentweight = self::return_weight($activityitem->aggregationcoef);
             $activityweight->assessmentweight = (($rawassessmentweight > 0) ? $rawassessmentweight . '%' : '-');
             if ($category->droplow > 0) {
@@ -443,7 +452,6 @@ class course {
         $cmid = $arrcoursemodule->id;
 
         return $cmid;
-
     }
 
     /**
@@ -518,16 +526,22 @@ class course {
                 if ($activities) {
                     foreach ($activities as $activityitem) {
                         if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
-                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
-                            $activityitem->courseid);
+                            $cm = get_coursemodule_from_instance(
+                                $activityitem->itemmodule,
+                                $activityitem->iteminstance,
+                                $activityitem->courseid
+                            );
                             $modinfo = get_fast_modinfo($activityitem->courseid);
                             $cms = $modinfo->get_cms();
                             if (array_key_exists($cm->id, $cms)) {
                                 $cm = $modinfo->get_cm($cm->id);
                                 if ($cm->uservisible) {
                                     // Get the activity based on its type...
-                                    $activity = \block_newgu_spdetails\activity::activity_factory($activityitem->id,
-                                    $activityitem->courseid, 0);
+                                    $activity = \block_newgu_spdetails\activity::activity_factory(
+                                        $activityitem->id,
+                                        $activityitem->courseid,
+                                        0
+                                    );
                                     if ($records = $activity->get_assessmentsdue()) {
                                         $assignmentdata[] = $records[0];
                                     }
@@ -608,7 +622,7 @@ class course {
         $next14days = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 14, date("Y")));
         $nextmonth = usertime(mktime(date("H"), date("i"), date("s"), date("m") + 1, date("d"), date("Y")));
         $option = '';
-        switch($charttype) {
+        switch ($charttype) {
             case 0:
                 $option = get_string('chart_24hrs', 'block_newgu_spdetails');
                 break;
@@ -641,13 +655,16 @@ class course {
                                 $cm = $modinfo->get_cm($cm->id);
                                 if ($cm->uservisible) {
                                     // Get the activity based on its type...
-                                    $activityitem = \block_newgu_spdetails\activity::activity_factory($item->id,
-                                    $item->courseid, 0);
+                                    $activityitem = \block_newgu_spdetails\activity::activity_factory(
+                                        $item->id,
+                                        $item->courseid,
+                                        0
+                                    );
                                     if ($assessments = $activityitem->get_assessmentsdue()) {
                                         $assessment = $assessments[0];
                                         if ($assessment->duedate > $now) {
                                             $includeitem = false;
-                                            switch($charttype) {
+                                            switch ($charttype) {
                                                 case 0:
                                                     $when = usertime(mktime(date("H"), date("i"), date("s"), date("m"), date("d") +
                                                         1, date("Y")));
@@ -666,8 +683,8 @@ class course {
                                                         < $next14days));
                                                     break;
                                                 case 3:
-                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m") + 1,
-                                                        date("d"), date("Y")));
+                                                    $when = usertime(mktime(date("H"), date("i"), date("s"), date("m") +
+                                                        1, date("d"), date("Y")));
                                                     $includeitem = (($assessment->duedate > $next14days) && ($assessment->duedate <
                                                         $nextmonth));
                                                     break;
@@ -773,8 +790,11 @@ class course {
                 if ($activities) {
                     foreach ($activities as $activity) {
                         if (!in_array($activity->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
-                            $cm = get_coursemodule_from_instance($activity->itemmodule, $activity->iteminstance,
-                            $activity->courseid);
+                            $cm = get_coursemodule_from_instance(
+                                $activity->itemmodule,
+                                $activity->iteminstance,
+                                $activity->courseid
+                            );
                             $modinfo = get_fast_modinfo($activity->courseid);
                             $cms = $modinfo->get_cms();
                             $skiprecord = false;
@@ -783,13 +803,15 @@ class course {
 
                                 // Lets start by saying this activity needs to be visible to the end user, regardless.
                                 if ($cm->uservisible) {
-
                                     // If this activity been graded and released from MyGrades, there's no need to go any further.
                                     if ($course->gugradesenabled) {
                                         // MGU-631 - Honour hidden grades and hidden activities.
                                         $isgradehidden = \local_gugrades\api::is_grade_hidden($activity->id, $USER->id);
-                                        $isreleased = \local_gugrades\grades::get_released_grade($activity->courseid, $activity->id,
-                                                $USER->id);
+                                        $isreleased = \local_gugrades\grades::get_released_grade(
+                                            $activity->courseid,
+                                            $activity->id,
+                                            $USER->id
+                                        );
                                         if ((!$isgradehidden) && ($isreleased != false)) {
                                             // Don't count this activity twice if the grading has already been done in MyGrades.
                                             $marked++;
@@ -798,7 +820,6 @@ class course {
                                     }
 
                                     if (!$skiprecord) {
-
                                         // Get the activity based on its status.
                                         $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
                                             $activity->courseid,
@@ -814,22 +835,21 @@ class course {
                                             case get_string('status_upcoming', 'block_newgu_spdetails'):
                                             case get_string('status_submit', 'block_newgu_spdetails'):
                                                 $totalupcoming++;
-                                            break;
-
+                                                break;
                                             case get_string('status_overdue', 'block_newgu_spdetails'):
                                                 $totaloverdue++;
-                                            break;
-
+                                                break;
                                             case get_string('status_submitted', 'block_newgu_spdetails'):
                                                 $totalsubmissions++;
-                                            break;
-
+                                                break;
                                             case get_string('status_graded', 'block_newgu_spdetails'):
-                                                if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
-                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                if (
+                                                    ($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display !=
+                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))
+                                                ) {
                                                         $marked++;
                                                 }
-                                            break;
+                                                break;
                                         };
                                     }
                                 }
@@ -924,8 +944,11 @@ class course {
                 if ($activities) {
                     foreach ($activities as $activityitem) {
                         if (!in_array($activityitem->itemmodule, \block_newgu_spdetails\activity::$excludedactivities)) {
-                            $cm = get_coursemodule_from_instance($activityitem->itemmodule, $activityitem->iteminstance,
-                            $activityitem->courseid);
+                            $cm = get_coursemodule_from_instance(
+                                $activityitem->itemmodule,
+                                $activityitem->iteminstance,
+                                $activityitem->courseid
+                            );
                             $modinfo = get_fast_modinfo($activityitem->courseid);
                             $cms = $modinfo->get_cms();
                             if (array_key_exists($cm->id, $cms)) {
@@ -968,9 +991,11 @@ class course {
                                                     if (!$usergrade->dropped) {
                                                         $gradestatus->activityweight->rawassessmentweight = (
                                                             ($usergrade->normalisedweight != null) ? self::return_weight(
-                                                                $usergrade->normalisedweight) : (
+                                                                $usergrade->normalisedweight
+                                                            ) : (
                                                                 ($activityitem->aggregationcoef != null) ? self::return_weight(
-                                                                    $activityitem->aggregationcoef) : '-')
+                                                                    $activityitem->aggregationcoef
+                                                                ) : '-')
                                                         );
                                                         $gradestatus->activityweight->assessmentweight = (
                                                             ($gradestatus->activityweight->rawassessmentweight > 0) ?
@@ -982,22 +1007,33 @@ class course {
                                                         $activityitem->itemtype . '/' . $activityitem->itemmodule .
                                                         '/view.php?id=' . $cm->id;
 
-                                                    $gradestatus->grade_status = get_string('status_graded',
-                                                        'block_newgu_spdetails');
-                                                    $gradestatus->status_text = get_string('status_text_graded',
-                                                        'block_newgu_spdetails');
-                                                    $gradestatus->status_class = get_string('status_class_graded',
-                                                        'block_newgu_spdetails');
+                                                    $gradestatus->grade_status = get_string(
+                                                        'status_graded',
+                                                        'block_newgu_spdetails'
+                                                    );
+                                                    $gradestatus->status_text = get_string(
+                                                        'status_text_graded',
+                                                        'block_newgu_spdetails'
+                                                    );
+                                                    $gradestatus->status_class = get_string(
+                                                        'status_class_graded',
+                                                        'block_newgu_spdetails'
+                                                    );
                                                     $gradestatus->status_link = '';
-                                                    $gradestatus->grade_to_display = get_string('status_text_graded',
-                                                        'block_newgu_spdetails');
-
+                                                    $gradestatus->grade_to_display = get_string(
+                                                        'status_text_graded',
+                                                        'block_newgu_spdetails'
+                                                    );
                                                     $grade = \block_newgu_spdetails\grade::is_admin_or_generic_grade(
-                                                        $usergrade->admingrade, $usergrade->displaygrade);
+                                                        $usergrade->admingrade,
+                                                        $usergrade->displaygrade
+                                                    );
                                                     $gradeclass = true;
                                                     $gradeprovisional = false;
-                                                    $gradefeedback = get_string('status_text_viewfeedback',
-                                                        'block_newgu_spdetails');
+                                                    $gradefeedback = get_string(
+                                                        'status_text_viewfeedback',
+                                                        'block_newgu_spdetails'
+                                                    );
                                                     // Because we don't have an activity instance,
                                                     // we can't call get_assessmenturl().
                                                     $gradefeedbacklink = $CFG->wwwroot . '/' . $activityitem->itemtype . '/'
@@ -1008,8 +1044,10 @@ class course {
                                                         $iconhidden = true;
                                                         $gradestatus->icon_alt = $iconalt;
                                                         $gradestatus->icon_hidden = $iconhidden;
-                                                        $gradefeedback = get_string('status_text_tobeconfirmed',
-                                                            'block_newgu_spdetails');
+                                                        $gradefeedback = get_string(
+                                                            'status_text_tobeconfirmed',
+                                                            'block_newgu_spdetails'
+                                                        );
                                                         $gradefeedbacklink = '';
                                                     }
                                                 }
@@ -1033,8 +1071,10 @@ class course {
                                                 $gradefeedback = $gradestatus->grade_feedback;
                                                 $gradefeedbacklink = $gradestatus->grade_feedback_link;
 
-                                                if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
-                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                                if (
+                                                    ($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
+                                                    get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))
+                                                ) {
                                                         continue;
                                                 }
                                             }
@@ -1057,8 +1097,10 @@ class course {
                                             $gradefeedback = $gradestatus->grade_feedback;
                                             $gradefeedbacklink = $gradestatus->grade_feedback_link;
 
-                                            if (($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
-                                                get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))) {
+                                            if (
+                                                ($gradestatus->grade_to_display != null) && ($gradestatus->grade_to_display ==
+                                                get_string('status_text_tobeconfirmed', 'block_newgu_spdetails'))
+                                            ) {
                                                     continue;
                                             }
                                         }
@@ -1081,8 +1123,10 @@ class course {
                                             $skiprecord = false;
                                             foreach ($usergrades as $usergrade) {
                                                 // MGU-631 - Honour hidden grades and hidden activities.
-                                                $isgradehidden = \local_gugrades\api::is_grade_hidden($activityitem->id,
-                                                    $USER->id);
+                                                $isgradehidden = \local_gugrades\api::is_grade_hidden(
+                                                    $activityitem->id,
+                                                    $USER->id
+                                                );
                                                 if (!$isgradehidden) {
                                                     $skiprecord = true;
                                                     break;
@@ -1105,7 +1149,6 @@ class course {
                                                 $activityitem->scaleid,
                                             );
                                         }
-
                                     } else {
                                         // This is just a regular Gradebook item.
                                         $gradestatus = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
@@ -1136,7 +1179,7 @@ class course {
                                         }
                                     }
 
-                                    switch($charttype) {
+                                    switch ($charttype) {
                                         case 4:
                                             if (property_exists($gradestatus, 'grade_date') && $gradestatus->grade_date != '') {
                                                 $date = userdate($gradestatus->grade_date);

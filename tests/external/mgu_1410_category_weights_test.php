@@ -29,7 +29,6 @@ use core_external\external_api;
 use local_gugrades\external\release_grades;
 use local_gugrades\external\get_alter_weight_form;
 use local_gugrades\external\save_altered_weights;
-
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
@@ -42,7 +41,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Tests for grade category weights and their appearance on Student MyGrades. Courses are assumed to be MyGrades enabled.
  */
 final class mgu_1410_category_weights_test extends \block_newgu_spdetails\external\newgu_spdetails_custom_testcase {
-
     /**
      * @var object $gradeitemobj
      */
@@ -111,8 +109,14 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = ($weight > 0) ? round($weight, 2) : 0;
-        $data = $this->activityapi->process_get_activities($this->gradeitemobj, $this->gradeitemobj->courseid,
-            $this->gradeitemobj->id, $this->student1->id, 'current', 'summative');
+        $data = $this->activityapi->process_get_activities(
+            $this->gradeitemobj,
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->id,
+            $this->student1->id,
+            'current',
+            'summative'
+        );
         $this->assertEquals($expected, $data['courseitems'][0]->raw_category_weight);
     }
 
@@ -176,8 +180,14 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = ($weight > 0) ? round($weight, 2) : 0;
-        $data = $this->activityapi->process_get_activities($this->gradeitemobj, $this->gradeitemobj->courseid,
-            $this->gradeitemobj->id, $this->student1->id, 'current', 'summative');
+        $data = $this->activityapi->process_get_activities(
+            $this->gradeitemobj,
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->id,
+            $this->student1->id,
+            'current',
+            'summative'
+        );
         $this->assertEquals($expected, $data['courseitems'][0]->raw_category_weight);
     }
 
@@ -233,8 +243,14 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
         $expected = (($weight > 0) ? round($weight, 2) : 0) . "%";
-        $data = $this->activityapi->process_get_activities($this->gradeitemobj, $this->gradeitemobj->courseid,
-            $this->gradeitemobj->iteminstance, $this->student1->id, 'current', 'summative');
+        $data = $this->activityapi->process_get_activities(
+            $this->gradeitemobj,
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->iteminstance,
+            $this->student1->id,
+            'current',
+            'summative'
+        );
         $this->assertEquals($expected, $data['weighttowardscourse']);
     }
 
@@ -320,9 +336,14 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $weight = (($alteredweight[0]->weight > 1) ? $alteredweight[0]->weight :
             $alteredweight[0]->weight * 100);
         $expected = (($weight > 0) ? round($weight, 2) : 0) . "%";
-        $data = $this->activityapi->process_get_activities($this->gradeitemobj, $this->gradeitemobj->courseid,
-            $this->gradeitemobj->iteminstance, $this->student1->id, 'current', 'summative');
+        $data = $this->activityapi->process_get_activities(
+            $this->gradeitemobj,
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->iteminstance,
+            $this->student1->id,
+            'current',
+            'summative'
+        );
         $this->assertEquals($expected, $data['weighttowardscourse']);
     }
-
 }

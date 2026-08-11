@@ -47,9 +47,14 @@ class grade {
      * @param int|null $scaleid
      * @return object
      */
-    public static function get_grade_status_and_feedback(int $courseid, int $itemid, int $userid, int $gradetype,
-    int $grademax, int|null $scaleid = null): object {
-
+    public static function get_grade_status_and_feedback(
+        int $courseid,
+        int $itemid,
+        int $userid,
+        int $gradetype,
+        int $grademax,
+        int|null $scaleid = null
+    ): object {
         $gradestatus = new \stdClass();
         $gradestatus->assessment_url = '';
         $gradestatus->due_date = '';
@@ -74,8 +79,10 @@ class grade {
             $gradestatus->raw_due_date = $activity->get_rawduedate();
             $gradestatus->due_date = $activity->get_formattedduedate();
 
-            if (property_exists($activitygrade, 'finalgrade') && $activitygrade->finalgrade != null &&
-            $activitygrade->finalgrade >= 0) {
+            if (
+                property_exists($activitygrade, 'finalgrade') && $activitygrade->finalgrade != null &&
+                $activitygrade->finalgrade >= 0
+            ) {
                 $grade = self::get_formatted_grade_from_grade_type($activitygrade->finalgrade, $gradetype, $grademax, $scaleid);
                 $gradestatus->grade_date = $activitygrade->gradedate;
                 $gradestatus->grade_status = get_string('status_graded', 'block_newgu_spdetails');
@@ -144,9 +151,14 @@ class grade {
      * @param int|null $scaleid
      * @return object
      */
-    public static function get_manual_grade_item_grade_status_and_feedback(int $courseid, int $itemid, int $userid, int $gradetype,
-    int $grademax, int|null $scaleid = null): object {
-
+    public static function get_manual_grade_item_grade_status_and_feedback(
+        int $courseid,
+        int $itemid,
+        int $userid,
+        int $gradetype,
+        int $grademax,
+        int|null $scaleid = null
+    ): object {
         global $DB, $CFG;
 
         $gradestatus = new \stdClass();
@@ -164,12 +176,13 @@ class grade {
         $gradestatus->grade_provisional = false;
         $gradestatus->grade_feedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $gradestatus->grade_feedback_link = '';
-        $grade = $DB->get_record_sql('
-            SELECT finalgrade, hidden, feedback FROM {grade_grades} WHERE itemid = :itemid AND userid = :userid',
+        $grade = $DB->get_record_sql(
+            'SELECT finalgrade, hidden, feedback FROM {grade_grades} WHERE itemid = :itemid AND userid = :userid',
             [
                 'itemid' => $itemid,
                 'userid' => $userid,
-            ]);
+            ]
+        );
         if ($grade) {
             if ($grade->hidden == 1) {
                 $gradestatus->hidden = 1;
@@ -207,9 +220,12 @@ class grade {
      * @param int|null $scaleid
      * @return string
      */
-    public static function get_formatted_grade_from_grade_type(int|float $grade, int $gradetype, int $grademax,
-    int|null $scaleid = null): string {
-
+    public static function get_formatted_grade_from_grade_type(
+        int|float $grade,
+        int $gradetype,
+        int $grademax,
+        int|null $scaleid = null
+    ): string {
         $returngrade = null;
         switch ($gradetype) {
             // Point Scale.

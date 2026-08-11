@@ -35,7 +35,6 @@ define('NUM_ASSESSMENTS_PER_PAGE', 12);
  * This class provides the API for the plugin.
  */
 class api extends external_api {
-
     /**
      * This method returns the processed list of gradable activities.
      *
@@ -46,8 +45,13 @@ class api extends external_api {
      * @param int|null $subcategory
      * @return array $data
      */
-    public static function get_assessments(string $activetab, int $page, string $sortby, string $sortorder,
-    int|null $subcategory = null): array {
+    public static function get_assessments(
+        string $activetab,
+        int $page,
+        string $sortby,
+        string $sortorder,
+        int|null $subcategory = null
+    ): array {
         global $USER, $PAGE;
 
         $PAGE->set_context(context_system::instance());
@@ -83,8 +87,13 @@ class api extends external_api {
      *
      * @return array $gradableactivities
      */
-    public static function get_gradable_activities(string $activetab, int $userid, string|null $sortby = null,
-    string|null $sortorder = null, int|null $subcategory = null): array {
+    public static function get_gradable_activities(
+        string $activetab,
+        int $userid,
+        string|null $sortby = null,
+        string|null $sortorder = null,
+        int|null $subcategory = null
+    ): array {
         $gradableactivities = [];
 
         // Start with getting the top level categories for all courses.
@@ -93,21 +102,24 @@ class api extends external_api {
                 case 'current':
                     $currentcourses = true;
                     $pastcourses = false;
-                break;
-
+                    break;
                 case 'past':
                     $currentcourses = false;
                     $pastcourses = true;
-                break;
-
+                    break;
                 default:
                     $currentcourses = false;
                     $pastcourses = false;
-                break;
+                    break;
             }
 
-            $courses = \local_gugrades\api::dashboard_get_courses($userid, $currentcourses, $pastcourses, $sortby . " " .
-            $sortorder);
+            $courses = \local_gugrades\api::dashboard_get_courses(
+                $userid,
+                $currentcourses,
+                $pastcourses,
+                $sortby . " " .
+                $sortorder
+            );
             return \block_newgu_spdetails\course::get_course_structure($courses, $currentcourses);
         } else {
             $gradableactivities = \block_newgu_spdetails\activity::get_activityitems($subcategory, $userid, $activetab);
@@ -230,18 +242,18 @@ class api extends external_api {
         $activitydate = 0;
         if ($itemnumber == 0) {
             $keys = [
-                'duedate',         // Assignmnent, Forum (rating), Organizer(-), Peerwork.
-                'timeclose',       // Choice(-), Group choice(-), Feedback(-), SCORM, Quiz.
-                'sessdate',        // Attendance(-)? not implemented.
+                'duedate', // Assignmnent, Forum (rating), Organizer(-), Peerwork.
+                'timeclose', // Choice(-), Group choice(-), Feedback(-), SCORM, Quiz.
+                'sessdate', // Attendance(-)? not implemented.
                 'timeavailableto', // Database.
-                'timedue',         // Kalvidassign? not implemented.
-                'deadline',        // Lesson.
-                'submissionend',   // Workshop.
+                'timedue', // Kalvidassign? not implemented.
+                'deadline', // Lesson.
+                'submissionend', // Workshop.
             ];
         } else if ($itemnumber == 1) {
             $keys = [
-                'assessmentend',    // Workshop.
-                'duedate',          // Forum (whole).
+                'assessmentend', // Workshop.
+                'duedate', // Forum (whole).
             ];
         }
 
@@ -272,5 +284,4 @@ class api extends external_api {
 
         return $activitydate;
     }
-
 }

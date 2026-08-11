@@ -43,7 +43,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * @see MGU-1472 for further details about the change to the purpose of this activity.
  */
 final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that for an assignment set up to not accept submissions, where the due date is in the future, the Upcoming number
      * is correct on the charts.
@@ -93,15 +92,22 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertArrayHasKey('assess_marked', $stats[0]);
         $this->assertEquals(0, $stats[0]['assess_marked']);
 
-        $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
-        $this->mygradessummativesubcategory->id);
+        $gradeitems = $this->api->get_gradable_activities(
+            'current',
+            $this->student1->id,
+            'duedate',
+            'asc',
+            $this->mygradessummativesubcategory->id
+        );
 
         $this->assertIsArray($gradeitems);
         $this->assertCount(1, $gradeitems['coursedata']['courseitems']);
 
         // Check for the status.
-        $this->assertStringContainsString(get_string('status_upcoming', 'block_newgu_spdetails'),
-        $gradeitems['coursedata']['courseitems'][0]->grade_status);
+        $this->assertStringContainsString(
+            get_string('status_upcoming', 'block_newgu_spdetails'),
+            $gradeitems['coursedata']['courseitems'][0]->grade_status
+        );
     }
 
     /**
@@ -153,15 +159,22 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertArrayHasKey('assess_marked', $stats[0]);
         $this->assertEquals(0, $stats[0]['assess_marked']);
 
-        $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
-        $this->mygradessummativesubcategory->id);
+        $gradeitems = $this->api->get_gradable_activities(
+            'current',
+            $this->student1->id,
+            'duedate',
+            'asc',
+            $this->mygradessummativesubcategory->id
+        );
 
         $this->assertIsArray($gradeitems);
         $this->assertCount(1, $gradeitems['coursedata']['courseitems']);
 
         // Check for the status.
-        $this->assertStringContainsString(get_string('status_text_notyetgraded', 'block_newgu_spdetails'),
-        $gradeitems['coursedata']['courseitems'][0]->status_text);
+        $this->assertStringContainsString(
+            get_string('status_text_notyetgraded', 'block_newgu_spdetails'),
+            $gradeitems['coursedata']['courseitems'][0]->status_text
+        );
     }
 
     /**
@@ -197,8 +210,13 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $DB->execute("UPDATE {grade_items} SET categoryid = ? WHERE iteminstance = ?", $params);
 
         // Create the assignment submission entries.
-        $this->add_assignment_grade($ipaassignment->id, $this->student1->id, $this->teacher->id, 35,
-        ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+        $this->add_assignment_grade(
+            $ipaassignment->id,
+            $this->student1->id,
+            $this->teacher->id,
+            35,
+            ASSIGN_SUBMISSION_STATUS_SUBMITTED
+        );
 
         $gradeitemid = $this->get_grade_item('', 'assign', $ipaassignment->id);
         $DB->insert_record('grade_grades', [
@@ -223,15 +241,21 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertArrayHasKey('assess_marked', $stats[0]);
         $this->assertEquals(1, $stats[0]['assess_marked']);
 
-        $gradeitems = $this->api->get_gradable_activities('current', $this->student1->id, 'duedate', 'asc',
-        $this->mygradessummativesubcategory->id);
+        $gradeitems = $this->api->get_gradable_activities(
+            'current',
+            $this->student1->id,
+            'duedate',
+            'asc',
+            $this->mygradessummativesubcategory->id
+        );
 
         $this->assertIsArray($gradeitems);
         $this->assertCount(1, $gradeitems['coursedata']['courseitems']);
 
         // Check for the status.
-        $this->assertStringContainsString(get_string('status_graded', 'block_newgu_spdetails'),
-        $gradeitems['coursedata']['courseitems'][0]->grade_status);
+        $this->assertStringContainsString(
+            get_string('status_graded', 'block_newgu_spdetails'),
+            $gradeitems['coursedata']['courseitems'][0]->grade_status
+        );
     }
-
 }

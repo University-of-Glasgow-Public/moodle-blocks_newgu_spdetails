@@ -37,7 +37,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for manual grade items.
  */
 final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that a manual grade item appears on Student MyGrades when initially created.
      *
@@ -88,8 +87,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         ]);
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmanualgradeitem = $this->activityapi->process_manual_grade_item($activities[0]->items[0], 'manual',
-            $this->teacher->id);
+        $processedmanualgradeitem = $this->activityapi->process_manual_grade_item(
+            $activities[0]->items[0],
+            'manual',
+            $this->teacher->id
+        );
         $icontext = get_string('manual_grade_item_hidden_icon_alt_text', 'block_newgu_spdetails');
         $iconalt = "<i class='icon fa fa-eye-slash fa-fw' title='" . $icontext . "' alt='" . $icontext
             . "' aria-hidden='true' role='img' aria-label='" . $icontext . "'></i>";
@@ -127,8 +129,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         ]);
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $this->activityapi->process_manual_grade_item($activities[0]->items[0], 'manual',
-            $this->teacher->id);
+        $this->activityapi->process_manual_grade_item(
+            $activities[0]->items[0],
+            'manual',
+            $this->teacher->id
+        );
         $expectedstudentview = $manualgradeitem->hidden;
         $expectedstaffview = $gradegradesitem->hidden;
         $this->assertEquals($expectedstudentview, 0);
@@ -224,8 +229,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'audittimecreated' => $now,
         ]);
 
-        $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
-            $this->student1->id);
+        $gradedata = api::get_aggregation_dashboard_user(
+            $this->mygradescourse->id,
+            $this->mygradessummativecategory->id,
+            $this->student1->id
+        );
         $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
@@ -240,8 +248,12 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
-            'summative');
+        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+            $gradeitems,
+            $activities[0]->items,
+            'current',
+            'summative'
+        );
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
         $expectedstatus = get_string('status_graded', 'block_newgu_spdetails');
@@ -352,8 +364,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'audittimecreated' => $now,
         ]);
 
-        $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
-            $this->student1->id);
+        $gradedata = api::get_aggregation_dashboard_user(
+            $this->mygradescourse->id,
+            $this->mygradessummativecategory->id,
+            $this->student1->id
+        );
         $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
@@ -368,8 +383,12 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
-            'summative');
+        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+            $gradeitems,
+            $activities[0]->items,
+            'current',
+            'summative'
+        );
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
         $expectedstatus = get_string('status_graded', 'block_newgu_spdetails');
@@ -476,8 +495,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'userid' => $this->student1->id,
         ]);
 
-        $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
-            $this->student1->id);
+        $gradedata = api::get_aggregation_dashboard_user(
+            $this->mygradescourse->id,
+            $this->mygradessummativecategory->id,
+            $this->student1->id
+        );
         $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
@@ -492,15 +514,19 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
-            'summative');
+        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+            $gradeitems,
+            $activities[0]->items,
+            'current',
+            'summative'
+        );
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
         $expectedstatus = get_string('status_graded', 'block_newgu_spdetails');
         $expectedgrade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
 
         // This will be the view in Student MyGrades, and Student MyGrades Staff View.
-        $expectedfeedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');;
+        $expectedfeedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $this->assertEquals($expectedicontext, $processedmanualgradeitem->icon_alt);
         $this->assertEquals($expectedstatus, $processedmanualgradeitem->grade_status);
         $this->assertEquals($expectedgrade, $processedmanualgradeitem->grade);
@@ -609,8 +635,11 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'userid' => $this->student1->id,
         ]);
 
-        $gradedata = api::get_aggregation_dashboard_user($this->mygradescourse->id, $this->mygradessummativecategory->id,
-            $this->student1->id);
+        $gradedata = api::get_aggregation_dashboard_user(
+            $this->mygradescourse->id,
+            $this->mygradessummativecategory->id,
+            $this->student1->id
+        );
         $tmpitems = $gradedata['fields'];
         $gradecategories = [];
         $gradeitems = [];
@@ -625,15 +654,19 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         }
 
         $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items($gradeitems, $activities[0]->items, 'current',
-            'summative');
+        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+            $gradeitems,
+            $activities[0]->items,
+            'current',
+            'summative'
+        );
         $processedmanualgradeitem = $processedmygradesitem[0];
         $expectedicontext = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
         $expectedstatus = get_string('status_graded', 'block_newgu_spdetails');
         $expectedgrade = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
 
         // This will be the view in Student MyGrades, and Student MyGrades Staff View.
-        $expectedfeedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');;
+        $expectedfeedback = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $this->assertEquals($expectedicontext, $processedmanualgradeitem->icon_alt);
         $this->assertEquals($expectedstatus, $processedmanualgradeitem->grade_status);
         $this->assertEquals($expectedgrade, $processedmanualgradeitem->grade);

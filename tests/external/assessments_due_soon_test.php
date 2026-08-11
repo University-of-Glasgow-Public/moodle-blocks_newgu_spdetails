@@ -37,7 +37,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for activities that are due in the near future.
  */
 final class assessments_due_soon_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that the returned assessments due date falls into
      * one of the following categories:

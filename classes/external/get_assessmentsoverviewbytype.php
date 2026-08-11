@@ -34,7 +34,6 @@ use core_external\external_value;
  * This class provides the web service description for returning the assessments overview by type.
  */
 class get_assessmentsoverviewbytype extends external_api {
-
     /**
      * Returns description of method parameters.
      *
@@ -54,13 +53,14 @@ class get_assessmentsoverviewbytype extends external_api {
      * @throws \invalid_parameter_exception
      */
     public static function execute(int $charttype): array {
-        $params = self::validate_parameters(self::execute_parameters(),
-            [
-                'charttype' => $charttype,
-            ]);
+        $params = self::validate_parameters(
+            self::execute_parameters(),
+            ['charttype' => $charttype]
+        );
         return [
             'result' => json_encode(\block_newgu_spdetails\api::get_assessmentsoverviewbytype(
-                $params['charttype'])),
+                $params['charttype']
+            )),
         ];
     }
 

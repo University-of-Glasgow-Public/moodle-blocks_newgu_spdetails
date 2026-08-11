@@ -34,7 +34,6 @@ use core_external\external_value;
  * This class provides the web service description for returning assessments that are due, by chart type (24hrs, 7 days etc).
  */
 class get_assessmentsduebytype extends external_api {
-
     /**
      * Returns description of method parameters.
      *
@@ -54,7 +53,8 @@ class get_assessmentsduebytype extends external_api {
      * @throws \invalid_parameter_exception
      */
     public static function execute(int $charttype): array {
-        $params = self::validate_parameters(self::execute_parameters(),
+        $params = self::validate_parameters(
+            self::execute_parameters(),
             [
                 'charttype' => $charttype,
             ]

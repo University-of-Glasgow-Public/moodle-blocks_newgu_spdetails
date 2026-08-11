@@ -161,8 +161,8 @@ class lti_activity extends base {
         $statusobj = new \stdClass();
         $statusobj->assessment_url = $this->get_assessmenturl();
         $statusobj->grade_status = get_string('status_tobeconfirmed', 'block_newgu_spdetails');
-        $statusobj->status_text = get_string('status_text_checkfordetails', 'block_newgu_spdetails');;
-        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');;
+        $statusobj->status_text = get_string('status_text_checkfordetails', 'block_newgu_spdetails');
+        $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
         $statusobj->status_link = $statusobj->assessment_url;
         $statusobj->grade_to_display = get_string('status_text_tobeconfirmed', 'block_newgu_spdetails');
         $statusobj->grade_class = false;
@@ -181,6 +181,5 @@ class lti_activity extends base {
     public function get_assessmentsdue(): array {
         $ltidata = [];
         return $ltidata;
-
     }
 }

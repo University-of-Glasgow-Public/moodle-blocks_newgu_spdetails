@@ -35,7 +35,6 @@ use core_external\external_value;
  * This class provides the web service description for returning assessments that are due in the near future.
  */
 class get_assessmentsduesoon extends external_api {
-
     /**
      * Returns description of method parameters
      * @return external_function_parameters

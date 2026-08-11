@@ -167,6 +167,5 @@ class hvp_activity extends base {
      */
     public function get_assessmentsdue(): array {
         return [];
-
     }
 }

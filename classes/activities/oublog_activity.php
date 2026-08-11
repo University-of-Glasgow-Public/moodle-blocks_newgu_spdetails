@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\activities;
  * Implementation for an oublog activity type.
  */
 class oublog_activity extends base {
-
     /**
      * @var object $cm
      */

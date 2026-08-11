@@ -43,13 +43,13 @@ function sortTable(n, sortName, tableName) {
             if (dir == "asc") {
                 if (compareFunction(x, y, 'asc') == true) {
                     // If so, mark as a switch and break the loop:
-                    shouldSwitch= true;
+                    shouldSwitch = true;
                     break;
                 }
             } else if (dir == "desc") {
                 if (compareFunction(x, y, 'desc') == true) {
                     // If so, mark as a switch and break the loop:
-                    shouldSwitch= true;
+                    shouldSwitch = true;
                     break;
                 }
             }
@@ -59,7 +59,7 @@ function sortTable(n, sortName, tableName) {
             rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
             switching = true;
             // Each time a switch is done, increase this count by 1:
-            switchcount ++;
+            switchcount++;
         } else {
             // If no switching has been done AND the direction is "asc", set the direction to "desc" and run the while loop again.
             if (switchcount == 0 && dir == "asc") {
@@ -80,7 +80,7 @@ function sortTable(n, sortName, tableName) {
  * @param {string} direction
  * @returns
  */
-let compareString = function (x, y, direction) {
+let compareString = function(x, y, direction) {
     if (direction == 'asc') {
         if (x.innerText.toLowerCase() > y.innerText.toLowerCase()) {
             return true;
@@ -92,6 +92,7 @@ let compareString = function (x, y, direction) {
         }
         return false;
     }
+    return false;
 };
 
 /**
@@ -104,9 +105,13 @@ let compareString = function (x, y, direction) {
  * @param {string} direction
  * @returns
  */
-let compareNumber = function (x, y, direction) {
-    let attXName = x.getAttributeNames().filter((attName) => { return attName.includes('data');});
-    let attYName = y.getAttributeNames().filter((attName) => { return attName.includes('data');});
+let compareNumber = function(x, y, direction) {
+    let attXName = x.getAttributeNames().filter((attName) => {
+        return attName.includes('data');
+    });
+    let attYName = y.getAttributeNames().filter((attName) => {
+        return attName.includes('data');
+    });
     if (direction == 'asc') {
         if (Number(x.getAttribute(attXName[0])) > Number(y.getAttribute(attYName[0]))) {
             return true;
@@ -118,6 +123,7 @@ let compareNumber = function (x, y, direction) {
         }
         return false;
     }
+    return false;
 };
 
 /**

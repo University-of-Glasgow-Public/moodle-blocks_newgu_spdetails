@@ -37,7 +37,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for the main get_assessments method.
  */
 final class get_assessments_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test that the call to get_assessments returns the currently enrolled courses.
      *
@@ -125,7 +124,7 @@ final class get_assessments_test extends \block_newgu_spdetails\external\newgu_s
         // This requires further mock "enabling" this as a MyGrades type course.
         // Find the custom field.
         $field = $DB->get_record('customfield_field', ['shortname' => 'studentmygrades'], '*', MUST_EXIST);
-        $data = new \stdClass;
+        $data = new \stdClass();
         $data->fieldid = $field->id;
         $data->instanceid = $pastcourse->id;
         $data->intvalue = 1;

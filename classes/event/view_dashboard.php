@@ -29,7 +29,6 @@ namespace block_newgu_spdetails\event;
  * view_dashboard event
  */
 class view_dashboard extends \core\event\base {
-
     /**
      * Initialise event
      */

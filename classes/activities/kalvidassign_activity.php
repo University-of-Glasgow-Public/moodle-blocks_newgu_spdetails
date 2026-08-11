@@ -371,7 +371,6 @@ class kalvidassign_activity extends base {
                 ],
             ];
             $cache->set_many($cachedata);
-
         } else {
             $cachedata = $cache->get_many([$cachekey]);
             $kalvidsubmissions = $cachedata[$cachekey][0]['kalvidassignmentsubmissions'];

@@ -28,7 +28,7 @@ namespace block_newgu_spdetails\activities;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot.'/mod/workshop/locallib.php');
+require_once($CFG->dirroot . '/mod/workshop/locallib.php');
 
 use cache;
 use workshop;
@@ -144,13 +144,13 @@ class workshop_activity extends base {
         $workshopphase = $this->gradeitem->itemnumber;
         $workshopduedate = 0;
 
-        switch($workshopphase) {
+        switch ($workshopphase) {
             case 0:
                 $workshopduedate = $this->workshop->submissionend;
-            break;
+                break;
             case 1:
                 $workshopduedate = $this->workshop->assessmentend;
-            break;
+                break;
         }
 
         $rawdate = $workshopduedate;
@@ -169,13 +169,13 @@ class workshop_activity extends base {
     public function get_formattedduedate(int|null $unformatteddate = null): string {
         $workshopphase = $this->gradeitem->itemnumber;
         $workshopduedate = 'N/A';
-        switch($workshopphase) {
+        switch ($workshopphase) {
             case 0:
                 $workshopduedate = $this->workshop->submissionend;
-            break;
+                break;
             case 1:
                 $workshopduedate = $this->workshop->assessmentend;
-            break;
+                break;
         }
 
         $rawdate = $workshopduedate;
@@ -226,13 +226,13 @@ class workshop_activity extends base {
                 $statusobj->due_date = $workshopinstance->submissionend;
                 $statusobj->raw_due_date = $workshopinstance->submissionend;
                 $workshopactivitytype = 'submission';
-            break;
+                break;
             case 1:
                 $submissionstart = $workshopinstance->assessmentstart;
                 $statusobj->due_date = $workshopinstance->assessmentend;
                 $statusobj->raw_due_date = $workshopinstance->assessmentend;
                 $workshopactivitytype = 'assessment';
-            break;
+                break;
         }
 
         $now = usertime(time());
@@ -242,7 +242,7 @@ class workshop_activity extends base {
             case \workshop::PHASE_SETUP:
                 $statusobj->grade_status = get_string('status_submissionnotopen', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_submissionnotopen', 'block_newgu_spdetails');
-            break;
+                break;
             case \workshop::PHASE_SUBMISSION:
                 if ($workshopactivitytype == 'submission') {
                     // The submission phase is not open yet.
@@ -262,7 +262,7 @@ class workshop_activity extends base {
                         $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
                     }
                 }
-            break;
+                break;
             case \workshop::PHASE_ASSESSMENT:
                 if ($workshopactivitytype == 'assessment') {
                     // The assessment phase is not open yet.
@@ -287,17 +287,17 @@ class workshop_activity extends base {
                     $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
                     $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
                 }
-            break;
+                break;
             case \workshop::PHASE_EVALUATION:
                 $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-            break;
+                break;
             case \workshop::PHASE_CLOSED:
                 $statusobj->grade_status = get_string('status_overdue', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_overdue', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_overdue', 'block_newgu_spdetails');
-            break;
+                break;
         }
 
         // Collect all the submissions and assessments for this user.
@@ -306,9 +306,9 @@ class workshop_activity extends base {
         $pendingassessments = $workshop->get_pending_assessments_by_reviewer($userid);
 
         // Do we have any submissions?
-        if ($workshopactivitytype == 'submission' &&
-            !empty($submissionbyuser)
-            ) {
+        if (
+            $workshopactivitytype == 'submission' && !empty($submissionbyuser)
+        ) {
             $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
@@ -316,12 +316,13 @@ class workshop_activity extends base {
         }
 
         // Do we have any assessments?
-        if ($workshopactivitytype == 'assessment' &&
+        if (
+            $workshopactivitytype == 'assessment' &&
             empty($pendingassessments) &&
             empty($assessmentsbyuser) &&
             $workshopinstance->phase > \workshop::PHASE_SUBMISSION &&
             ($submissionstart <= $now && $workshopinstance->assessmentend > $now)
-            ) {
+        ) {
             $statusobj->grade_status = get_string('status_unavailable', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submissionunavailable', 'block_newgu_spdetails');
             $statusobj->status_class = '';
@@ -329,22 +330,24 @@ class workshop_activity extends base {
         }
 
         // Do we need more assessments?
-        if ($workshopactivitytype == 'assessment' &&
+        if (
+            $workshopactivitytype == 'assessment' &&
             !empty($pendingassessments) &&
             $workshopinstance->phase > \workshop::PHASE_SUBMISSION &&
             ($submissionstart <= $now && $workshopinstance->assessmentend > $now)
-            ) {
+        ) {
             $statusobj->grade_status = get_string('status_submit', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submit', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_submit', 'block_newgu_spdetails');
         }
 
         // Do we have all assessments?
-        if ($workshopactivitytype == 'assessment' &&
+        if (
+            $workshopactivitytype == 'assessment' &&
             empty($pendingassessments) &&
             !empty($assessmentsbyuser) &&
             $workshopinstance->phase > \workshop::PHASE_SUBMISSION
-            ) {
+        ) {
             $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
             $statusobj->status_text = get_string('status_text_submitted', 'block_newgu_spdetails');
             $statusobj->status_class = get_string('status_class_submitted', 'block_newgu_spdetails');
@@ -403,7 +406,6 @@ class workshop_activity extends base {
                     'updated' => $currenttime,
                     'workshopsubmissions' => $workshopsubmissions,
                 ];
-
             }
             if ($activityphase == 1) {
                 // Here we'll need to join the assessments against the submission table using the submissionid.
@@ -467,7 +469,6 @@ class workshop_activity extends base {
                     }
                 }
             }
-
         }
 
         return $workshopdata;

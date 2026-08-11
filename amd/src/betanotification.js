@@ -36,8 +36,9 @@ const Selectors = {
  */
 const insertBetaNotification = () => {
     let tempPanel = document.querySelector(Selectors.PAGE_HEADER_CONTENT);
-    getString('beta_notification', 'block_newgu_spdetails') .then((str) => {
+    getString('beta_notification', 'block_newgu_spdetails').then((str) => {
         tempPanel.insertAdjacentHTML("afterend", "<div class='alert alert-info'>" + str + "</div>");
+        return true;
     })
     .catch((err) => {
         Log.debug(err); return;

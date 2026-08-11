@@ -288,7 +288,8 @@ class forum_activity extends base {
                 'SELECT f.id FROM {forum_posts} fp INNER JOIN {forum_discussions} fd ON fd.id = fp.discussion INNER JOIN
                 {forum} f ON f.id = fd.forum WHERE ((fp.created BETWEEN :lastmonth AND :now) OR (fp.modified BETWEEN
                 :tlastmonth AND :tnow))',
-                $params);
+                $params
+            );
 
             $submissionsdata = [
                 'updated' => $currenttime,

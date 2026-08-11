@@ -38,7 +38,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * This deals with the scaffolding for the tests.
  */
 class newgu_spdetails_custom_testcase extends \block_newgu_spdetails\external\newgu_spdetails_base_testcase {
-
     /**
      * @var array $gradeitems
      */

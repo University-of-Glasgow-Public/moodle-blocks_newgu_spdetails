@@ -35,7 +35,6 @@ require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdet
  * Unit tests for activity types.
  */
 final class assessment_type_test extends \block_newgu_spdetails\external\newgu_spdetails_advanced_testcase {
-
     /**
      * Test of the language string settings against mock assessment types and weighting.
      *
