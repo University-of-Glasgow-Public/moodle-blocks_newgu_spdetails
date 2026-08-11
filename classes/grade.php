@@ -43,8 +43,8 @@ class grade {
      * @param int $itemid
      * @param int $userid
      * @param int $gradetype
-     * @param int $scaleid
      * @param int $grademax
+     * @param int|null $scaleid
      * @return object
      */
     public static function get_grade_status_and_feedback(int $courseid, int $itemid, int $userid, int $gradetype,
@@ -140,8 +140,8 @@ class grade {
      * @param int $itemid
      * @param int $userid
      * @param int $gradetype
-     * @param int $scaleid
      * @param int $grademax
+     * @param int|null $scaleid
      * @return object
      */
     public static function get_manual_grade_item_grade_status_and_feedback(int $courseid, int $itemid, int $userid, int $gradetype,
@@ -203,8 +203,8 @@ class grade {
      *
      * @param int|float $grade
      * @param int $gradetype
-     * @param int $scaleid
      * @param int $grademax
+     * @param int|null $scaleid
      * @return string
      */
     public static function get_formatted_grade_from_grade_type(int|float $grade, int $gradetype, int $grademax,

@@ -77,7 +77,7 @@ class course {
                         if ($hasitemsorcategories) {
 
                             $item = \grade_item::fetch(['courseid' => $course->id, 'iteminstance' => $subcatid,
-                            'itemtype' => 'category']);
+                            'itemtype' => 'category', ]);
                             $assessmenttype = self::return_assessmenttype($subcatname, $item->aggregationcoef);
                             $subcatdata[] = [
                                 'id' => $subcatid,
@@ -226,7 +226,7 @@ class course {
             $hasitemsorcategories = self::has_items_or_categories($courseid, 'categoryid', $gradecategory->category->id);
             if ($hasitemsorcategories) {
                 $item = \grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $gradecategory->category->id,
-                'itemtype' => 'category']);
+                'itemtype' => 'category', ]);
 
                 $gradecategoryweight = self::get_grade_category_weight($item, $gradecategory->category);
                 $rawsubcatweight = $gradecategoryweight->raw_weight;
@@ -272,7 +272,7 @@ class course {
      * @see MGU-973/MGU-1244 for further details around requirments/issues.
      * @param int $courseid
      * @param string $field
-     * @param int $categoryid
+     * @param int $id
      * @return bool
      */
     public static function has_items_or_categories(int $courseid, string $field, int $id) {
@@ -852,11 +852,12 @@ class course {
 
     /**
      * Return only the assessments that are:
-     * Upcoming/to be submitted. @see MGU-1472
+     * Upcoming/to be submitted.
      * Overdue
      * Submitted
      * Graded
      *
+     * @see https://uofglasgow.atlassian.net/browse/MGU-1472
      * @param int $charttype
      * @return array
      */

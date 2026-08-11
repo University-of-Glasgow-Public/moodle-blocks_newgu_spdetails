@@ -140,7 +140,7 @@ class peerwork_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
@@ -177,7 +177,7 @@ class peerwork_activity extends base {
         $statusobj->status_link = $statusobj->assessment_url;
 
         $peerworksubmission = $DB->get_record('peerwork_submission', ['peerworkid' => $this->peerwork->id,
-            'userid' => $userid]);
+            'userid' => $userid, ]);
 
         if (!empty($peerworksubmission)) {
             if ($peerworksubmission->releasedby == null) {

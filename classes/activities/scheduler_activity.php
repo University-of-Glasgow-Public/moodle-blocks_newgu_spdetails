@@ -52,6 +52,7 @@ class scheduler_activity extends base {
         // Get the course module object.
         $this->cm = \local_gugrades\users::get_cm_from_grade_item($gradeitemid, $courseid);
         $this->scheduler = $this->get_scheduler($this->cm);
+        $this->scheduler->userid = 0;
     }
 
     /**
@@ -72,12 +73,15 @@ class scheduler_activity extends base {
 
     /**
      * A scheduler activity doesn't appear to end up in the Gradebook.
+     * Because we're implementing this from the base class, we're forced
+     * to use $userid to avoid PHP MD errors.
      * Simply return false for now.
      *
      * @param int $userid
      * @return mixed object|bool
      */
     public function get_grade(int $userid): object|bool {
+        $this->scheduler->userid = $userid;
         return false;
     }
 

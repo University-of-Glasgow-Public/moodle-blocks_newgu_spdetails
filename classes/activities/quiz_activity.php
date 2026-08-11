@@ -228,7 +228,7 @@ class quiz_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
@@ -564,7 +564,7 @@ class quiz_activity extends base {
         if (!$cachedata[$cachekey] || $cachedata[$cachekey][0]['updated'] < $fiveminutes) {
             $select = 'userid = :userid AND timestart BETWEEN :lastmonth AND :now AND state IN (:inprogress, :overdue)';
             $params = ['userid' => $USER->id, 'lastmonth' => $lastmonth, 'now' => $now, 'inprogress' => 'inprogress',
-            'overdue' => 'overdue'];
+            'overdue' => 'overdue', ];
             $quizattempts = $DB->get_records_select('quiz_attempts', $select, $params, '', 'quiz, state, attempt, timecheckstate');
 
             $submissionsdata = [
@@ -603,7 +603,7 @@ class quiz_activity extends base {
             foreach ($groupoverrides as $groupoverride) {
                 // An override for this quiz exists - is our user a member of the group?
                 $groupmembers = $DB->record_exists('groups_members', ['groupid' => $groupoverride->groupid,
-                'userid' => $USER->id]);
+                'userid' => $USER->id, ]);
                 if ($groupmembers === true) {
                     // If any of these fields are NULL, the override is using the default activity settings.
                     if ($groupoverride->timeopen != null) {

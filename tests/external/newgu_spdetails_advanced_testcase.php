@@ -16,6 +16,7 @@
 
 /**
  * Custom class for setting up our course types, gradebook and activities.
+ *
  * We should try and represent all the activities that Moodle provides,
  * however, the main focus, for now at least, should be on the activities
  * that are used regularly, namely assignment, quiz, possibly workshop and forum.
@@ -264,6 +265,7 @@ class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
      * @param int $studentid
      * @param int $graderid
      * @param float $gradeval
+     * @param int $score
      */
     protected function add_peerwork_grade(int $peerworkid, int $studentid, int $graderid, float $gradeval, int $score) {
 

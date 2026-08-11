@@ -59,7 +59,6 @@ class activity {
      * need to appear on Student MyGrades.
      *
      */
-
     public static $excludedactivities = [
         'attendance',
         'board',
@@ -256,7 +255,7 @@ class activity {
             $weighttowardscourse = new stdClass();
             $weighttowardscourse->grade_category_weight = 0;
             if ($item = \grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $activityitems->category->id,
-            'itemtype' => 'category'])) {
+            'itemtype' => 'category', ])) {
                 $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
                 $weighttowardscourse->grade_category_weight = $tmpwtc->grade_category_weight;
             }
@@ -508,7 +507,7 @@ class activity {
                         $gradecategoryweight = 0;
                         if ($item = \grade_item::fetch(['courseid' => $tmpgradeitem->courseid,
                             'itemname' => $tmpgradeitem->itemname, 'itemtype' => 'mod', 'itemmodule' => $tmpgradeitem->itemmodule,
-                            'iteminstance' => $tmpgradeitem->iteminstance, 'itemnumber' => $tmpgradeitem->itemnumber])) {
+                            'iteminstance' => $tmpgradeitem->iteminstance, 'itemnumber' => $tmpgradeitem->itemnumber, ])) {
                             $gradecategoryweight = course::get_grade_category_weight($item, $tmpgradeitem);
                         }
 
@@ -542,7 +541,7 @@ class activity {
      * @param string $activetab
      * @param string $assessmenttype
      * @param bool $displayweights
-     * @param int $userid - this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
+     * @param int|null $userid - this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
      * @return array
      */
     public static function process_default_items(array $defaultitems, string $activetab, string $assessmenttype,
@@ -704,7 +703,7 @@ class activity {
      *
      * @param object $manualgradeitem
      * @param string $assessmenttype
-     * @param int $userid - when this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
+     * @param int|null $userid - when this is being passed in by Student MyGrades Staff View - $USER would actually be the teacher here.
      * @return object or null
      */
     public static function process_manual_grade_item(object $manualgradeitem, string $assessmenttype,
@@ -845,7 +844,7 @@ class activity {
      * However, if using a weighted strategy with 'drop the lowest' and the value is greater
      * than 0, then don't display any weights.
      * @param object $gradecategoryweight
-     * @param object $gradecategory
+     * @param object|null $gradecategory
      * @return bool
      */
     public static function display_activity_item_weights(object $gradecategoryweight,

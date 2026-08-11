@@ -163,7 +163,7 @@ class workshop_activity extends base {
      * We need to account for both the submission and assessment items.
      * $gradeitem->itemnumber appears to denote 0 for the submission and 1 for the assessment.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {

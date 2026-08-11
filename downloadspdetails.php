@@ -16,6 +16,7 @@
 
 /**
  * Export Grade data from the student dashboard.
+ *
  * MGU-572 - This file accepts a course and export type, and generates
  * either a PDF or CSV file which is then becomes available to download.
  *
@@ -143,11 +144,10 @@ if ($coursestype) {
                     foreach ($course->firstlevel as $firstlevel) {
                         $firstlevelid = 0;
                         $firstlevelid = $firstlevel['id'];
-                        if ($mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user(
-                            $course->id,
-                            $firstlevelid,
-                            $USER->id
-                            )) {
+                        if (
+                            $mygradesdata = \local_gugrades\api::get_aggregation_dashboard_user($course->id, $firstlevelid,
+                            $USER->id)
+                            ) {
                             $tmpitems = $mygradesdata->fields;
                             foreach ($tmpitems as $tmpitem) {
                                 if ($tmpitem['iscategory'] == true) {
@@ -201,7 +201,10 @@ if ($coursestype) {
                     }
                     $activities = $tmpactivities;
                     $activitydata = \block_newgu_spdetails\activity::process_mygrades_items(
-                        $mygradeitems, $activities, $coursestype, ''
+                        $mygradeitems,
+                        $activities,
+                        $coursestype,
+                        ''
                     );
                 }
             }
@@ -253,8 +256,10 @@ if ($coursestype) {
 
                     // MGU-1066 - Only display activity item weights when a weighted strategy is being used.
                     // If 'drop the lowest' value is greater than 0 however, then don't any display weights.
-                    if (($category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
-                        $category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)) {
+                    if (
+                        ($category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
+                        $category->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)
+                    ) {
                         if ($category->droplow > 0) {
                             $activityitem->assessment_weight = '-';
                         }
@@ -368,7 +373,7 @@ if ($spdetailstype == "pdf" && $spdetailspdf != "" && $strcoursestype != "") {
     $html = "<h1>" . $strcoursestype . " Report for</h1>";
     $doc->writeHTMLCell(0, 0, $cellwidth, 80, $html, '', 1, 0, true, 'C', true);
     $doc->Line(183, 88, 275, 88, $style2);
-    $html = "<h2>" . $myfirstlastname. "</h2></div>";
+    $html = "<h2>" . $myfirstlastname . "</h2></div>";
     $doc->writeHTMLCell(0, 0, 170, 90, $html, '', 1, 0, true, 'C', true);
     $doc->Line(183, 98, 275, 98, $style2);
 

@@ -56,9 +56,8 @@ class get_assessments extends external_api {
      * @param int $page
      * @param string $sortby
      * @param string $sortorder
-     * @param int $subcategory
+     * @param int|null $subcategory
      * @return array of assessments, grouped by course.
-     * @throws \invalid_parameter_exception
      */
     public static function execute(string $activetab, int $page, string $sortby, string $sortorder,
     int|null $subcategory = null): array {

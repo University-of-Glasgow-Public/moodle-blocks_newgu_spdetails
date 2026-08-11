@@ -142,7 +142,7 @@ class lesson_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
@@ -271,7 +271,7 @@ class lesson_activity extends base {
     /**
      * Have any lesson attempts been made.
      *
-     * @param object $statusobj;
+     * @param object $statusobj
      * @param int $userid
      * @return object
      */
@@ -294,7 +294,7 @@ class lesson_activity extends base {
 
             // Now query the specialist table for this activity.
             if ($lessongrades = $DB->get_record('lesson_grades', ['lessonid' => $this->lesson->id, 'userid' => $userid,
-            'completed' => 1])) {
+            'completed' => 1, ])) {
                 $statusobj->grade_status = get_string('status_graded', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
                 $statusobj->status_class = get_string('status_class_graded', 'block_newgu_spdetails');

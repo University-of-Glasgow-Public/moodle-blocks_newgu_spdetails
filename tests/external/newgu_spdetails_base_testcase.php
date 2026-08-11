@@ -34,9 +34,11 @@ global $CFG;
 require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 
 /**
- * Base class from which all other test classes can extend. Creates a basic MyGrades type course,
- * enrols a teacher and some students. Extending classes can then modify the courses as they see fit,
- * e.g adding categories/sub categories/activities etc.
+ * Base class from which all other test classes can extend.
+ *
+ * Creates a basic MyGrades type course, enrols a teacher and some students.
+ * Extending classes can then modify the courses as they see fit, e.g adding
+ * categories/sub categories/activities etc.
  */
 class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
 
@@ -242,7 +244,6 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
      *
      * @param string $archetype
      * @return int
-     * @throws dml_exception
      */
     public function get_roleid(string $archetype = 'student'): int {
         global $DB;
@@ -252,11 +253,12 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
     }
 
     /**
-     * Check for MyGrades custom course category and field
-     * @var object $mygradescourse
-     * @var object $context
+     * Check for MyGrades custom course category and field.
+     *
+     * @param object $mygradescourse
+     * @param object $context
      */
-    protected function custom_course_field($mygradescourse, $context) {
+    protected function custom_course_field(object $mygradescourse, object $context) {
         global $DB;
 
         $category = new \stdClass;

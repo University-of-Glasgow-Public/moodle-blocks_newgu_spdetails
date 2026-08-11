@@ -34,9 +34,11 @@ global $CFG;
 require_once($CFG->dirroot . '/blocks/newgu_spdetails/tests/external/newgu_spdetails_advanced_testcase.php');
 
 /**
- * Unit tests for validating that when using an Assignment activity as a "grade placeholder" (basically set up to not accept
- * submissions), this returns as "Upcoming" for a due date in the future, "Not yet graded" when the due date is in the past prior
- * to grading, and "Graded" once a grade has been given. An Assignment activity with these settings will never appear as Overdue.
+ * Unit tests for validating using an Assignment activity as a "grade placeholder".
+ *
+ * Basically set this up with only a due date, and no submissions, this returns as "Upcoming" for a due date in the future,
+ * "Not yet graded" when the due date is in the past prior to grading, and "Graded" once a grade has been given. An Assignment
+ * activity with these settings will never appear as Overdue.
  *
  * @see MGU-1472 for further details about the change to the purpose of this activity.
  */

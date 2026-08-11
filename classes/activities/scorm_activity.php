@@ -168,7 +168,7 @@ class scorm_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
@@ -235,7 +235,7 @@ class scorm_activity extends base {
     /**
      * Have any SCORM submission attempts been made.
      *
-     * @param object $statusobj;
+     * @param object $statusobj
      * @param int $userid
      * @return object
      */

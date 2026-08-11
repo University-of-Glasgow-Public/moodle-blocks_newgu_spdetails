@@ -140,7 +140,7 @@ class forum_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {

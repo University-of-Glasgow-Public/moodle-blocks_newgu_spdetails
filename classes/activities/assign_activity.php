@@ -159,7 +159,7 @@ class assign_activity extends base {
     /**
      * Return a formatted date.
      *
-     * @param int $unformatteddate
+     * @param int|null $unformatteddate
      * @return string
      */
     public function get_formattedduedate(int|null $unformatteddate = null): string {
@@ -811,11 +811,11 @@ class assign_activity extends base {
                 'tlastmonth' => $lastmonth,
                 'tnow' => $now,
             ];
-            $assignmentsubmissions = $DB->get_records_select('assign_submission', $select, $params, '', 'assignment, status');
+            $assignsubmissions = $DB->get_records_select('assign_submission', $select, $params, '', 'assignment, status');
 
             $submissionsdata = [
                 'updated' => $currenttime,
-                'assignmentsubmissions' => $assignmentsubmissions,
+                'assignmentsubmissions' => $assignsubmissions,
             ];
 
             $cachedata = [
@@ -826,7 +826,7 @@ class assign_activity extends base {
             $cache->set_many($cachedata);
         } else {
             $cachedata = $cache->get_many([$cachekey]);
-            $assignmentsubmissions = $cachedata[$cachekey][0]['assignmentsubmissions'];
+            $assignsubmissions = $cachedata[$cachekey][0]['assignmentsubmissions'];
         }
 
         $assigninstance = $this->assign->get_instance();
@@ -859,11 +859,11 @@ class assign_activity extends base {
         if (!$assigninstance->teamsubmission ||
             (isset($allteammemberssubmit) && $allteammemberssubmit == true)) {
             // Looks like when visiting an activity, you end up with a submission entry by default.
-            if (!array_key_exists($assigninstance->id, $assignmentsubmissions) ||
-                (array_key_exists($assigninstance->id, $assignmentsubmissions) &&
-                (is_object($assignmentsubmissions[$assigninstance->id]) &&
-                property_exists($assignmentsubmissions[$assigninstance->id], 'status') &&
-                $assignmentsubmissions[$assigninstance->id]->status == 'new'))) {
+            if (!array_key_exists($assigninstance->id, $assignsubmissions) ||
+                (array_key_exists($assigninstance->id, $assignsubmissions) &&
+                (is_object($assignsubmissions[$assigninstance->id]) &&
+                property_exists($assignsubmissions[$assigninstance->id], 'status') &&
+                $assignsubmissions[$assigninstance->id]->status == 'new'))) {
                 // For the assessments due chart, we're only interested in if there's a due date essentially.
                 if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
                     $obj = new \stdClass();

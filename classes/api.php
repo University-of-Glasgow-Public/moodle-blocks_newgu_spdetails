@@ -43,7 +43,7 @@ class api extends external_api {
      * @param int $page
      * @param string $sortby
      * @param string $sortorder
-     * @param int $subcategory
+     * @param int|null $subcategory
      * @return array $data
      */
     public static function get_assessments(string $activetab, int $page, string $sortby, string $sortorder,
@@ -77,9 +77,9 @@ class api extends external_api {
      *
      * @param string $activetab
      * @param int $userid
-     * @param string $sortby
-     * @param string $sortorder
-     * @param int $subcategory
+     * @param string|null $sortby
+     * @param string|null $sortorder
+     * @param int|null $subcategory
      *
      * @return array $gradableactivities
      */
@@ -222,8 +222,8 @@ class api extends external_api {
      * Gak - I thought there might have been an easier way to match and return said
      * key from a source array of keys - looks like we've got to go the old skool way.
      *
-     * @param int $itemnumber
      * @param object $cm - The course module object. Our key 'customdata' is an array.
+     * @param int $itemnumber
      * @return int
      */
     public static function get_activity_end_date_name(object $cm, int $itemnumber): int {

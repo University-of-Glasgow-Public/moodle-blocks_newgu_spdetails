@@ -15,8 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Custom class which sets up (complex) gradebook schemas and data for
- * grade category testing
+ * Custom class which sets up (complex) gradebook schemas and data for grade category testing.
  *
  * @package    block_newgu_spdetails
  * @author     Greg Pedder <greg.pedder@glasgow.ac.uk>
