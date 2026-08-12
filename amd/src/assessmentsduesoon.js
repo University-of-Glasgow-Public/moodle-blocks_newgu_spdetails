@@ -103,117 +103,77 @@ async function fetchAssessmentsDueSoon() {
         let duein14days = response[0].duein14days;
         let duein1month = response[0].duein1month;
 
+        // MGU-1460 - Segments with 0 values shouldn't display.
+        const dataobject = [];
+        if (duein24hours > 0) {
+            dataobject.push({
+                data: [{
+                    name: chart24Hrs,
+                    id: '0',
+                    y: duein24hours
+                }],
+                color: 'rgba(255, 49, 49, 1)',
+                name: chart24Hrs,
+            });
+        }
+
+        if (duein7days > 0) {
+            dataobject.push({
+                data: [{
+                    name: chart7Days,
+                    id: '1',
+                    y: duein7days
+                }],
+                color: 'rgba(255, 145, 77, 1)',
+                name: chart7Days
+            });
+        }
+
+        if (duein14days > 0) {
+            dataobject.push({
+                data: [{
+                    name: chart14Days,
+                    id: '2',
+                    y: duein14days
+                }],
+                color: 'rgba(255, 222, 89, 1)',
+                name: chart14Days
+            });
+        }
+
+        if (duein1month > 0) {
+            dataobject.push({
+                data: [{
+                    name: chart1Mth,
+                    id: '3',
+                    y: duein1month
+                }],
+                color: 'rgba(0, 191, 99, 1)',
+                name: chart1Mth
+            });
+        }
+
         // Set specific colours/fonts/weights etc for the Highcharts config object.
-        let backgroundColour = '#FFFFFF';
-        let tmpFontColour = '#000';
-        let labelFontSize = '0.7em';
-        let tooltipBackgroundColour = '#FFFFFF';
-        let tooltipFontColour = '';
-        // Check for the contrast setting
-        if (document.querySelector('.hillhead40-night')) {
-            tmpFontColour = '#95B7E6';
-            backgroundColour = '#274163';
-            tooltipBackgroundColour = '#132030';
-            tooltipFontColour = '#95B7E6';
-            document.querySelector('.alert.alert-info a').style.color = '#95B7E6';
-        }
-        if (document.querySelector('.hillhead40-contrast-wb')) {
-            tmpFontColour = '#eee';
-            backgroundColour = '#000000';
-            tooltipBackgroundColour = '#000000';
-            tooltipFontColour = '#FFFFFF';
-            document.querySelector('.alert.alert-info a').style.color = '#eee';
-        }
-        if (document.querySelector('.hillhead40-contrast-yb')) {
-            tmpFontColour = '#ee6';
-            backgroundColour = '#000000';
-            tooltipBackgroundColour = '#000000';
-            tooltipFontColour = '#ee6';
-            document.querySelector('.alert.alert-info a').style.color = '#ee6';
-        }
-        if (document.querySelector('.hillhead40-contrast-by')) {
-            document.querySelector('.alert.alert-info a').style.color = '#000';
-            backgroundColour = '#ee6';
-            tooltipBackgroundColour = '#ee6';
-        }
-        if (document.querySelector('.hillhead40-contrast-wg')) {
-            tmpFontColour = '#eee';
-            backgroundColour = '#666';
-            tooltipBackgroundColour = '#666';
-            tooltipFontColour = '#eee';
-            document.querySelector('.alert.alert-info a').style.color = '#eee';
-        }
-        if (document.querySelector('.hillhead40-contrast-br')) {
-            backgroundColour = '#EEB9B9';
-            tooltipBackgroundColour = '#EEB9B9';
-            document.querySelector('.alert.alert-info a').style.color = '#000';
-        }
-        if (document.querySelector('.hillhead40-contrast-bb')) {
-            backgroundColour = '#B9D9EE';
-            tooltipBackgroundColour = '#B9D9EE';
-            document.querySelector('.alert.alert-info a').style.color = '#000';
-        }
-        if (document.querySelector('.hillhead40-contrast-bw')) {
-            backgroundColour = '#F6F6F6';
-            tooltipBackgroundColour = '#F6F6F6';
-            document.querySelector('.alert.alert-info a').style.color = '#000';
-        }
+        let [
+            tmpFontColour,
+            backgroundColour,
+            tooltipBackgroundColour,
+            tooltipFontColour
+        ] = setFontColours();
+
         // Check for the font setting
-        let tmpFontFamily = "'Hillhead', 'Ubuntu', 'Trebuchet MS', 'Arial', sans-serif";
-        if (document.querySelector('.hillhead40-font-modern')) {
-            tmpFontFamily = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
-        }
-        if (document.querySelector('.hillhead40-font-classic')) {
-            tmpFontFamily = "'Palatino', 'Times New Roman', serif";
-        }
-        if (document.querySelector('.hillhead40-font-comic')) {
-            tmpFontFamily = "'Hillhead Comic', 'Chalkboard', 'Comic Sans', 'Comic Sans MS', sans-serif";
-        }
-        if (document.querySelector('.hillhead40-font-mono')) {
-            tmpFontFamily = "'Hillhead Mono', 'Menlo', 'Courier New', monospace";
-        }
-        if (document.querySelector('.hillhead40-font-dyslexic')) {
-            tmpFontFamily = "'OpenDyslexic', 'Helvetica', 'Arial', sans-serif";
-        }
+        let tmpFontFamily = setFontFamily();
+
         // Check for the size setting. We also further control the chart dimensions here.
-        let tmpFontSize = 20;
-        let tmpWidth = 400;
-        let tmpHeight = 300;
-        let tmpCardRem = '33rem';
-        if (document.querySelector('.hillhead40-size-120')) {
-            tmpFontSize = 'large';
-            tmpWidth = 500;
-            tmpHeight = 400;
-            tmpCardRem = '70rem';
-        }
-        if (document.querySelector('.hillhead40-size-140')) {
-            tmpFontSize = 'x-large';
-            tmpWidth = 600;
-            tmpHeight = 500;
-            tmpCardRem = '70rem';
-        }
-        if (document.querySelector('.hillhead40-size-160')) {
-            tmpFontSize = 'xx-large';
-            tmpWidth = 700;
-            tmpHeight = 600;
-            tmpCardRem = '70rem';
-        }
-        if (document.querySelector('.hillhead40-size-180')) {
-            tmpFontSize = 'xxx-large';
-            tmpWidth = 800;
-            tmpHeight = 700;
-            tmpCardRem = '70rem';
-        }
-        // Check for the bold setting
-        let tmpFontWeight = 'normal';
-        if (document.querySelector('.hillhead40-bold')) {
-            tmpFontWeight = 'bolder';
-        }
-        // Check for the spacing setting
-        let tmpLineHeight = '';
-        if (document.querySelector('.hillhead40-spacing')) {
-            tmpLineHeight = '2rem';
-        }
+        let [
+            tmpFontSize,
+            labelFontSize,
+            tmpWidth,
+            tmpHeight,
+            tmpCardRem,
+            tmpFontWeight,
+            tmpLineHeight
+        ] = setFontSize();
 
         // Set the width/height of the card (container) and chart.
         let tempCard = document.querySelector(Selectors.DUESOON_CARD);
@@ -279,8 +239,9 @@ async function fetchAssessmentsDueSoon() {
                         itemClick: function(e) {
                             // This prevents the strikethrough and column from being removed from the chart.
                             e.preventDefault();
-                            let index = e.legendItem.index;
-                            viewAssessmentsDueByChartType(index);
+                            // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
+                            let legendIndex = e.legendItem.data[0].id;
+                            viewAssessmentsDueByChartType(legendIndex);
                         }
                     }
                 },
@@ -301,9 +262,9 @@ async function fetchAssessmentsDueSoon() {
                         showInLegend: true,
                         events: {
                             click: function(event) {
-                                // Prevent the column from greying out when clicked.
-                                let index = event.point.category;
-                                viewAssessmentsDueByChartType(index);
+                                // MGU-1460 - This allows us to send through the correct index number, saving changes to the WS.
+                                let pointIndex = event.point.id;
+                                viewAssessmentsDueByChartType(pointIndex);
                             }
                         },
                         states: {
@@ -325,6 +286,9 @@ async function fetchAssessmentsDueSoon() {
                 },
                 yAxis: {
                     title: {
+                        style: {
+                            color: tmpFontColour
+                        },
                         text: chartCount,
                     },
                     tickInterval: 1,
@@ -350,35 +314,7 @@ async function fetchAssessmentsDueSoon() {
                         y: 230
                     }
                 },
-                series: [{
-                    data: [{
-                        name: chart24Hrs,
-                        y: duein24hours
-                    }],
-                    color: 'rgba(255, 49, 49, 1)',
-                    name: chart24Hrs,
-                }, {
-                    data: [{
-                        name: chart7Days,
-                        y: duein7days
-                    }],
-                    color: 'rgba(255, 145, 77, 1)',
-                    name: chart7Days
-                }, {
-                    data: [{
-                        name: chart14Days,
-                        y: duein14days
-                    }],
-                    color: 'rgba(255, 222, 89, 1)',
-                    name: chart14Days
-                }, {
-                    data: [{
-                        name: chart1Mth,
-                        y: duein1month
-                    }],
-                    color: 'rgba(0, 191, 99, 1)',
-                    name: chart1Mth
-                }]
+                series: dataobject
             });
         });
     }).fail(function(err) {
@@ -390,11 +326,151 @@ async function fetchAssessmentsDueSoon() {
 }
 
 /**
+ * Set the various font colours for when the Accessibility tool is in use.
+ */
+const setFontColours = () => {
+    let tmpFontColour = '#000';
+    let backgroundColour = '#FFFFFF';
+    let tooltipBackgroundColour = '#FFFFFF';
+    let tooltipFontColour = '';
+    // Check for the contrast setting
+    if (document.querySelector('.hillhead40-night')) {
+        tmpFontColour = '#95B7E6';
+        backgroundColour = '#274163';
+        tooltipBackgroundColour = '#132030';
+        tooltipFontColour = '#95B7E6';
+    }
+    if (document.querySelector('.hillhead40-contrast-wb')) {
+        tmpFontColour = '#eee';
+        backgroundColour = '#000000';
+        tooltipBackgroundColour = '#000000';
+        tooltipFontColour = '#FFFFFF';
+    }
+    if (document.querySelector('.hillhead40-contrast-yb')) {
+        tmpFontColour = '#ee6';
+        backgroundColour = '#000000';
+        tooltipBackgroundColour = '#000000';
+        tooltipFontColour = '#ee6';
+    }
+    if (document.querySelector('.hillhead40-contrast-by')) {
+        document.querySelector('.alert.alert-info a').style.color = '#000';
+        backgroundColour = '#ee6';
+        tooltipBackgroundColour = '#ee6';
+    }
+    if (document.querySelector('.hillhead40-contrast-wg')) {
+        tmpFontColour = '#eee';
+        backgroundColour = '#666';
+        tooltipBackgroundColour = '#666';
+        tooltipFontColour = '#eee';
+    }
+    if (document.querySelector('.hillhead40-contrast-br')) {
+        backgroundColour = '#EEB9B9';
+        tooltipBackgroundColour = '#EEB9B9';
+        document.querySelector('.alert.alert-info a').style.color = '#000';
+    }
+    if (document.querySelector('.hillhead40-contrast-bb')) {
+        backgroundColour = '#B9D9EE';
+        tooltipBackgroundColour = '#B9D9EE';
+        document.querySelector('.alert.alert-info a').style.color = '#000';
+    }
+    if (document.querySelector('.hillhead40-contrast-bw')) {
+        backgroundColour = '#F6F6F6';
+        tooltipBackgroundColour = '#F6F6F6';
+        document.querySelector('.alert.alert-info a').style.color = '#000';
+    }
+
+    return [
+        tmpFontColour,
+        backgroundColour,
+        tooltipBackgroundColour,
+        tooltipFontColour
+    ];
+};
+
+/**
+ * Set the font family for if and when the Accessibility tool is in use.
+ */
+const setFontFamily = () => {
+    let tmpFontFamily = "'Hillhead', 'Ubuntu', 'Trebuchet MS', 'Arial', sans-serif";
+    if (document.querySelector('.hillhead40-font-modern')) {
+        tmpFontFamily = "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+    }
+    if (document.querySelector('.hillhead40-font-classic')) {
+        tmpFontFamily = "'Palatino', 'Times New Roman', serif";
+    }
+    if (document.querySelector('.hillhead40-font-comic')) {
+        tmpFontFamily = "'Hillhead Comic', 'Chalkboard', 'Comic Sans', 'Comic Sans MS', sans-serif";
+    }
+    if (document.querySelector('.hillhead40-font-mono')) {
+        tmpFontFamily = "'Hillhead Mono', 'Menlo', 'Courier New', monospace";
+    }
+    if (document.querySelector('.hillhead40-font-dyslexic')) {
+        tmpFontFamily = "'OpenDyslexic', 'Helvetica', 'Arial', sans-serif";
+    }
+    return tmpFontFamily;
+};
+
+/**
+ * Set the various font sizes for when the Accessibility tool is in use.
+ */
+const setFontSize = () => {
+    let tmpFontSize = 20;
+    let labelFontSize = '0.7em';
+    let tmpWidth = 400;
+    let tmpHeight = 300;
+    let tmpCardRem = '33rem';
+    let tmpFontWeight = 'normal';
+    let tmpLineHeight = '';
+    if (document.querySelector('.hillhead40-size-120')) {
+        tmpFontSize = 'large';
+        tmpWidth = 500;
+        tmpHeight = 400;
+        tmpCardRem = '70rem';
+    }
+    if (document.querySelector('.hillhead40-size-140')) {
+        tmpFontSize = 'x-large';
+        tmpWidth = 600;
+        tmpHeight = 500;
+        tmpCardRem = '70rem';
+    }
+    if (document.querySelector('.hillhead40-size-160')) {
+        tmpFontSize = 'xx-large';
+        tmpWidth = 700;
+        tmpHeight = 600;
+        tmpCardRem = '70rem';
+    }
+    if (document.querySelector('.hillhead40-size-180')) {
+        tmpFontSize = 'xxx-large';
+        tmpWidth = 800;
+        tmpHeight = 700;
+        tmpCardRem = '70rem';
+    }
+    // Check for the bold setting
+    if (document.querySelector('.hillhead40-bold')) {
+        tmpFontWeight = 'bolder';
+    }
+    // Check for the spacing setting
+    if (document.querySelector('.hillhead40-spacing')) {
+        tmpLineHeight = '2rem';
+    }
+
+    return [
+        tmpFontSize,
+        labelFontSize,
+        tmpWidth,
+        tmpHeight,
+        tmpCardRem,
+        tmpFontWeight,
+        tmpLineHeight
+    ];
+};
+
+/**
  * @method viewAssessmentsDueByChartType Click through to the relevant chart type.
  * @param {*} index
  */
 const viewAssessmentsDueByChartType = function(index) {
-    const chartType = index;
+    const chartType = parseInt(index);
 
     let containerBlock = document.querySelector(Selectors.COURSECONTENTS_BLOCK);
     if (containerBlock.checkVisibility()) {

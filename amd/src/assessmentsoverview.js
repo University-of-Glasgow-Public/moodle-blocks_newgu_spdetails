@@ -114,6 +114,7 @@ async function fetchAssessmentsOverview() {
                 color: 'rgba(255, 222, 89, 1)',
             });
         }
+
         if (overdue > 0) {
             dataobject.push({
                 name: statusTextOverdue + ': <strong>' + overdue + '</strong>',
@@ -122,6 +123,7 @@ async function fetchAssessmentsOverview() {
                 color: 'rgba(255, 49, 49, 1)',
             });
         }
+
         if (submitted > 0) {
             dataobject.push({
                 name: statusTextSubmitted + ': <strong>' + submitted + '</strong>',
@@ -130,6 +132,7 @@ async function fetchAssessmentsOverview() {
                 color: 'rgba(0, 191, 99, 1)',
             });
         }
+
         if (graded > 0) {
             dataobject.push({
                 name: statusTextGraded + ': <strong>' + graded + '</strong>',
@@ -457,6 +460,7 @@ const setFontFamily = () => {
     if (document.querySelector('.hillhead40-font-dyslexic')) {
         tmpFontFamily = "'OpenDyslexic', 'Helvetica', 'Arial', sans-serif";
     }
+
     return tmpFontFamily;
 };
 
