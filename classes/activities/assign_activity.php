@@ -885,13 +885,19 @@ class assign_activity extends base {
                 property_exists($assignsubmissions[$assigninstance->id], 'status') &&
                 $assignsubmissions[$assigninstance->id]->status == 'new'))
             ) {
-                // For the assessments due chart, we're only interested in if there's a due date essentially.
-                if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
-                    $obj = new \stdClass();
-                    $obj->id = $assigninstance->id;
-                    $obj->name = $assigninstance->name;
-                    $obj->duedate = (int) $statusobj->due_date;
-                    $assignmentdata[] = $obj;
+                // MGU-1472 - Moodle creates a mdl_assign_submission entry with a status of 'new' which gives us a false
+                // positive for an in person assignment/grade placeholder. This can be graded before the due date, but the
+                // assign_submission entry never changes. Check here whether it's been graded - ignore it if it has.
+                $hasbeengraded = $this->get_grade($USER->id);
+                if (!is_object($hasbeengraded)) {
+                    // For the assessments due chart, we're only interested in if there's a due date essentially.
+                    if (($statusobj->due_date != 0) && ($statusobj->due_date > $now)) {
+                        $obj = new \stdClass();
+                        $obj->id = $assigninstance->id;
+                        $obj->name = $assigninstance->name;
+                        $obj->duedate = (int) $statusobj->due_date;
+                        $assignmentdata[] = $obj;
+                    }
                 }
             }
         }
