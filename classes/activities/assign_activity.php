@@ -655,7 +655,7 @@ class assign_activity extends base {
         // MGU-1472 - Assignments with no submmissions still require to be date checked for the charts.
         if ($statusobj->nosubmissions == 1) {
             if ($now > $statusobj->due_date) {
-                $statusobj->grade_status = get_string('status_nosubmissionrequired', 'block_newgu_spdetails');
+                $statusobj->grade_status = get_string('status_submitted', 'block_newgu_spdetails');
                 $statusobj->status_text = get_string('status_text_notyetgraded', 'block_newgu_spdetails'); // Yes, really.
                 $statusobj->status_class = get_string('status_class_nosubmissionrequired', 'block_newgu_spdetails');
                 if ($statusobj->tmpworkflowstate != '') {
