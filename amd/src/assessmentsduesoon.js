@@ -102,7 +102,6 @@ async function fetchAssessmentsDueSoon() {
         let duein7days = response[0].duein7days;
         let duein14days = response[0].duein14days;
         let duein1month = response[0].duein1month;
-        let showtooltip = true;
 
         // MGU-1460 - Segments with 0 values shouldn't display.
         const dataobject = [];
@@ -152,11 +151,6 @@ async function fetchAssessmentsDueSoon() {
                 color: 'rgba(0, 191, 99, 1)',
                 name: chart1Mth
             });
-        }
-
-        // MGU-1472 - don't show the tooltip if only 1 date element exists.
-        if (dataobject.length == 1) {
-            showtooltip = false;
         }
 
         // Set specific colours/fonts/weights etc for the Highcharts config object.
@@ -307,7 +301,7 @@ async function fetchAssessmentsDueSoon() {
                     }
                 },
                 tooltip: {
-                    enabled: showtooltip,
+                    enabled: false,
                     backgroundColor: tooltipBackgroundColour,
                     style: {
                         color: tooltipFontColour
