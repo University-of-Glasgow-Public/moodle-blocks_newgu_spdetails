@@ -155,7 +155,7 @@ final class mgu_1472_in_person_assessment_test extends \block_newgu_spdetails\ex
         $this->assertArrayHasKey('overdue', $stats[0]);
         $this->assertEquals(0, $stats[0]['overdue']);
         $this->assertArrayHasKey('sub_assess', $stats[0]);
-        $this->assertEquals(0, $stats[0]['sub_assess']);
+        $this->assertEquals(1, $stats[0]['sub_assess']);
         $this->assertArrayHasKey('assess_marked', $stats[0]);
         $this->assertEquals(0, $stats[0]['assess_marked']);
 
