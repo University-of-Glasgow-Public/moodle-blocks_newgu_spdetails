@@ -66,7 +66,7 @@ class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
     /**
      * @var object $mygradesassignment5
      */
-    protected $mygradesassignment45;
+    protected $mygradesassignment5;
 
     /**
      * @var object $mygradesassignment6
@@ -89,7 +89,7 @@ class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
     protected $gradebookassignment3;
 
     /**
-     * @var object $mygrades_summativecategory
+     * @var object $mygradessummativecategory
      */
     protected $mygradessummativecategory;
 
@@ -104,7 +104,7 @@ class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
     protected $mygradessummativesubcategory2;
 
     /**
-     * @var object $mygrades_formativecategory
+     * @var object $mygradesformativecategory
      */
     protected $mygradesformativecategory;
 
@@ -298,7 +298,6 @@ class newgu_spdetails_advanced_testcase extends newgu_spdetails_base_testcase {
      * settings made in Gradebook.
      *
      * @return void
-     * @throws dml_exception
      */
     protected function setUp(): void {
 

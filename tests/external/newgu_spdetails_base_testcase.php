@@ -26,6 +26,7 @@
 namespace block_newgu_spdetails\external;
 
 use externallib_advanced_testcase;
+use core_external\external_api;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -159,6 +160,12 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
             'scale' => $scaleitems,
             'courseid' => $mygradescourse->id,
         ]);
+        $schedulea = [
+            0 => 'H:0', 1 => 'G2:1', 2 => 'G1:2', 3 => 'F3:3', 4 => 'F2:4', 5 => 'F1:5', 6 => 'E3:6', 7 => 'E2:7', 8 => 'E1:8',
+            9 => 'D3:9', 10 => 'D2:10', 11 => 'D1:11', 12 => 'C3:12', 13 => 'C2:13', 14 => 'C1:14', 15 => 'B3:15', 16 => 'B2:16',
+            17 => 'B1:17', 18 => 'A5:18', 19 => 'A4:19', 20 => 'A3:20', 21 => 'A2:21', 22 => 'A1:22',
+        ];
+        $this->fill_scalevalue($schedulea, $scalea->id, 'schedulea');
 
         // Add another scale.
         // Range 1 to 8.
@@ -217,7 +224,8 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
         int $studentid,
         int $graderid,
         float $gradeval,
-        string $status = ASSIGN_SUBMISSION_STATUS_NEW
+        string $status = ASSIGN_SUBMISSION_STATUS_NEW,
+        string $comment = ''
     ) {
         global $DB;
 
@@ -240,7 +248,61 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
         $grade->grader = $graderid;
         $grade->grade = $gradeval;
         $grade->attemptnumber = 0;
-        $DB->insert_record('assign_grades', $grade);
+        $gradeid = $DB->insert_record('assign_grades', $grade);
+
+        if ($comment) {
+            $cmt = new \stdClass();
+            $cmt->assignment = $assignid;
+            $cmt->grade = $gradeid;
+            $cmt->commenttext = $comment;
+            $cmt->commentformat = 1;
+            $DB->insert_record('assignfeedback_comments', $cmt);
+        }
+    }
+
+    /**
+     * Action to take when releasing grades
+     * For Assignment, update workflow
+     * @param int $userid
+     * @param object $assignment
+     * @param int $gradeitemid
+     */
+    protected function release_assignment_grades(int $userid, object $assignment, int $gradeitemid) {
+
+        $this->set_marking_workflow($userid, ASSIGN_MARKING_WORKFLOW_STATE_RELEASED, $assignment, $gradeitemid);
+
+        return;
+    }
+
+    /**
+     * Modify assignment workflow state
+     * @param int $userid
+     * @param string $workflowstate
+     * @param object $assignment
+     * @param int $gradeitem
+     */
+    private function set_marking_workflow(int $userid, string $workflowstate, object $assignment, int $gradeitem) {
+        global $DB;
+
+        $cm = \local_gugrades\users::get_cm_from_grade_item($gradeitem, $assignment->course);
+        $course = $DB->get_record('course', ['id' => $assignment->course], '*', MUST_EXIST);
+        $coursemodulecontext = \context_module::instance($cm->id);
+        $assign = new \assign($coursemodulecontext, $cm, $course);
+
+        $userflags = $assign->get_user_flags($userid, true);
+        $userflags->workflowstate = $workflowstate;
+        $assign->update_user_flags($userflags);
+
+        // Update grade.
+        $grade = $assign->get_user_grade($userid, true);
+
+        // Is there any feedback comment for this grade?
+        // I got this from the process_save_quic_grades() function in mod_assign::locallib.php.
+        if ($feedback = $DB->get_record('assignfeedback_comments', ['grade' => $grade->id])) {
+            $grade->feedbacktext = $feedback->commenttext;
+            $grade->feedbackformat = $feedback->commentformat;
+        }
+        $assign->update_grade($grade);
     }
 
     /**
@@ -345,5 +407,38 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
         $gradeitem = $DB->get_record('grade_items', ['id' => $gradeitemid], '*', MUST_EXIST);
         $gradeitem->categoryid = $gradecategoryid;
         $DB->update_record('grade_items', $gradeitem);
+    }
+
+    /**
+     * Import set of grades
+     * @param int $courseid
+     * @param int $gradeitemid
+     * @param array $userlist
+     * @param string $fillns
+     * @param string $reason = 'FIRST'
+     * @param string $importadditional = 'update'
+     */
+    protected function import_grades(
+        int $courseid,
+        int $gradeitemid,
+        array $userlist,
+        string $fillns = '',
+        string $reason = 'FIRST',
+        string $importadditional = 'update'
+    ) {
+        $status = \local_gugrades\external\import_grades_users::execute(
+            courseid:       $courseid,
+            gradeitemid:    $gradeitemid,
+            additional:     $importadditional,
+            fillns:         $fillns,
+            reason:         $reason,
+            other:          '',
+            dryrun:         false,
+            userlist:       $userlist
+        );
+        $status = external_api::clean_returnvalue(
+            \local_gugrades\external\import_grades_users::execute_returns(),
+            $status
+        );
     }
 }

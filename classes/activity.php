@@ -499,7 +499,7 @@ class activity {
                                     );
                                     $mygradesactivityitem->status_text = get_string('status_text_graded', 'block_newgu_spdetails');
 
-                                    // See MGU-1230 - Student MyGrades / Staff View.
+                                    // MGU-1540 - We now link back to the activity grading page, and not the Grader Report.
                                     if ($cm) {
                                         if ($cm->uservisible) {
                                             if ($cm->visibleoncoursepage) {
@@ -507,9 +507,7 @@ class activity {
                                                     'status_text_viewfeedback',
                                                     'block_newgu_spdetails'
                                                 );
-                                                $mygradesactivityitem->grade_feedback_link = $CFG->wwwroot .
-                                                '/grade/report/index.php?id=' .
-                                                $tmpgradeitems[$index]->courseid;
+                                                $mygradesactivityitem->grade_feedback_link = $assessmenturl . "#page-footer";
                                             }
                                         }
                                     }

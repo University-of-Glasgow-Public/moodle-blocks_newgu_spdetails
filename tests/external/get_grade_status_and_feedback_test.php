@@ -24,6 +24,7 @@
  */
 
 namespace block_newgu_spdetails\external;
+use core_external\external_api;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -150,5 +151,183 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
         // Check for the final grade.
         $this->assertObjectHasProperty('grade_class', $mygradesgradeditems['coursedata']['courseitems'][1]);
         $this->assertFalse($mygradesgradeditems['coursedata']['courseitems'][1]->grade_provisional);
+    }
+
+    /**
+     * Test that the Feedback link that becomes available after an activity
+     * has been graded in Gradebook, links to the activity grade page.
+     * See MGU-1540 for further information.
+     */
+    public function test_get_gradebook_feedback_link(): void {
+        global $DB;
+
+        // We're the test student.
+        $this->setUser($this->student1->id);
+
+        // Fake some due dates.
+        $duedate1 = mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 5, date("Y"));
+
+        $this->mygradesassignment1 = $this->getDataGenerator()->create_module('assign', [
+            'name' => 'Gradebook Feedback link',
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'course' => $this->mygradescourse->id,
+            'duedate' => $duedate1,
+            'gradetype' => 2,
+            'grademax' => 50,
+            'scaleid' => $this->scalea->id,
+        ]);
+
+        // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
+        $mygradessummativesubcategoryid = $this->mygradessummativesubcategory->id;
+        $params = [
+            $mygradessummativesubcategoryid,
+            $this->mygradesassignment1->id,
+        ];
+        $DB->execute("UPDATE {grade_items} SET categoryid = ? WHERE iteminstance = ?", $params);
+
+        // Create_module also doesn't allow us to set an assignment plugin, which we check for in the main class.
+        // Fake that we are allowing submissions.
+        $params = [
+            'nosubmissions' => 0,
+            'id' => $this->mygradesassignment1->id,
+        ];
+        $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
+
+        // Create the assignment grade, along with some feedback.
+        $this->add_assignment_grade(
+            $this->mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            17,
+            ASSIGN_SUBMISSION_STATUS_NEW,
+            'Excellent work.'
+        );
+
+        $gradeitem = $DB->get_record('grade_items',
+            [
+                'courseid' => $this->mygradesassignment1->course,
+                'iteminstance' => $this->mygradesassignment1->id
+            ], 
+            '*', 
+            MUST_EXIST
+        );
+
+        // This should update the assign_submission table and the grades_grade table.
+        $this->release_assignment_grades($this->student1->id, $this->mygradesassignment1, $gradeitem->id);
+
+        $activity = \block_newgu_spdetails\activity::activity_factory($gradeitem->id, $this->mygradesassignment1->course, 0);
+        $activityurl = $activity->get_assessmenturl();
+
+        $gradestatobj = \block_newgu_spdetails\grade::get_grade_status_and_feedback(
+            $this->mygradescourse->id,
+            $gradeitem->id,
+            $this->student1->id,
+            2,
+            17,
+            $this->scalea->id,
+        );
+
+        $this->assertIsObject($gradestatobj);
+        $this->assertObjectHasProperty('grade_feedback_link', $gradestatobj);
+        $this->assertStringContainsString($gradestatobj->grade_feedback_link, $activityurl . "#page-footer");
+    }
+
+    /**
+     * Test that the Feedback link that becomes available after an activity has been graded and released
+     * from MyGrades, links to the activity grade page and no longer the Grader Report page.
+     * See MGU-1540 for further information.
+     */
+    public function test_get_mygrades_feedback_link(): void {
+        global $DB;
+
+        // We're the teacher to begin with.
+        $this->setUser($this->teacher->id);
+
+        // Fake some due dates.
+        $duedate1 = mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 6, date("Y"));
+
+        $this->mygradesassignment1 = $this->getDataGenerator()->create_module('assign', [
+            'name' => 'MyGrades Feedback link',
+            'itemtype' => 'mod',
+            'itemmodule' => 'assign',
+            'course' => $this->mygradescourse->id,
+            'duedate' => $duedate1,
+            'gradetype' => 2,
+            'grademax' => 50,
+            'scaleid' => $this->scalea->id,
+        ]);
+
+        // Create_module gives us stuff for free, however, it doesn't set the categoryid correctly.
+        $mygradessummativesubcategoryid = $this->mygradessummativesubcategory->id;
+        $params = [
+            $mygradessummativesubcategoryid,
+            $this->mygradesassignment1->id,
+        ];
+        $DB->execute("UPDATE {grade_items} SET categoryid = ? WHERE iteminstance = ?", $params);
+
+        // Create_module also doesn't allow us to set an assignment plugin, which we check for in the main class.
+        // Fake that we are allowing submissions.
+        $params = [
+            'nosubmissions' => 0,
+            'id' => $this->mygradesassignment1->id,
+        ];
+        $DB->execute("UPDATE {assign} SET nosubmissions = ? WHERE id = ?", $params);
+
+        // Create the assignment grade, along with some feedback.
+        $this->add_assignment_grade(
+            $this->mygradesassignment1->id,
+            $this->student1->id,
+            $this->teacher->id,
+            14,
+            ASSIGN_SUBMISSION_STATUS_NEW,
+            'Outstanding work.'
+        );
+
+        $gradeitem = $DB->get_record('grade_items',
+            [
+                'courseid' => $this->mygradescourse->id,
+                'iteminstance' => $this->mygradesassignment1->id
+            ], 
+            '*', 
+            MUST_EXIST
+        );
+
+        // This should update the assign_submission table and the grades_grade table.
+        $this->release_assignment_grades($this->student1->id, $this->mygradesassignment1, $gradeitem->id);
+
+        // The above has now set gradetype to points, we need to reset this to Scale.
+        $params = [
+            2,
+            $this->scalea->id,
+            $this->mygradesassignment1->id,
+        ];
+        $DB->execute("UPDATE {grade_items} SET gradetype = ?, scaleid = ? WHERE iteminstance = ?", $params);
+
+        // We need to now import this item into MyGrades
+        $userlist = [
+            $this->student1->id,
+        ];
+        $this->import_grades($this->mygradescourse->id, $gradeitem->id, $userlist);
+
+        // Release aggregated grade "MyGrades Feedback link".
+        $status = \local_gugrades\external\release_grades::execute($this->mygradescourse->id, $gradeitem->id, 0, false);
+        $status = external_api::clean_returnvalue(
+            \local_gugrades\external\release_grades::execute_returns(),
+            $status
+        );
+
+        // Revert to being the student.
+        $this->setUser($this->student1->id);
+        
+        $activities = \block_newgu_spdetails\activity::get_activityitems($mygradessummativesubcategoryid, $this->student1->id, "current");
+        $coursedata = $activities['coursedata'];
+        $courseitems = $coursedata['courseitems'];
+        $courseitem = $courseitems[0];
+        $activity = \block_newgu_spdetails\activity::activity_factory($gradeitem->id, $this->mygradesassignment1->course, 0);
+        $activityurl = $activity->get_assessmenturl();
+
+        // This should now point to the activity grade page.
+        $this->assertStringContainsString($courseitem->grade_feedback_link, $activityurl . "#page-footer");
     }
 }
