@@ -60,7 +60,8 @@ async function fetchAssessmentsDueSoon() {
         {key: 'chart_count', component: 'block_newgu_spdetails'},
         {key: 'duesoon_aria_label_text', component: 'block_newgu_spdetails'},
         {key: 'duesoon_accessibility_description', component: 'block_newgu_spdetails'},
-        {key: 'duesoon_tooltip_preamble', component: 'block_newgu_spdetails'}
+        {key: 'duesoon_tooltip_preamble', component: 'block_newgu_spdetails'},
+        {key: 'chart_nodata', component: 'block_newgu_spdetails'}
     ];
     let loadingText = '';
     let chart24Hrs = '';
@@ -71,6 +72,7 @@ async function fetchAssessmentsDueSoon() {
     let ariaLabelText = '';
     let accessibilityDescription = '';
     let duesoonTooltipPreamble = '';
+    let chartNoData = '';
 
     await getStrings(requiredStrings).then((result) => {
         loadingText = result[0];
@@ -82,6 +84,7 @@ async function fetchAssessmentsDueSoon() {
         ariaLabelText = result[6];
         accessibilityDescription = result[7];
         duesoonTooltipPreamble = result[8];
+        chartNoData = result[9];
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -314,6 +317,18 @@ async function fetchAssessmentsDueSoon() {
                     position: {
                         y: 230
                     }
+                },
+                noData: {
+                    style: {
+                        fontWeight: 'bold',
+                        fontStyle: 'italic',
+                        fontSize: '20px',
+                        color: '#303030'
+                    },
+                    useHTML: true
+                },
+                lang: {
+                    noData: chartNoData
                 },
                 series: dataobject
             });

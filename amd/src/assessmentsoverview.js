@@ -63,7 +63,8 @@ async function fetchAssessmentsOverview() {
         {key: 'status_text_graded', component: 'block_newgu_spdetails'},
         {key: 'overview_aria_label_text', component: 'block_newgu_spdetails'},
         {key: 'overview_accessibility_description', component: 'block_newgu_spdetails'},
-        {key: 'overview_tooltip_preamble', component: 'block_newgu_spdetails'}
+        {key: 'overview_tooltip_preamble', component: 'block_newgu_spdetails'},
+        {key: 'overview_nodata', component: 'block_newgu_spdetails'}
     ];
     let loadingText = '';
     let statusTextUpcoming = '';
@@ -73,6 +74,7 @@ async function fetchAssessmentsOverview() {
     let ariaLabelText = '';
     let accessibilityDescription = '';
     let overviewTooltipPreamble = '';
+    let overviewNoData = '';
 
     await getStrings(requiredStrings).then((result) => {
         loadingText = result[0];
@@ -83,6 +85,7 @@ async function fetchAssessmentsOverview() {
         ariaLabelText = result[5];
         accessibilityDescription = result[6];
         overviewTooltipPreamble = result[7];
+        overviewNoData = result[8];
         return;
     }).catch((err) => {
         Log.debug(err);
@@ -240,6 +243,9 @@ async function fetchAssessmentsOverview() {
                     }
                 },
                 plotOptions: {
+                    pie: {
+                        borderWidth: 0
+                    },
                     series: {
                         allowPointSelect: true,
                         cursor: 'pointer',
@@ -269,6 +275,21 @@ async function fetchAssessmentsOverview() {
                     },
                     format: '<span style="color:{color}">\u25CF</span>' + overviewTooltipPreamble + '{key}<br/>',
                     shared: true
+                },
+                noData: {
+                    position: {
+                        x: 100
+                    },
+                    style: {
+                        fontWeight: 'bold',
+                        fontStyle: 'italic',
+                        fontSize: '20px',
+                        color: '#303030'
+                    },
+                    useHTML: true,
+                },
+                lang: {
+                    noData: overviewNoData
                 },
                 series: [{
                     innerSize: '50%',
