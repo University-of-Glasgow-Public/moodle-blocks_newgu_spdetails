@@ -157,6 +157,7 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
      * Test that the Feedback link that becomes available after an activity
      * has been graded in Gradebook, links to the activity grade page.
      * See MGU-1540 for further information.
+     * @covers \blocks\newgu_spdetails\grade
      */
     public function test_get_gradebook_feedback_link(): void {
         global $DB;
@@ -204,12 +205,13 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
             'Excellent work.'
         );
 
-        $gradeitem = $DB->get_record('grade_items',
+        $gradeitem = $DB->get_record(
+            'grade_items',
             [
                 'courseid' => $this->mygradesassignment1->course,
-                'iteminstance' => $this->mygradesassignment1->id
-            ], 
-            '*', 
+                'iteminstance' => $this->mygradesassignment1->id,
+            ],
+            '*',
             MUST_EXIST
         );
 
@@ -237,6 +239,7 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
      * Test that the Feedback link that becomes available after an activity has been graded and released
      * from MyGrades, links to the activity grade page and no longer the Grader Report page.
      * See MGU-1540 for further information.
+     * @covers \blocks\newgu_spdetails\grade
      */
     public function test_get_mygrades_feedback_link(): void {
         global $DB;
@@ -284,12 +287,13 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
             'Outstanding work.'
         );
 
-        $gradeitem = $DB->get_record('grade_items',
+        $gradeitem = $DB->get_record(
+            'grade_items',
             [
                 'courseid' => $this->mygradescourse->id,
-                'iteminstance' => $this->mygradesassignment1->id
-            ], 
-            '*', 
+                'iteminstance' => $this->mygradesassignment1->id,
+            ],
+            '*',
             MUST_EXIST
         );
 
@@ -304,7 +308,7 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
         ];
         $DB->execute("UPDATE {grade_items} SET gradetype = ?, scaleid = ? WHERE iteminstance = ?", $params);
 
-        // We need to now import this item into MyGrades
+        // We need to now import this item into MyGrades.
         $userlist = [
             $this->student1->id,
         ];
@@ -319,8 +323,12 @@ final class get_grade_status_and_feedback_test extends \block_newgu_spdetails\ex
 
         // Revert to being the student.
         $this->setUser($this->student1->id);
-        
-        $activities = \block_newgu_spdetails\activity::get_activityitems($mygradessummativesubcategoryid, $this->student1->id, "current");
+
+        $activities = \block_newgu_spdetails\activity::get_activityitems(
+            $mygradessummativesubcategoryid,
+            $this->student1->id,
+            "current"
+        );
         $coursedata = $activities['coursedata'];
         $courseitems = $coursedata['courseitems'];
         $courseitem = $courseitems[0];

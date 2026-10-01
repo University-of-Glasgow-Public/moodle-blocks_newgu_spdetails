@@ -118,6 +118,7 @@ $string['noduedate'] = 'No Due Date';
 $string['noncreditcourses'] = 'Non credit courses';
 $string['notmarked'] = 'Not marked';
 $string['notsubmitted'] = 'Not Submitted';
+$string['opendate'] = 'Opened';
 $string['overdue'] = 'Overdue';
 $string['overview_accessibility_description'] = 'This is the Assessments overview chart. It displays your assessments that need to be submitted, are overdue, have been submitted, or have been graded.';
 $string['overview_aria_label_text'] = 'Assessments overview. A chart displaying assessments to be submitted, overdue, submitted and graded.';

@@ -44,6 +44,7 @@ $thhd = 'border="1px" height="15" style="text-align:center;background-color: #cc
 $tdstl = 'border="1px" cellpadding="10" valign="middle" height="22" style="margin-left:10px;"';
 $tdstc = 'border="1px" cellpadding="10" valign="middle" height="22" style="text-align:center;"';
 $spdetailspdf = get_string('nocoursesfound', 'block_newgu_spdetails');
+$cellwidth = 0;
 
 /**
  * Quick and dirty way of getting all of the mygrades grade category items in the format we need.
@@ -64,7 +65,7 @@ function get_aggregation_items(int $courseid, int $gradeitemid, int $userid, arr
     if ($gradecat = \grade_item::fetch(['id' => $gradeitemid])) {
         $gradecatid = $gradecat->iteminstance;
         $tmp = \local_gugrades\api::get_aggregation_dashboard_user($courseid, $gradecatid, $userid);
-        $tmpitems = $tmp->fields;
+        $tmpitems = $tmp['fields'];
         foreach ($tmpitems as $tmpitem) {
             if ($tmpitem['iscategory'] == true) {
                 $aggitems = get_aggregation_items($courseid, $tmpitem['gradeitemid'], $userid, $items);
@@ -81,6 +82,10 @@ function get_aggregation_items(int $courseid, int $gradeitemid, int $userid, arr
 }
 
 if ($coursestype) {
+    $coursheaderwidth = '25%';
+    $assessmentheaderwidth = '24%';
+    $assementtypeheaderwidth = '8%';
+    $duedateheaderwidth = '13%';
     switch ($coursestype) {
         case "current":
             $strcoursestype = get_string('currentcourses', 'block_newgu_spdetails');
@@ -91,6 +96,10 @@ if ($coursestype) {
             $strcoursestype = get_string('pastcourses', 'block_newgu_spdetails');
             $courses = \local_gugrades\api::dashboard_get_courses($USER->id, false, true, $sortstring);
             $cellwidth = 148;
+            $coursheaderwidth = '30%';
+            $assessmentheaderwidth = '30%';
+            $assementtypeheaderwidth = '10%';
+            $duedateheaderwidth = '16%';
             break;
         default:
             $strcoursestype = get_string('currentcourses', 'block_newgu_spdetails');
@@ -100,16 +109,19 @@ if ($coursestype) {
 
     $spdetailspdf = "<table width=100%>";
     $spdetailspdf .= '<tr style="font-weight: bold;">';
-    $spdetailspdf .= '<th width="22%"' . $thhd . '>' . get_string('course') . '</th>';
-    $spdetailspdf .= '<th width="22%"' . $thhd . '>' . get_string('assessment') . '</th>';
-    $spdetailspdf .= '<th width="8%" ' . $thhd . '>' . get_string('assessmenttype', 'block_newgu_spdetails') . "</th>";
+    $spdetailspdf .= '<th width="' . $coursheaderwidth . '"' . $thhd . '>' . get_string('course') . '</th>';
+    $spdetailspdf .= '<th width="' . $assessmentheaderwidth . '"' . $thhd . '>' . get_string('assessment') . '</th>';
+    $spdetailspdf .= '<th width="' . $assementtypeheaderwidth . '" ' . $thhd . '>' . get_string(
+        'assessmenttype',
+        'block_newgu_spdetails'
+    ) . "</th>";
     $spdetailspdf .= '<th width="5%" ' . $thhd . '>' . get_string('weight', 'block_newgu_spdetails') . "</th>";
+    $spdetailspdf .= '<th width="' . $duedateheaderwidth . '" ' . $thhd . '>' . get_string(
+        'duedate',
+        'block_newgu_spdetails'
+    ) . "</th>";
     if ($coursestype == 'current') {
-        $spdetailspdf .= '<th width="15%" ' . $thhd . '>' . get_string('duedate', 'block_newgu_spdetails') . "</th>";
         $spdetailspdf .= '<th width="15%" ' . $thhd . '>' . get_string('status') . "</th>";
-    } else {
-        $spdetailspdf .= '<th width="15%" ' . $thhd . '>' . get_string('startdate', 'block_newgu_spdetails') . "</th>";
-        $spdetailspdf .= '<th width="15%" ' . $thhd . '>' . get_string('enddate', 'block_newgu_spdetails') . "</th>";
     }
     $spdetailspdf .= '<th width="11%" ' . $thhd . '>' . get_string('yourgrade', 'block_newgu_spdetails') . "</th>";
     $spdetailspdf .= "</tr>";
@@ -120,6 +132,8 @@ if ($coursestype) {
         if (\block_newgu_spdetails\api::return_isstudent($course->id, $USER->id)) {
             $mygradesenabled = \block_newgu_spdetails\course::is_type_mygrades($course->id);
             $activitydata = [];
+            $startdate = '';
+            $enddate = '';
             // MGU-1368 The call to api::get_aggregation_dashboard_user() further on might not return data.
             $hasgradedata = false;
 
@@ -137,10 +151,10 @@ if ($coursestype) {
             $activities = \block_newgu_spdetails\course::get_activities($course->id, ['itemtype' => 'manual'], true);
 
             if ($mygradesenabled) {
+                $mygradeitems = [];
                 // Method get_aggregation_dashboard_user() gets us items for the current category only.
                 // As we need every item in every category, we need to recursively fetch them.
                 if ($course->firstlevel) {
-                    $mygradeitems = [];
                     foreach ($course->firstlevel as $firstlevel) {
                         $firstlevelid = 0;
                         $firstlevelid = $firstlevel['id'];
@@ -151,7 +165,7 @@ if ($coursestype) {
                                 $USER->id
                             )
                         ) {
-                            $tmpitems = $mygradesdata->fields;
+                            $tmpitems = $mygradesdata['fields'];
                             foreach ($tmpitems as $tmpitem) {
                                 if ($tmpitem['iscategory'] == true) {
                                     $fielditems = get_aggregation_items($course->id, $tmpitem['gradeitemid'], $USER->id, []);
@@ -170,9 +184,10 @@ if ($coursestype) {
 
                 if ($hasgradedata == true) {
                     // MGU-1243 - only keep an item in $mygradeitem if there is a corresponding item in $activities.
+                    $activitiesobj = array_column($activities, 'id');
                     foreach ($mygradeitems as $mygradeitem) {
                         $tempgradeitem = $mygradeitem['gradeitemid'];
-                        if (!array_key_exists($tempgradeitem, $activities)) {
+                        if (!in_array($tempgradeitem, $activitiesobj)) {
                             unset($mygradeitems[$tempgradeitem]);
                         }
                     }
@@ -224,6 +239,7 @@ if ($coursestype) {
             if ($activitydata) {
                 foreach ($activitydata as $key => $activityitem) {
                     $itemrestriction = '';
+                    $topcategoryname = '';
                     // MGU-1372 - We need to check if the grade item is a resit grade item, so we can display it.
                     if (isset($activityitem->reassessment) && $activityitem->reassessment) {
                         $itemrestriction .= ' (' . get_string('reassessment', 'block_newgu_spdetails') . ')';
@@ -269,12 +285,9 @@ if ($coursestype) {
                     }
 
                     $spdetailspdf .= "<td $tdstc>" . $activityitem->assessment_weight . "</td>";
+                    $spdetailspdf .= "<td $tdstc><strong>" . $activityitem->due_date . "</strong></td>";
                     if ($coursestype == 'current') {
-                        $spdetailspdf .= "<td $tdstc><strong>" . $activityitem->due_date . "</strong></td>";
                         $spdetailspdf .= "<td $tdstc>" . $activityitem->status_text . "</td>";
-                    } else {
-                        $spdetailspdf .= "<td $tdstc>" . $startdate . "</td>";
-                        $spdetailspdf .= "<td $tdstc>" . $enddate . "</td>";
                     }
                     if ($activityitem->grade != get_string('status_text_tobeconfirmed', 'block_newgu_spdetails')) {
                         $grade = "<strong>" . $activityitem->grade . "</strong>";
@@ -294,15 +307,10 @@ if ($coursestype) {
                     $col++;
                     $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $activityitem->assessment_weight];
                     $col++;
+                    $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $activityitem->due_date];
+                    $col++;
                     if ($coursestype == 'current') {
-                        $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $activityitem->due_date];
-                        $col++;
                         $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $activityitem->status_text];
-                        $col++;
-                    } else {
-                        $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $startdate];
-                        $col++;
-                        $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => $enddate];
                         $col++;
                     }
                     $xldata[$row][$col] = ["row" => $row, "col" => $col, "text" => strip_tags($activityitem->grade)];
@@ -457,9 +465,10 @@ if ($spdetailstype == "excel" && $spdetailspdf != "" && $strcoursestype != "") {
     $myxls->set_column(3, 4, 10);
     $myxls->write_string(4, 0, $strcoursestype . ' Report - ' . date("d/m/Y"));
 
+    $col = 0;
+    $row = 0;
     $rowhd = 6;
     $row++;
-    $col = 0;
     $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('course')];
     $col++;
     $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string("assessment")];
@@ -468,16 +477,10 @@ if ($spdetailstype == "excel" && $spdetailspdf != "" && $strcoursestype != "") {
     $col++;
     $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('weight', 'block_newgu_spdetails')];
     $col++;
+    $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('duedate', 'block_newgu_spdetails')];
+    $col++;
     if ($coursestype == "current") {
-        $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('duedate', 'block_newgu_spdetails')];
-        $col++;
         $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('status')];
-        $col++;
-    }
-    if ($coursestype == "past") {
-        $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('startdate', 'block_newgu_spdetails')];
-        $col++;
-        $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('enddate', 'block_newgu_spdetails')];
         $col++;
     }
     $xldata[$row][$col] = ["row" => $rowhd, "col" => $col, "text" => get_string('yourgrade', 'block_newgu_spdetails')];
@@ -490,8 +493,8 @@ if ($spdetailstype == "excel" && $spdetailspdf != "" && $strcoursestype != "") {
     }
 
     if ($coursestype == "past") {
-        $myxls->set_column(5, 6, 15);
-        $myxls->set_column(7, 8, 25);
+        $myxls->set_column(4, 5, 20);
+        $myxls->set_column(7, 8, 20);
     }
 
     $rowheight = 22;
