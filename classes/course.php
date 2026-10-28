@@ -120,6 +120,16 @@ class course {
     }
 
     /**
+     * Get the grade category ID from a grade item ID.
+     * @param int $gradeitemid
+     * @return int The grade category ID associated with the grade item.
+     */
+    public static function get_grade_category_from_itemid(int $gradeitemid): int {
+        $item = \local_gugrades\grades::get_gradeitem($gradeitemid);
+        return $item->iteminstance;
+    }
+
+    /**
      * Process and prepare for display MyGrades type sub categories for this course.
      *
      * @param int $courseid
