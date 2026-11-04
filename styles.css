@@ -130,7 +130,7 @@
 .status-item {
     background-color: transparent;
     border: 1px solid #ccc;
-    border-radius: 2px;
+    border-radius: 1rem;
     color: #ccc;
     display: inline-block;
     font-weight: 600;
@@ -185,13 +185,29 @@
     flex-grow: 1;
 }
 
+.subcategory-details-container.dualgrades {
+    background-color: #344374;
+    color: white;
+    border-radius: 0.5rem;
+}
+
 .subcategory-details-label {
     color: #005c8a;
     font-weight: bold;
 }
 
+.subcategory-details-label.dualgrades {
+    color: white;
+    font-weight: bold;
+}
+
 .subcategory-details-value {
     color: #505057;
+    font-weight: bold;
+}
+
+.subcategory-details-value.dualgrades {
+    color: white;
     font-weight: bold;
 }
 

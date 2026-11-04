@@ -130,6 +130,19 @@ class course {
     }
 
     /**
+     * Get the parent ID of a grade category.
+     * @param int $categoryid
+     * @return array An array containing the grade category object and the parent ID of the grade category,
+     * or 0 if it has no parent.
+     */
+    public static function get_grade_category_parent($categoryid): array {
+        $gradecategory = \grade_category::fetch(['id' => $categoryid]);
+        $parent = \grade_category::fetch(['id' => $gradecategory->parent]);
+
+        return [$gradecategory, $parent->parent == null ? 0 : $parent->id];
+    }
+
+    /**
      * Process and prepare for display MyGrades type sub categories for this course.
      *
      * @param int $courseid
@@ -154,19 +167,20 @@ class course {
             }
 
             if ($gradecategory['released'] == true) {
-                $tokens = explode('AGG_', $gradecategory['fieldname']);
-                $fieldid = $tokens[1];
-                $hasitemsorcategories = self::has_items_or_categories($courseid, 'id', $fieldid);
+                $gradeitemid = $gradecategory['gradeitemid'];
+                $hasitemsorcategories = self::has_items_or_categories($courseid, 'id', $gradeitemid);
                 if ($hasitemsorcategories) {
-                    $item = \grade_item::fetch(['courseid' => $courseid, 'id' => $fieldid, 'itemtype' => 'category']);
+                    $item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradeitemid, 'itemtype' => 'category']);
                     $rawsubcatweight = (($gradecategory['weight'] != null) ? $gradecategory['weight'] : 0);
                     $subcatweight = (($gradecategory['weight'] != null) ? self::return_weight(
                         $gradecategory['weight']
                     ) . '%' : '-');
                     $subcat = new \stdClass();
-                    // The iteminstance is our grade category id here. $fieldid above is actually from the grade item record.
+                    // The iteminstance is our grade category id here.
                     $subcat->id = $item->iteminstance;
-                    $subcat->name = $tmpgradecategories[$index]->category->fullname;
+                    $subcat->name = $gradecategory['fullname'];
+                    // MGU-1459.
+                    $subcat->hasdualgrades = $gradecategory['dualgrades'];
                     // MGU-1372 - We need to check if the category grade item is a resit grade item.
                     $subcat->reassessment = \local_gugrades\grades::is_resit_gradeitem($item->id);
                     $subcat->reassessment_text = $subcat->reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
@@ -198,10 +212,15 @@ class course {
                         $subcat->sub_category_weight = $subcatweight;
 
                         if (!$gradecategory['grademissing']) {
-                            $subcat->grade_category_grade = grade::is_admin_or_generic_grade(
-                                $gradecategory['releasegrade']->admingrade,
-                                $gradecategory['releasegrade']->displaygrade
-                            );
+                            if (!$subcat->hasdualgrades) {
+                                $subcat->grade_category_grade = grade::is_admin_or_generic_grade(
+                                    $gradecategory['releasegrade']->admingrade,
+                                    $gradecategory['releasegrade']->displaygrade
+                                );
+                            } else {
+                                $subcat->category_firstattempt = $gradecategory['releasegrade1st']->displaygrade;
+                                $subcat->category_award = $gradecategory['releasegrade']->displaygrade;
+                            }
                         }
                     }
 
@@ -290,8 +309,7 @@ class course {
      * @param int $id
      * @return bool
      */
-    public static function has_items_or_categories(int $courseid, string $field, int $id) {
-
+    public static function has_items_or_categories(int $courseid, string $field, int $id): bool {
         $items = \grade_item::fetch_all(['courseid' => $courseid, $field => $id]);
         $categoryitems = 0;
         if ($items) {
@@ -311,6 +329,61 @@ class course {
         }
 
         return false;
+    }
+
+    /**
+     * Method to get the weight towards the course for a given grade category.
+     *
+     * @param int $courseid
+     * @param array $gradedata
+     * @param object $activityitems
+     * @return string
+     */
+    public static function get_weight_towards_course(int $courseid, array $gradedata, object $activityitems): string {
+        $weighttowardscourse = 0;
+
+        // Initially, lets see if we can get it from the $gradedata->parent property.
+        if ($item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradedata['parent']->gradeitemid])) {
+            $tmpwtc = self::get_grade_category_weight($item, $activityitems->category);
+            $weighttowardscourse = $tmpwtc->grade_category_weight;
+        }
+
+        return $weighttowardscourse;
+    }
+
+    /**
+     * Method to return the category grade if it has been released for the user.
+     * We also might override the $weighttowardscourse value based on altered weights.
+     *
+     * @param array $gradedata
+     * @param string $weighttowardscourse
+     * @param int $userid
+     * @return array
+     */
+    public static function get_category_grade(array $gradedata, string $weighttowardscourse, int $userid): array {
+        $hascategorygrade = false;
+        $categorygrade = null;
+        // MGU-1153 - Reinstate the label for the category grade.
+        if (is_object($gradedata['parent']) && $gradedata['parent']->released) {
+            $hascategorygrade = true;
+            $categorygrade = grade::is_admin_or_generic_grade(
+                $gradedata['parent']->admingrade,
+                $gradedata['parent']->displaygrade
+            );
+
+            // MGU-1410 - Check for the correct weighting.
+            [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
+                $gradedata['parent']->gradeitemid,
+                $userid
+            );
+            if ($isaltered) {
+                $weighttowardscourse = self::return_weight($alteredweight) . '%';
+            } else {
+                $weighttowardscourse = self::return_weight($originalweight) . '%';
+            }
+        }
+
+        return [$hascategorygrade, $categorygrade, $weighttowardscourse];
     }
 
     /**

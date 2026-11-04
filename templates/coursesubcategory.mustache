@@ -74,16 +74,18 @@
         <div>
             <span class="subcategory-details-label">{{#str}} label_componentname, block_newgu_spdetails {{/str}}</span>
             <span id="subcategory-details-name" class="subcategory-details-value">{{#data.coursedata}}{{subcatfullname}}{{/data.coursedata}}</span>
-            {{#data.coursedata.reassessment}}
-                <span id="subcategory-details-resit" class="subcategory-details-value"><span class="badge badge-pill badge-success">{{#data.coursedata}}{{reassessment_text}}{{/data.coursedata}}</span></span>
-            {{/data.coursedata.reassessment}}
+{{#data.coursedata.reassessment}}
+            <span id="subcategory-details-resit" class="subcategory-details-value"><span class="badge badge-pill badge-success">{{#data.coursedata}}{{reassessment_text}}{{/data.coursedata}}</span></span>
+{{/data.coursedata.reassessment}}
         </div>
-        {{#data.coursedata.hascategorygrade}}
+{{#data.coursedata.hascategorygrade}}
+    {{^data.coursedata.parentisdualgrades}}
         <div>
             <span class="subcategory-details-label">{{#str}} label_coursecategorygrade, block_newgu_spdetails {{/str}}</span>
             <span id="subcategory-details-categorygrade" class="subcategory-details-value">{{#data.coursedata}}{{categorygrade}}{{/data.coursedata}}</span>
         </div>
-        {{/data.coursedata.hascategorygrade}}
+    {{/data.coursedata.parentisdualgrades}}
+{{/data.coursedata.hascategorygrade}}
         <div>
             <span class="subcategory-details-label">{{#str}} label_weight, block_newgu_spdetails {{/str}}</span>
             <span id="subcategory-details-weight" class="subcategory-details-value">{{#data.coursedata}}{{weighttowardscourse}}{{/data.coursedata}}</span>
@@ -91,8 +93,8 @@
     </div>
 </div>
 <div id="current_subassessments" class="assessments-details-sort-container">
-    {{^data.coursedata.hasdata}}
-        {{#data.coursedata.haserror}}
+{{^data.coursedata.hasdata}}
+    {{#data.coursedata.haserror}}
         <div class="alert alert-danger text-center" role="alert">
             <h4 class="alert-heading">{{#str}} error_text, block_newgu_spdetails {{/str}}</h4>
             <hr />
@@ -100,87 +102,98 @@
             <hr />
             <strong>{{#str}} error_text_guidance, block_newgu_spdetails {{/str}}</strong>
         </div>
-        {{/data.coursedata.haserror}}
-        {{^data.coursedata.haserror}}
+    {{/data.coursedata.haserror}}
+    {{^data.coursedata.haserror}}
         <div class="alert alert-warning" role="alert">
         {{#str}} noactivitiesfound, block_newgu_spdetails {{/str}}
         </div>
-        {{/data.coursedata.haserror}}
-    {{/data.coursedata.hasdata}}
-    {{#data.coursedata.hasdata}}
+    {{/data.coursedata.haserror}}
+{{/data.coursedata.hasdata}}
+{{#data.coursedata.hasdata}}
     <table id="category_table" class="table table-striped table-responsive assessments-details-table">
         <thead>
             <tr>
                 <th id="sortby_fullname" data-sortby="fullname" class="td50 th-sortable">{{#str}} header_category, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_assessmenttype" data-sortby="assessmenttype" class="td15 th-sortable">{{#str}} header_type, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_weight" data-sortby="weight" class="td5 th-sortable">{{#str}} header_weight, block_newgu_spdetails {{/str}}</th>
-                {{#data.coursedata.hascourseitems}}
+    {{#data.coursedata.hascourseitems}}
                 <th id="sortby_duedate" data-sortby="duedate" class="td10 th-sortable"{{#data.coursedata.hidestatuscol}} colspan="2"{{/data.coursedata.hidestatuscol}}>{{#str}} header_duedate, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_status" data-sortby="status" class="td15 th-sortable">{{#str}} header_status, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_grade" data-sortby="grade" class="td10 th-sortable">{{#str}} header_grade, block_newgu_spdetails {{/str}}</th>
                 <th class="td10">{{#str}} header_feedback, block_newgu_spdetails {{/str}}</th>
-                {{/data.coursedata.hascourseitems}}
-                {{^data.coursedata.hascourseitems}}
-                    {{#data.coursedata.mygradesenabled}}
-                        {{#data.coursedata.hasgradecategory}}
+    {{/data.coursedata.hascourseitems}}
+    {{^data.coursedata.hascourseitems}}
+        {{#data.coursedata.mygradesenabled}}
+            {{#data.coursedata.hasgradecategory}}
                 <th id="sortby_grade" data-sortby="grade" class="td10 th-sortable">{{#str}} header_grade, block_newgu_spdetails {{/str}}</th>
-                        {{/data.coursedata.hasgradecategory}}
-                    {{/data.coursedata.mygradesenabled}}
-                {{/data.coursedata.hascourseitems}}
+            {{/data.coursedata.hasgradecategory}}
+            {{#data.coursedata.hasdualgrades}}
+                <th id="sortby_firstattempt" data-sortby="firstattempt" class="td10 th-sortable">{{#str}} header_firstattempt, block_newgu_spdetails {{/str}}</th>
+                <th id="sortby_award" data-sortby="award" class="td10 th-sortable">{{#str}} header_award, block_newgu_spdetails {{/str}}</th>
+            {{/data.coursedata.hasdualgrades}}
+        {{/data.coursedata.mygradesenabled}}
+    {{/data.coursedata.hascourseitems}}
             </tr>
         </thead>
         <tbody>
-        {{#data.coursedata.courseitems}}
-            {{#is_gradecategory}}
+    {{#data.coursedata.courseitems}}
+        {{#is_gradecategory}}
             <tr data-id="{{id}}">
-            {{/is_gradecategory}}
-            {{^is_gradecategory}}
+        {{/is_gradecategory}}
+        {{^is_gradecategory}}
             <tr data-assessmentid="{{id}}">
-            {{/is_gradecategory}}
-                {{#is_gradecategory}}
+        {{/is_gradecategory}}
+        {{#is_gradecategory}}
                 <td class="td50 subcategory-row"><a href="#"><i class="icon fa fa-fw  fa-sharp fa-solid fa-folder"></i><strong>{{name}}</strong></a> {{#reassessment}}<span class="badge badge-pill badge-success">{{reassessment_text}}</span>{{/reassessment}}</td>
                 <td class="td15 subcategory-row">{{assessment_type}}</td>
                 <td class="subcategory-row"{{#data.coursedata.hascourseitems}} colspan="3"{{/data.coursedata.hascourseitems}} data-rawcategoryweight="{{raw_category_weight}}">{{sub_category_weight}}</td>
-                    {{#mygradesenabled}}
+            {{#mygradesenabled}}
                 <td>
-                        {{#grade_category_grade}}
+                {{#grade_category_grade}}
                     <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{grade_category_grade}}</span>
-                        {{/grade_category_grade}}
-                        {{^grade_category_grade}}
-                    <span>-</span>
-                        {{/grade_category_grade}}
+                {{/grade_category_grade}}
                 </td>
-                <td></td>
-                    {{/mygradesenabled}}
-                    {{^mygradesenabled}}
-                        {{#data.coursedata.hascourseitems}}
+                {{#hasdualgrades}}
+                    {{#category_firstattempt}}
                 <td>
-                    <span>-</span>
+                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{category_firstattempt}}</span>
                 </td>
+                    {{/category_firstattempt}}
+                    {{#category_award}}
+                <td>
+                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{category_award}}</span>
+                </td>
+                    {{/category_award}}
+                {{/hasdualgrades}}
+                {{^hasdualgrades}}
                 <td></td>
-                        {{/data.coursedata.hascourseitems}}
-                        {{^data.coursedata.hascourseitems}}
-                        <td colspan="2">-</td>
-                        {{/data.coursedata.hascourseitems}}
-                    {{/mygradesenabled}}
-                {{/is_gradecategory}}
-                {{^is_gradecategory}}
+                <td></td>
+                {{/hasdualgrades}}
+            {{/mygradesenabled}}
+            {{^mygradesenabled}}
+                {{#data.coursedata.hascourseitems}}
+                <td></td>
+                <td></td>
+                {{/data.coursedata.hascourseitems}}
+            {{/mygradesenabled}}
+        {{/is_gradecategory}}
+        {{^is_gradecategory}}
                 <td class="td50">
-                {{#assessment_url}}<a href="{{assessment_url}}">{{#item_icon}}<img class="icon itemicon" src="{{item_icon}}" title="{{icon_alt}}" alt="{{icon_alt}}" />{{/item_icon}}{{/assessment_url}}
-                {{^assessment_url}}<span tabindex="0">
-                    {{#icon_hidden}}<i class="icon fa fa-eye-slash fa-fw " title="{{icon_alt}}" alt="{{icon_alt}}" aria-hidden="true" role="img" aria-label="{{icon_alt}}"></i>{{/icon_hidden}}
-                    {{^icon_hidden}}<i class="icon fa fa-pencil-square-o fa-fw icon itemicon" title="{{icon_alt}}" alt="{{icon_alt}}" aria-hidden="true" role="img" aria-label="{{icon_alt}}"></i>{{/icon_hidden}}
-                {{/assessment_url}}
-                {{item_name}}
-                {{#reassessment}}<span class="badge badge-pill badge-success">{{reassessment_text}}</span>{{/reassessment}} {{! MGU-1372 show resit pills }}
-                {{^assessment_url}}</span>{{/assessment_url}}
-                {{#assessment_url}}</a>{{/assessment_url}}
-                {{#icon_restricted}}<i class="icon fa fa-lock fa-fw " title="Locked" alt="Locked" aria-hidden="true" role="img" aria-label="Locked"></i>{{/icon_restricted}}
+            {{#assessment_url}}<a href="{{assessment_url}}">{{#item_icon}}<img class="icon itemicon" src="{{item_icon}}" title="{{icon_alt}}" alt="{{icon_alt}}" />{{/item_icon}}{{/assessment_url}}
+            {{^assessment_url}}<span tabindex="0">
+                {{#icon_hidden}}<i class="icon fa fa-eye-slash fa-fw " title="{{icon_alt}}" alt="{{icon_alt}}" aria-hidden="true" role="img" aria-label="{{icon_alt}}"></i>{{/icon_hidden}}
+                {{^icon_hidden}}<i class="icon fa fa-pencil-square-o fa-fw icon itemicon" title="{{icon_alt}}" alt="{{icon_alt}}" aria-hidden="true" role="img" aria-label="{{icon_alt}}"></i>{{/icon_hidden}}
+            {{/assessment_url}}
+            {{item_name}}
+            {{#reassessment}}<span class="badge badge-pill badge-success">{{reassessment_text}}</span>{{/reassessment}} {{! MGU-1372 show resit pills }}
+            {{^assessment_url}}</span>{{/assessment_url}}
+            {{#assessment_url}}</a>{{/assessment_url}}
+            {{#icon_restricted}}<i class="icon fa fa-lock fa-fw " title="Locked" alt="Locked" aria-hidden="true" role="img" aria-label="Locked"></i>{{/icon_restricted}}
                 </td>
                 <td class="td10">{{assessment_type}}</td>
                 <td class="td5" data-rawassessmentweight="{{raw_assessment_weight}}">{{assessment_weight}}</td>
                 <td class="td15"{{#data.coursedata.hidestatuscol}} colspan="2"{{/data.coursedata.hidestatuscol}} data-rawduedate="{{raw_due_date}}">{{due_date}}</td>
-                {{^data.coursedata.hidestatuscol}}
+            {{^data.coursedata.hidestatuscol}}
                 <td class="td15">
                 {{#grade_status}}
                     {{#status_link}}
@@ -192,25 +205,42 @@
                     {{/status_link}}
                 {{/grade_status}}
                 </td>
-                {{/data.coursedata.hidestatuscol}}
+            {{/data.coursedata.hidestatuscol}}
                 <td class="td10">{{#grade_class}}<span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{/grade_class}}{{grade}}{{#grade_class}}</span>{{/grade_class}}{{#grade_provisional}} ({{#str}} status_text_provisional, block_newgu_spdetails {{/str}}){{/grade_provisional}}</td>
                 <td class="td10">
-                {{#grade_feedback_link}}
+            {{#grade_feedback_link}}
                     <a href="{{grade_feedback_link}}">
-                {{/grade_feedback_link}}
-                {{grade_feedback}}
-                {{#grade_feedback_link}}
+            {{/grade_feedback_link}}
+            {{grade_feedback}}
+            {{#grade_feedback_link}}
                     </a>
-                {{/grade_feedback_link}}
+            {{/grade_feedback_link}}
                 </td>
-                {{/is_gradecategory}}
+        {{/is_gradecategory}}
             </tr>
-        {{/data.coursedata.courseitems}}
+    {{/data.coursedata.courseitems}}
         </tbody>
     </table>
-    {{#data.coursedata.hasdualgrades}}
 
-    {{/data.coursedata.hasdualgrades}}
+    {{#data.coursedata.mygradesenabled}}
+        {{^data.coursedata.hascourseitems}}
+            {{^data.coursedata.hasdualgrades}}
+    <div class="subcategory-details-container dualgrades mb-3">
+        <div>
+            <span class="subcategory-details-label dualgrades">{{#str}} label_grade_dual, block_newgu_spdetails {{/str}}</span>
+        </div>
+        <div>
+            <span class="subcategory-details-label dualgrades">{{#str}} header_firstattempt, block_newgu_spdetails {{/str}}:</span>
+            <span class="subcategory-details-value dualgrades">{{data.coursedata.firstattemptgrade}}</span>
+        </div>
+        <div>
+            <span class="subcategory-details-label dualgrades">{{#str}} header_award, block_newgu_spdetails {{/str}}:</span>
+            <span class="subcategory-details-value dualgrades">{{data.coursedata.awardgrade}}</span>
+        </div>
+    </div>
+            {{/data.coursedata.hasdualgrades}}
+        {{/data.coursedata.hascourseitems}}
+    {{/data.coursedata.mygradesenabled}}
 
     <div class="d-flex flex-row mb-2 justify-content-end">
         <div class="p-0">
@@ -220,5 +250,5 @@
             <a target='_blank' href='{{data.excel_link}}'><i style='padding-left:20px; color:green;' class='fa fa-file-excel-o fa-2x' aria-hidden='true'><div style="display:none">x</div></i></a>
         </div>
     </div>
-    {{/data.coursedata.hasdata}}
+{{/data.coursedata.hasdata}}
 </div>

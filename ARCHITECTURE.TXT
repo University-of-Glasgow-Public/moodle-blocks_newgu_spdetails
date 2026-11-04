@@ -1,0 +1,352 @@
+block_newgu_spdetails plugin notes
+=================================
+
+Purpose
+-------
+Student MyGrades provides a student-facing dashboard for current and past
+courses, assessment deadlines, submission status, grades and feedback.
+
+It supports both courses using the local_gugrades MyGrades tool and courses
+using the ordinary Moodle gradebook. These use different grade-reading and
+presentation paths.
+
+The backend is PHP, exposed through Moodle external APIs. The frontend uses
+Mustache templates, Moodle AMD JavaScript modules and Highcharts. This plugin
+does not use the Vue application found in local/studentmygrades.
+
+Main entry points
+-----------------
+- block_newgu_spdetails.php:
+  Moodle block class. Supplies a link to the dashboard. applicable_formats()
+  currently restricts the block to admin pages.
+- index.php:
+  Authenticated dashboard page. Sets up the report layout, records a dashboard
+  view event, renders the initial template and starts the AMD frontend.
+- downloadspdetails.php:
+  Separate export endpoint for current or past course results.
+- classes/api.php:
+  Application-level operations called by the external APIs.
+- classes/course.php:
+  Course/category presentation, weights, assessment classification, chart
+  totals and chart drill-down data.
+- classes/activity.php:
+  Category navigation, activity presentation, MyGrades/gradebook branching,
+  visibility handling and the activity adapter factory.
+- classes/grade.php:
+  Grade/status/feedback presentation, manual grade items, numeric and scale
+  formatting, and administrative grade display.
+- classes/activities/:
+  Activity-specific adapters for grades, deadlines, status and feedback.
+- classes/external/:
+  Moodle external API parameter and return definitions.
+- db/services.php:
+  Web service registration.
+- db/caches.php, db/events.php and classes/observer.php:
+  Cache definitions and event-driven invalidation.
+- templates/:
+  Server and AJAX-rendered Mustache views.
+- amd/src/:
+  Frontend source modules.
+- amd/build/:
+  Compiled frontend modules.
+
+Dependencies and data ownership
+-------------------------------
+The block depends heavily on local_gugrades APIs and grade data, including
+course discovery, dashboard enablement, category trees, released grades,
+hidden-grade checks, administrative grades and aggregation dashboard results.
+
+This dependency exists even though the block can display ordinary gradebook
+courses. Do not treat the gradebook branch as independent of local_gugrades.
+
+Moodle owns courses, enrolments, grade_items, grade_categories, grade_grades
+and activity records. local_gugrades owns its grading and release data.
+The block primarily reads these structures and produces presentation data.
+
+No plugin-owned database installation schema is present. The privacy provider
+implements Moodle's null_provider interface. The dashboard nevertheless emits
+a Moodle event containing user-related information; consider that separately
+when reviewing logging and privacy behaviour.
+
+Dashboard request flow
+----------------------
+1. index.php requires login and establishes the system page context.
+2. It triggers the view_dashboard event.
+3. It renders templates/coursetabs.mustache.
+4. amd/src/main.js initialises the beta notification, overview chart,
+   due-soon chart and course tabs.
+5. The frontend requests data through core/ajax.
+6. PHP assembles presentation data from courses, grade categories,
+   local_gugrades results and activity-specific adapters.
+7. The frontend renders returned data using core/templates or Highcharts.
+
+index.php also exposes the Moodle wwwroot through window.moodleConfig.
+
+The dashboard view event records the effective user's identity and, when
+logging in as another user, information about the original user.
+
+External APIs
+-------------
+All five registered functions are read services, AJAX-enabled and require
+login. They are also registered with Moodle's official mobile service.
+
+- block_newgu_spdetails_get_assessments:
+  Current/past course listing or category drill-down.
+  Parameters include activetab, page, sortby, sortorder and subcategory.
+- block_newgu_spdetails_get_assessmentsoverview:
+  Assessment overview totals.
+- block_newgu_spdetails_get_assessmentsoverviewbytype:
+  Assessment list filtered by overview classification.
+- block_newgu_spdetails_get_assessmentsduesoon:
+  Due-soon chart totals.
+- block_newgu_spdetails_get_assessmentsduebytype:
+  Assessment list filtered by deadline window.
+
+Several endpoints return JSON encoded inside a result string. The frontend
+explicitly parses response.result before rendering it. Do not replace these
+responses with direct objects without updating the external return definitions
+and all callers.
+
+Course and category navigation
+------------------------------
+api::get_gradable_activities() chooses the navigation path:
+
+- Without a category ID:
+  Obtain current or past courses through
+  local_gugrades\api::dashboard_get_courses(), then build the course structure.
+- With a category ID:
+  Call activity::get_activityitems() to obtain that category's contents.
+
+Category IDs used for drill-down are grade category IDs, not Moodle course
+category IDs or grade item IDs.
+
+course::get_course_structure() builds course labels, links and navigable
+categories. Past-course output includes course start and end dates.
+
+activity::get_activityitems() resolves the category's course and parent,
+retrieves the activity tree, and prepares category and assessment rows.
+Parent information supports navigation back up the hierarchy.
+
+Errors returned by local_gugrades are exposed through haserror and errormsg
+rather than treated as an ordinary empty category.
+
+api::get_assessments() applies a 12-entry slice using page * limit as the
+offset. The assembled data also includes export links where applicable.
+Check the returned structure carefully when changing pagination because
+listing and category-detail responses contain presentation metadata.
+
+MyGrades and gradebook paths
+---------------------------
+activity::process_get_activities() selects the processing path according to
+course::is_type_mygrades().
+
+For MyGrades courses:
+- Fetch the aggregation dashboard data through local_gugrades.
+- Separate category fields from individual assessment fields.
+- Use the supplied grade, release and visibility information.
+- Preserve reassessment and dual-grade presentation flags.
+- Distinguish child dual-grade state from the parent category's state.
+
+For ordinary gradebook courses:
+- Read Moodle grade items and activity-specific data.
+- Produce grade, submission status, deadline and feedback presentation.
+- Handle manually created grade items separately from module-backed items.
+
+The existence of a grade is not equivalent to permission to display it.
+Preserve release checks, grade visibility and user-specific hiding.
+
+Activity adapters
+-----------------
+activity::activity_factory() selects an adapter for the grade item's module.
+When no specialised adapter exists, default_activity provides fallback
+behaviour. Adapters inherit common functionality from activities/base.php.
+
+Adapters cover standard and additional modules, including Assignment, Quiz,
+Forum, Lesson, Workshop, SCORM, Peerwork, H5P, Kaltura and others.
+
+Different modules expose different:
+- submission states;
+- grading and feedback mechanisms;
+- due dates and closing dates;
+- assessment URLs;
+- override and availability behaviour.
+
+Keep module-specific rules inside the appropriate adapter where possible.
+A new adapter may also need chart, visibility, cache and regression coverage.
+
+activity::$excludedactivities controls a separate exclusion policy.
+An adapter existing for a module does not mean that module is included in
+dashboard summaries.
+
+Grades, visibility and assessment classification
+------------------------------------------------
+grade.php assembles display values, status labels, CSS classes, feedback
+links, dates and provisional-grade indicators.
+
+Numeric grades, scale grades, administrative grades and manual grade items
+follow different handling paths. Do not assume one formatter or visibility
+check applies to all of them.
+
+Activity visibility, restricted availability, grade-item visibility and
+per-user grade visibility are separate concerns. Some presentation paths
+retain hidden-item indicators rather than simply removing the row.
+
+Assessment type is derived through helpers in course.php. Category names
+such as Formative or Summative and aggregation coefficients participate in
+classification.
+
+Weight helpers convert aggregation information into displayed percentages.
+Changes must account for nested categories and the distinction between an
+item's local weight and its contribution towards the course.
+
+When changing grade handling, explicitly test zero grades, missing grades,
+administrative grades, hidden grades and unreleased MyGrades results.
+
+Charts and drill-down lists
+--------------------------
+The overview chart groups assessments into:
+- upcoming/to be submitted;
+- overdue;
+- submitted;
+- graded.
+
+For MyGrades courses, visible released grades can count as graded without
+also passing through the ordinary activity-status counting path.
+
+The due-soon chart uses windows for:
+- the next 24 hours;
+- the next 7 days;
+- the next 14 days;
+- the next month.
+
+Deadline calculations use Moodle user-time handling and calendar date
+construction. A month is not implemented as a fixed 30-day duration.
+
+Chart totals and chart drill-down lists are implemented in separate methods
+in course.php. Changes to classifications, exclusions, deadlines, visibility
+or release rules must be checked in both places.
+
+Do not assume the numeric charttype values are interchangeable between the
+overview and due-soon endpoints.
+
+Frontend
+--------
+amd/src/main.js starts:
+- betanotification.js;
+- assessmentsoverview.js;
+- assessmentsduesoon.js;
+- coursetabs.js.
+
+coursetabs.js loads course/category data, chooses the appropriate Mustache
+template and attaches navigation handlers. It stores activeTab and
+activeCategoryId in browser sessionStorage.
+
+Browser sessionStorage is separate from Moodle's server session and cache.
+The logout observer currently does not clear these browser values.
+
+sorting.js supports table sorting.
+
+Highcharts and its accessibility and no-data modules are supplied under js/.
+Chart clicks request detail data and render templates/assessmentsdue.mustache.
+
+Keep Mustache field names, DOM selectors, PHP output and JavaScript handlers
+consistent. Rebuild AMD output using the repository's existing Moodle build
+tooling after changing amd/src; do not hand-edit compiled minified files.
+
+Caching and events
+------------------
+db/caches.php defines application caches with a five-minute TTL:
+- studentdashboarddata;
+- activity-specific due-query caches for Assignment, Forum, Kaltura,
+  Lesson, Peerwork, Quiz, SCORM and Workshop.
+
+db/events.php registers observers for activity events.
+classes/observer.php contains handlers for submission, grading and related
+events that delete a user-keyed studentdashboarddata entry.
+
+Do not assume these handlers invalidate every activity-specific cache.
+Inspect the relevant cache reader, key construction and observer registration
+when investigating stale data.
+
+Event userid is not universally the affected student. Confirm actor versus
+related-user semantics before changing invalidation behaviour.
+
+Exports
+-------
+downloadspdetails.php independently fetches current or past courses and
+builds PDF or Excel output. The implementation uses Moodle export libraries.
+
+For MyGrades courses it recursively traverses aggregation dashboard fields
+to collect assessment results.
+
+Exports do not simply serialize the current AJAX-rendered table. Changes to
+grade display, weights, category traversal, visibility or assessment types
+may require corresponding export changes.
+
+Authentication and access
+-------------------------
+index.php and downloadspdetails.php require login.
+Registered external services also require login.
+
+Course presentation uses api::return_isstudent(), which checks the
+moodle/grade:view capability for the user in the course context.
+
+api::checkrole() is a different helper and contains site-specific staff role
+shortnames. Do not treat these two checks as equivalent.
+
+Authentication alone is not course-level authorisation. When changing
+category navigation or adding endpoints, verify access to the requested
+course/category and preserve effective-user isolation.
+
+Tests
+-----
+PHP tests are primarily under tests/external/.
+
+Shared fixtures are provided by:
+- newgu_spdetails_base_testcase;
+- newgu_spdetails_advanced_testcase;
+- newgu_spdetails_custom_testcase.
+
+Coverage includes:
+- block behaviour;
+- course/category structures;
+- assessment lists and classification;
+- overview and due-soon summaries;
+- grade status and feedback;
+- manual and administrative grades;
+- activity and category weights;
+- in-person assessment handling.
+
+Run a focused test from the Moodle root, for example:
+
+vendor/bin/phpunit blocks/newgu_spdetails/tests/external/get_weight_test.php
+
+The existing test documentation also gives this suite command:
+
+vendor/bin/phpunit --testsuite blocks_newgu_spdetails_testsuite
+
+Suite availability depends on the local Moodle PHPUnit configuration.
+Use the isolated Moodle PHPUnit database, not the live application database.
+
+For behaviour changes, cover both MyGrades and ordinary gradebook courses,
+current and past tabs where relevant, and chart totals plus drill-down lists.
+Check export behaviour separately when shared presentation rules change.
+
+Maintenance notes
+-----------------
+Existing documentation is under docs/:
+- architecture.md;
+- overview.md;
+- unit_tests.md.
+
+This plugin's frontend and APIs are separate from local/studentmygrades.
+Similar class names do not guarantee identical behaviour or response shapes.
+
+The block class currently requests the AMD module
+block_newgu_spdetails/assessmentsummary, but no matching module is present
+in this checkout's amd/src or amd/build directories. The dashboard page
+instead initialises block_newgu_spdetails/main.
+
+Keep this document aligned with implementation and tests. It describes the
+code structure and important constraints; it does not configure runtime
+behaviour.

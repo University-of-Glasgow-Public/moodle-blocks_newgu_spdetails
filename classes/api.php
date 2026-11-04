@@ -42,7 +42,7 @@ class api extends external_api {
      * @param int $page
      * @param string $sortby
      * @param string $sortorder
-     * @param int|null $subcategory
+     * @param int|null $categoryid
      * @return array $data
      */
     public static function get_assessments(
@@ -50,7 +50,7 @@ class api extends external_api {
         int $page,
         string $sortby,
         string $sortorder,
-        int|null $subcategory = null
+        int|null $categoryid = null
     ): array {
         global $USER, $PAGE;
 
@@ -60,7 +60,7 @@ class api extends external_api {
         $offset = $page * $limit;
         $data = [];
 
-        $items = self::get_gradable_activities($activetab, $userid, $sortby, $sortorder, $subcategory);
+        $items = self::get_gradable_activities($activetab, $userid, $sortby, $sortorder, $categoryid);
 
         if ($items) {
             $paginatedassessments = array_splice($items, $offset, $limit);
@@ -83,7 +83,7 @@ class api extends external_api {
      * @param int $userid
      * @param string|null $sortby
      * @param string|null $sortorder
-     * @param int|null $subcategory
+     * @param int|null $categoryid
      *
      * @return array $gradableactivities
      */
@@ -92,12 +92,12 @@ class api extends external_api {
         int $userid,
         string|null $sortby = null,
         string|null $sortorder = null,
-        int|null $subcategory = null
+        int|null $categoryid = null
     ): array {
         $gradableactivities = [];
 
         // Start with getting the top level categories for all courses.
-        if (!$subcategory) {
+        if (!$categoryid) {
             switch ($activetab) {
                 case 'current':
                     $currentcourses = true;
@@ -122,7 +122,7 @@ class api extends external_api {
             );
             return \block_newgu_spdetails\course::get_course_structure($courses, $currentcourses);
         } else {
-            $gradableactivities = \block_newgu_spdetails\activity::get_activityitems($subcategory, $userid, $activetab);
+            $gradableactivities = \block_newgu_spdetails\activity::get_activityitems($categoryid, $userid, $activetab);
         }
 
         return $gradableactivities;
