@@ -182,11 +182,6 @@ class activity {
         string $assessmenttype
     ): array {
         $data = [];
-        // We've lost all knowledge at this point of the course type - fetch it again.
-        $mygradesenabled = course::is_type_mygrades($courseid);
-        // MGU-1368 The call to api::get_aggregation_dashboard_user() might not return data.
-        $hasgradedata = false;
-
         $data['mygradesenabled'] = false;
         $data['weighttowardscourse'] = '-';
         $data['hascategorygrade'] = false;
@@ -199,6 +194,10 @@ class activity {
         $data['awardgrade'] = '';
         $data['hascourseitems'] = false;
         $data['hasdata'] = false;
+        // We've lost all knowledge at this point of the course type - fetch it again.
+        $mygradesenabled = course::is_type_mygrades($courseid);
+        // MGU-1368 The call to api::get_aggregation_dashboard_user() might not return data.
+        $hasgradedata = false;
 
         if ($mygradesenabled == true) {
             // This call should return grade data that has been processed through the MyGrades tool.
@@ -224,17 +223,25 @@ class activity {
                 $data['hascategorygrade'] = $hascategorygrade;
                 $data['categorygrade'] = $categorygrade;
 
-                [$gradecategories, $gradeitems, $hasdualgrades] = array_reduce($gradedata['fields'], function ($carry, $tmpitem) {
-                    if ($tmpitem['iscategory'] == true) {
-                        $carry[0][] = $tmpitem;
-                        if ($tmpitem['dualgrades']) {
-                            $carry[2] = true;
+                $gradecategories = [];
+                $gradeitems = [];
+                $hasdualgrades = false;
+                if (isset($gradedata['fields'])) {
+                    [$gradecategories, $gradeitems, $hasdualgrades] = array_reduce($gradedata['fields'], function (
+                        $carry,
+                        $tmpitem
+                    ) {
+                        if ($tmpitem['iscategory'] == true) {
+                            $carry[0][] = $tmpitem;
+                            if ($tmpitem['dualgrades']) {
+                                $carry[2] = true;
+                            }
+                        } else {
+                            $carry[1][] = $tmpitem;
                         }
-                    } else {
-                        $carry[1][] = $tmpitem;
-                    }
-                    return $carry;
-                }, [[], [], false]);
+                        return $carry;
+                    }, [[], [], false]);
+                }
 
                 // We derive $hasdualgrades from the child categories. This can get lost. Check if the parent has this value.
                 $parentisdualgrades = false;
@@ -286,7 +293,7 @@ class activity {
             if (
                 $item = \grade_item::fetch([
                     'courseid' => $courseid,
-                    'iteminstance' => $activityitems->category->id,
+                    'iteminstance' => $categoryid,
                     'itemtype' => 'category', ])
             ) {
                 $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
@@ -295,14 +302,12 @@ class activity {
             $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
             if ($activityitems->categories) {
-                $categorydata = [];
                 $categorydata = course::process_default_subcategories($courseid, $activityitems->categories, $assessmenttype);
                 $data['courseitems'] = $categorydata;
                 $data['hasgradecategory'] = true;
             }
 
             if ($activityitems->items) {
-                $activitydata = [];
                 $displayweights = self::display_activity_item_weights($weighttowardscourse, $activityitems->category);
                 $activitydata = self::process_default_items(
                     $activityitems->items,
@@ -354,18 +359,13 @@ class activity {
             // While processing each item, we will need to 'key into' $tmpgradeitems for help with things along the way.
             $index = 0;
             foreach ($mygradesitems as $mygradesitem) {
+                $tmpgradeitem = $tmpgradeitems[$index];
                 $cm = null;
                 $modinfo = null;
-                $cms = null;
                 $isagradebookitem = false;
-                if ($tmpgradeitems[$index]->itemtype != 'manual') {
-                    $cm = get_coursemodule_from_instance(
-                        $tmpgradeitems[$index]->itemmodule,
-                        $tmpgradeitems[$index]->iteminstance,
-                        $tmpgradeitems[$index]->courseid
-                    );
-                    $modinfo = get_fast_modinfo($tmpgradeitems[$index]->courseid);
-                    $cms = $modinfo->get_cms();
+                if ($tmpgradeitem->itemtype != 'manual') {
+                    $modinfo = get_fast_modinfo($tmpgradeitem->courseid);
+                    $cm = $modinfo->instances[$tmpgradeitem->itemmodule][$tmpgradeitem->iteminstance] ?? null;
                 }
 
                 // Deal with ^a kind of^ easy state first.
@@ -381,21 +381,18 @@ class activity {
                         $iconhidden = false;
                         $assessmenturl = '';
                         if ($cm) {
-                            if (array_key_exists($cm->id, $cms)) {
-                                $cm = $modinfo->get_cm($cm->id);
-                                // MGU-1230 - However, if for whatever reason, the activity has been set to hidden in Common Module
-                                // Settings, we don't want a link to the activity as this leads to an error page effectively.
-                                $assessmenturl = $cm->url->out();
-                                if ($activityicon = self::get_activity_icon($cm, $tmpgradeitems[$index]->itemmodule)) {
-                                    $itemicon = $activityicon->iconurl;
-                                    $iconalt = $activityicon->iconalt;
-                                }
-                                if (!$cm->uservisible) {
-                                    if ($cm->visibleoncoursepage) {
-                                        $assessmenturl = '';
-                                        $iconalt = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
-                                        $iconhidden = true;
-                                    }
+                            // MGU-1230 - However, if for whatever reason, the activity has been set to hidden in Common Module
+                            // Settings, we don't want a link to the activity as this leads to an error page effectively.
+                            $assessmenturl = $cm->url->out();
+                            if ($activityicon = self::get_activity_icon($cm, $tmpgradeitem->itemmodule)) {
+                                $itemicon = $activityicon->iconurl;
+                                $iconalt = $activityicon->iconalt;
+                            }
+                            if (!$cm->uservisible) {
+                                if ($cm->visibleoncoursepage) {
+                                    $assessmenturl = '';
+                                    $iconalt = get_string('hidden_icon_alt_text', 'block_newgu_spdetails');
+                                    $iconhidden = true;
                                 }
                             }
                         }
