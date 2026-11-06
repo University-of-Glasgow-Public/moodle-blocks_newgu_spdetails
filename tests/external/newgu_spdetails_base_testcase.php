@@ -58,6 +58,11 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
     protected $activityapi;
 
     /**
+     * @var object $activityitemsapi
+     */
+    protected $activityitemsapi;
+
+    /**
      * @var object $gradeapi
      */
     protected $gradeapi;
@@ -121,6 +126,9 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
 
         $activityapi = new \block_newgu_spdetails\activity();
         $this->activityapi = $activityapi;
+
+        $activityitemsapi = new \block_newgu_spdetails\activityitems();
+        $this->activityitemsapi = $activityitemsapi;
 
         $gradeapi = new \block_newgu_spdetails\grade();
         $this->gradeapi = $gradeapi;

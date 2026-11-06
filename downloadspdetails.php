@@ -218,7 +218,7 @@ if ($coursestype) {
                         $tmpactivities[] = $activity;
                     }
                     $activities = $tmpactivities;
-                    $activitydata = \block_newgu_spdetails\activity::process_mygrades_items(
+                    $activitydata = \block_newgu_spdetails\activityitems::process_mygrades_items(
                         $mygradeitems,
                         $activities,
                         $coursestype,
@@ -233,7 +233,7 @@ if ($coursestype) {
                     $tmpactivities[] = $activity;
                 }
                 $activities = $tmpactivities;
-                $activitydata = \block_newgu_spdetails\activity::process_default_items($activities, $coursestype, '', true);
+                $activitydata = \block_newgu_spdetails\activityitems::process_default_items($activities, $coursestype, '', true);
             }
 
             if ($activitydata) {

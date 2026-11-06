@@ -25,7 +25,6 @@
 
 namespace block_newgu_spdetails;
 
-use block_newgu_spdetails;
 use stdClass;
 
 /**
@@ -475,6 +474,7 @@ class course {
     public static function return_assessmenttype(string $gradecategoryname, float $aggregationcoef): string {
         $type = strtolower($gradecategoryname);
         $hasweight = !empty((float)$aggregationcoef);
+        $assessmenttype = '';
 
         if ($hasweight || (!$hasweight && strpos($type, 'summative') !== false)) {
             $assessmenttype = get_string('summative', 'block_newgu_spdetails');
@@ -502,6 +502,8 @@ class course {
         } else {
             $topcategoryid = $categoryid;
         }
+
+        $topcategoryname = '';
         $topcategory = \grade_category::fetch(['id' => $topcategoryid]);
         if ($topcategory) {
             $topcategoryname = $topcategory->fullname;
