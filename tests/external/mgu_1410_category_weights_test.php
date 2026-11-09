@@ -105,6 +105,12 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $gradeitem->courseid = $this->gradeitemobj->courseid;
         $this->gradeitemobj->items[] = $gradeitem;
 
+        [$assessmenttype, $item] = $this->activityapi->get_activitytype(
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->category->id, 
+            $gradecategory->category->fullname
+        );
+
         // Same calculation as used in course::return_weight().
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
@@ -115,7 +121,8 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
             $this->gradeitemobj->id,
             $this->student1->id,
             'current',
-            'summative'
+            $assessmenttype,
+            $item
         );
         $this->assertEquals($expected, $data['courseitems'][0]->raw_category_weight);
     }
@@ -176,6 +183,12 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
         $gradeitem->courseid = $this->gradeitemobj->courseid;
         $this->gradeitemobj->items[] = $gradeitem;
 
+        [$assessmenttype, $item] = $this->activityapi->get_activitytype(
+            $this->gradeitemobj->courseid,
+            $this->gradeitemobj->category->id, 
+            $gradecategory->category->fullname
+        );
+
         // Same calculation as used in course::return_weight().
         $weight = (($this->gradeitemobj->aggregationcoef > 1) ? $this->gradeitemobj->aggregationcoef :
             $this->gradeitemobj->aggregationcoef * 100);
@@ -186,7 +199,8 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
             $this->gradeitemobj->id,
             $this->student1->id,
             'current',
-            'summative'
+            $assessmenttype,
+            $item
         );
         $this->assertEquals($expected, $data['courseitems'][0]->raw_category_weight);
     }

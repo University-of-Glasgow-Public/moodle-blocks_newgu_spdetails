@@ -321,7 +321,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'itemtype' => 'manual',
             'itemmodule' => null,
             'courseid' => $this->mygradescourse->id,
-            'categoryid' => $this->mygradessummativecategory->id,
+            'categoryid' => $this->mygradessummativesubcategory->id,
             'gradetype' => 1,
             'grademax' => 100,
         ]);
@@ -399,9 +399,43 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'audittimecreated' => $now,
         ]);
 
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory->id);
+        // We seem to have to insert a grade record for the second subcategory as well.
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory2->id);
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+
         $gradedata = api::get_aggregation_dashboard_user(
             $this->mygradescourse->id,
-            $this->mygradessummativecategory->id,
+            $this->mygradessummativesubcategory->id,
             $this->student1->id
         );
         $tmpitems = $gradedata['fields'];
@@ -417,8 +451,8 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             }
         }
 
-        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativesubcategory->id);
+        $processedmygradesitem = $this->activityitemsapi->process_mygrades_items(
             $gradeitems,
             $activities[0]->items,
             'current',
@@ -456,7 +490,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'itemtype' => 'manual',
             'itemmodule' => null,
             'courseid' => $this->mygradescourse->id,
-            'categoryid' => $this->mygradessummativecategory->id,
+            'categoryid' => $this->mygradessummativesubcategory->id,
             'gradetype' => 1,
             'grademax' => 100,
             'hidden' => 1,
@@ -524,6 +558,41 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'auditby' => 0,
             'audittimecreated' => $now,
         ]);
+
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory->id);
+        // We seem to have to insert a grade record for the second subcategory as well.
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory2->id);
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+
         $hiddenid = $DB->insert_record('local_gugrades_hidden', [
             'courseid' => $this->mygradescourse->id,
             'gradeitemid' => $manualgradeitem->id,
@@ -532,7 +601,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user(
             $this->mygradescourse->id,
-            $this->mygradessummativecategory->id,
+            $this->mygradessummativesubcategory->id,
             $this->student1->id
         );
         $tmpitems = $gradedata['fields'];
@@ -548,8 +617,8 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             }
         }
 
-        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativesubcategory->id);
+        $processedmygradesitem = $this->activityitemsapi->process_mygrades_items(
             $gradeitems,
             $activities[0]->items,
             'current',
@@ -588,7 +657,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             'itemtype' => 'manual',
             'itemmodule' => null,
             'courseid' => $this->mygradescourse->id,
-            'categoryid' => $this->mygradessummativecategory->id,
+            'categoryid' => $this->mygradessummativesubcategory->id,
             'gradetype' => 1,
             'grademax' => 100,
         ]);
@@ -613,6 +682,40 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
         $DB->insert_record('local_gugrades_grade', [
             'courseid' => $this->mygradescourse->id,
             'gradeitemid' => $parentcategorygradeitemid->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory->id);
+        // We seem to have to insert a grade record for the second subcategory as well.
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
+            'userid' => $this->student1->id,
+            'points' => 1,
+            'rawgrade' => 0,
+            'convertedgrade' => 0,
+            'admingrade' => '',
+            'displaygrade' => 'Grades missing',
+            'gradetype' => 'CATEGORY',
+            'columnid' => $categorycolid,
+            'iscurrent' => 1,
+            'auditby' => 0,
+            'audittimecreated' => $now,
+        ]);
+        $gradecatitem = \local_gugrades\grades::get_gradeitem_from_gradecategoryid($this->mygradessummativesubcategory2->id);
+        $DB->insert_record('local_gugrades_grade', [
+            'courseid' => $this->mygradescourse->id,
+            'gradeitemid' => $gradecatitem->id,
             'userid' => $this->student1->id,
             'points' => 1,
             'rawgrade' => 0,
@@ -672,7 +775,7 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
 
         $gradedata = api::get_aggregation_dashboard_user(
             $this->mygradescourse->id,
-            $this->mygradessummativecategory->id,
+            $this->mygradessummativesubcategory->id,
             $this->student1->id
         );
         $tmpitems = $gradedata['fields'];
@@ -688,8 +791,8 @@ final class manual_grade_item_test extends \block_newgu_spdetails\external\newgu
             }
         }
 
-        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativecategory->id);
-        $processedmygradesitem = $this->activityapi->process_mygrades_items(
+        $activities = api::get_activities($this->mygradescourse->id, $this->mygradessummativesubcategory->id);
+        $processedmygradesitem = $this->activityitemsapi->process_mygrades_items(
             $gradeitems,
             $activities[0]->items,
             'current',

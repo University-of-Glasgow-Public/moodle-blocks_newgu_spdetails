@@ -137,7 +137,8 @@ class activity {
                 $categoryid,
                 $userid,
                 $activetab,
-                $assessmenttype
+                $assessmenttype,
+                $item
             );
             $coursedata['courseitems'] = $activitiesdata['courseitems'];
             $coursedata['hasdata'] = $activitiesdata['hasdata'];
@@ -175,14 +176,15 @@ class activity {
         int $categoryid,
         int $userid,
         string $activetab,
-        string $assessmenttype
+        string $assessmenttype,
+        ?\grade_item $gradeitem = null
     ): array {
         $data = [];
         $data['mygradesenabled'] = false;
         $data['weighttowardscourse'] = '-';
         $data['hascategorygrade'] = false;
         $data['categorygrade'] = '';
-        $data['courseitems'] = '';
+        $data['courseitems'] = [];
         $data['hasgradecategory'] = false;
         $data['hasdualgrades'] = false;
         $data['parentisdualgrades'] = false;
@@ -195,7 +197,7 @@ class activity {
         // MGU-1368 The call to api::get_aggregation_dashboard_user() might not return data.
         $hasgradedata = false;
 
-        if ($mygradesenabled == true) {
+        if ($mygradesenabled) {
             // This call should return grade data that has been processed through the MyGrades tool.
             // This includes grade category data as well as individual grade item data.
             if ($gradedata = api::get_aggregation_dashboard_user($courseid, $categoryid, $userid)) {
@@ -222,26 +224,21 @@ class activity {
                 $gradecategories = [];
                 $gradeitems = [];
                 $hasdualgrades = false;
-                if (isset($gradedata['fields'])) {
-                    [$gradecategories, $gradeitems, $hasdualgrades] = array_reduce($gradedata['fields'], function (
-                        $carry,
-                        $tmpitem
-                    ) {
-                        if ($tmpitem['iscategory'] == true) {
-                            $carry[0][] = $tmpitem;
-                            if ($tmpitem['dualgrades']) {
-                                $carry[2] = true;
-                            }
-                        } else {
-                            $carry[1][] = $tmpitem;
+                foreach ($gradedata['fields'] ?? [] as $tmpitem) {
+                    if ($tmpitem['iscategory']) {
+                        $gradecategories[] = $tmpitem;
+                        if (!empty($tmpitem['dualgrades'])) {
+                            $hasdualgrades = true;
                         }
-                        return $carry;
-                    }, [[], [], false]);
+                    } else {
+                        $gradeitems[] = $tmpitem;
+                    }
                 }
 
                 // We derive $hasdualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
                 $parentisdualgrades = false;
-                if (is_object($gradedata['parent']) && $gradedata['parent']->dualgrades) {
+                $parent = $gradedata['parent'] ?? null;
+                if (is_object($parent) && $parent->dualgrades) {
                     $parentisdualgrades = true;
                 }
 
@@ -257,8 +254,8 @@ class activity {
                     $data['hasgradecategory'] = true;
                     $data['hasdualgrades'] = $hasdualgrades;
                     $data['parentisdualgrades'] = $parentisdualgrades;
-                    $data['firstattemptgrade'] = $gradedata['releasegrade1st'];
-                    $data['awardgrade'] = $gradedata['releasegrade'];
+                    $data['firstattemptgrade'] = $gradedata['releasegrade1st'] ?? '';
+                    $data['awardgrade'] = $gradedata['releasegrade'] ?? '';
                 }
 
                 if ($activityitems->items && count($activityitems->items) > 0) {
@@ -269,11 +266,7 @@ class activity {
                         $assessmenttype,
                         $userid
                     );
-                    $data['courseitems'] = array_merge(
-                        (array) (
-                        (!empty($data['courseitems'])) ? $data['courseitems'] : []),
-                        (array) $activitydata
-                    );
+                    $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
                     $data['hascourseitems'] = true;
                 }
 
@@ -281,29 +274,24 @@ class activity {
             }
         }
 
-        if ($mygradesenabled == false || $hasgradedata == false) {
+        if (!$mygradesenabled || !$hasgradedata) {
             // The weight for this grade category can be derived from the aggregation coefficient
             // value of the grade item, this needs to have been set in Gradebook Setup however.
             $weighttowardscourse = new stdClass();
             $weighttowardscourse->grade_category_weight = 0;
-            if (
-                $item = \grade_item::fetch([
-                    'courseid' => $courseid,
-                    'iteminstance' => $categoryid,
-                    'itemtype' => 'category', ])
-            ) {
-                $tmpwtc = course::get_grade_category_weight($item, $activityitems->category);
+            if ($gradeitem && $activityitems->category && count($activityitems->categories) > 0) {
+                $tmpwtc = course::get_grade_category_weight($gradeitem, $activityitems->category);
                 $weighttowardscourse->grade_category_weight = $tmpwtc->grade_category_weight;
             }
             $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
-            if ($activityitems->categories) {
+            if ($activityitems->categories && count($activityitems->categories) > 0) {
                 $categorydata = course::process_default_subcategories($courseid, $activityitems->categories, $assessmenttype);
                 $data['courseitems'] = $categorydata;
                 $data['hasgradecategory'] = true;
             }
 
-            if ($activityitems->items) {
+            if ($activityitems->items && count($activityitems->items) > 0) {
                 $displayweights = self::display_activity_item_weights($weighttowardscourse, $activityitems->category);
                 $activitydata = activityitems::process_default_items(
                     $activityitems->items,
@@ -312,8 +300,7 @@ class activity {
                     $displayweights,
                     $userid
                 );
-                $data['courseitems'] = array_merge((array) ((!empty($data['courseitems'])) ? $data['courseitems'] : []), (array)
-                    $activitydata);
+                $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
                 $data['hascourseitems'] = true;
             }
         }
@@ -321,19 +308,30 @@ class activity {
         if (!empty($data['courseitems'])) {
             $data['hasdata'] = true;
             // Finalise the course items.
-            $data['courseitems'] = self::finaliseCourseItems($data['courseitems']);
+            $data['courseitems'] = self::finalise_course_items($data['courseitems']);
         }
 
         return $data;
     }
 
     /**
+     * Merge course items with activity data.
+     *
+     * @param array $courseitems
+     * @param array $activitydata
+     * @return array
+     */
+    public static function merge_course_items(array $courseitems, array $activitydata): array {
+        return array_merge($courseitems, $activitydata);
+    }
+    
+    /**
      * Finalise the course items by sorting and reindexing them.
      *
      * @param array $courseitems
      * @return array
      */
-    public static function finaliseCourseItems(array $courseitems): array {
+    public static function finalise_course_items(array $courseitems): array {
         $tmpcourseitems = self::sort_course_items($courseitems);
         // An array of objects is returned, keyed by the sort order.
         // We need to reindex the array w/o losing the order of the items, this is needed by Mustache when iterating items.
