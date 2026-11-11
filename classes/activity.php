@@ -204,20 +204,11 @@ class activity {
                 $data['mygradesenabled'] = true;
 
                 // The weight value for this category can be derived from different places in the process.
-                $weighttowardscourse = course::get_weight_towards_course(
-                    $courseid,
-                    $gradedata,
-                    $activityitems
-                );
+                $categoryweight = course::get_weight_towards_course($courseid, $gradedata, $activityitems, $gradeitem);
+                $data['weighttowardscourse'] = $categoryweight->grade_category_weight;  
 
-                // Get the category grade, update $weighttowardscourse if necessary.
-                [$hascategorygrade, $categorygrade, $weighttowardscourse] = course::get_category_grade(
-                    $gradedata,
-                    $weighttowardscourse,
-                    $userid
-                );
-
-                $data['weighttowardscourse'] = $weighttowardscourse;
+                // Get the category grade.
+                [$hascategorygrade, $categorygrade] = course::get_category_grade($gradedata);
                 $data['hascategorygrade'] = $hascategorygrade;
                 $data['categorygrade'] = $categorygrade;
 
@@ -277,13 +268,12 @@ class activity {
         if (!$mygradesenabled || !$hasgradedata) {
             // The weight for this grade category can be derived from the aggregation coefficient
             // value of the grade item, this needs to have been set in Gradebook Setup however.
-            $weighttowardscourse = new stdClass();
-            $weighttowardscourse->grade_category_weight = 0;
-            if ($gradeitem && $activityitems->category && count($activityitems->categories) > 0) {
-                $tmpwtc = course::get_grade_category_weight($gradeitem, $activityitems->category);
-                $weighttowardscourse->grade_category_weight = $tmpwtc->grade_category_weight;
+            $categoryweight = new stdClass();
+            $categoryweight->grade_category_weight = '-';
+            if ($gradeitem && is_object($activityitems->category)) {
+                $categoryweight = course::get_grade_category_weight($gradeitem, $activityitems->category);
+                $data['weighttowardscourse'] = $categoryweight->grade_category_weight;
             }
-            $data['weighttowardscourse'] = $weighttowardscourse->grade_category_weight;
 
             if ($activityitems->categories && count($activityitems->categories) > 0) {
                 $categorydata = course::process_default_subcategories($courseid, $activityitems->categories, $assessmenttype);
@@ -292,7 +282,10 @@ class activity {
             }
 
             if ($activityitems->items && count($activityitems->items) > 0) {
-                $displayweights = self::display_activity_item_weights($weighttowardscourse, $activityitems->category);
+                $displayweights = false;
+                if (is_object($activityitems->category)) {
+                    $displayweights = self::display_activity_item_weights($categoryweight, $activityitems->category);
+                }
                 $activitydata = activityitems::process_default_items(
                     $activityitems->items,
                     $activetab,

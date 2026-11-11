@@ -332,34 +332,61 @@ class course {
 
     /**
      * Method to get the weight towards the course for a given grade category.
+     * We also might override the $weighttowardscourse value based on altered weights.
      *
      * @param int $courseid
      * @param array $gradedata
      * @param object $activityitems
-     * @return string
+     * @param \grade_item|null $gradeitem
+     * @return object
      */
-    public static function get_weight_towards_course(int $courseid, array $gradedata, object $activityitems): string {
-        $weighttowardscourse = 0;
+    public static function get_weight_towards_course(
+        int $courseid,
+        array $gradedata,
+        object $activityitems,
+        ?\grade_item $gradeitem = null
+    ): object {
+        $weighttowardscourse = new stdClass();
+        $weighttowardscourse->grade_category_weight = '-';
 
-        // Initially, lets see if we can get it from the $gradedata->parent property.
-        if ($item = \grade_item::fetch(['courseid' => $courseid, 'id' => $gradedata['parent']->gradeitemid])) {
-            $tmpwtc = self::get_grade_category_weight($item, $activityitems->category);
-            $weighttowardscourse = $tmpwtc->grade_category_weight;
+        if (!is_object($gradedata['parent'])) {
+            return $weighttowardscourse;
         }
+
+        $item = $gradeitem ?? \grade_item::fetch([
+            'courseid' => $courseid,
+            'id' => $gradedata['parent']->gradeitemid,
+        ]);
+        if (!$item || !is_object($activityitems->category)) {
+            return $weighttowardscourse;
+        }
+
+        $coefficient = null;
+        if ($gradedata['parent']->released) {
+            // MGU-1410 - Check for the correct weighting.
+            [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
+                $gradedata['parent']->gradeitemid,
+                $gradedata['parent']->userid
+            );
+            $coefficient = $isaltered ? $alteredweight : $originalweight;
+        }
+
+        $weighttowardscourse->grade_category_weight = self::get_grade_category_weight(
+            $item,
+            $activityitems->category,
+            $coefficient
+        )->grade_category_weight;
 
         return $weighttowardscourse;
     }
 
     /**
      * Method to return the category grade if it has been released for the user.
-     * We also might override the $weighttowardscourse value based on altered weights.
      *
      * @param array $gradedata
-     * @param string $weighttowardscourse
-     * @param int $userid
      * @return array
      */
-    public static function get_category_grade(array $gradedata, string $weighttowardscourse, int $userid): array {
+    public static function get_category_grade(array $gradedata): array {
         $hascategorygrade = false;
         $categorygrade = null;
         // MGU-1153 - Reinstate the label for the category grade.
@@ -369,20 +396,9 @@ class course {
                 $gradedata['parent']->admingrade,
                 $gradedata['parent']->displaygrade
             );
-
-            // MGU-1410 - Check for the correct weighting.
-            [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
-                $gradedata['parent']->gradeitemid,
-                $userid
-            );
-            if ($isaltered) {
-                $weighttowardscourse = self::return_weight($alteredweight) . '%';
-            } else {
-                $weighttowardscourse = self::return_weight($originalweight) . '%';
-            }
         }
 
-        return [$hascategorygrade, $categorygrade, $weighttowardscourse];
+        return [$hascategorygrade, $categorygrade];
     }
 
     /**
@@ -392,23 +408,25 @@ class course {
      *
      * @param object $item - the activity item
      * @param object $gradecategory - the grade category object
+     * @param float|null $coefficient - the aggregation coefficient for the grade category
      * @return object
      */
-    public static function get_grade_category_weight(object $item, object $gradecategory): object {
+    public static function get_grade_category_weight(object $item, object $gradecategory, ?float $coefficient = null): object {
         $gradecategoryweight = new stdClass();
         $gradecategoryweight->raw_weight = 0;
         $gradecategoryweight->grade_category_weight = '-';
+        $coefficient ??= $item->aggregationcoef;
         if (
             (isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN ||
             isset($gradecategory->aggregation) && $gradecategory->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN2)
         ) {
-            if ((int) $item->aggregationcoef <= 1) {
-                $gradecategoryweight->raw_weight = self::return_weight($item->aggregationcoef);
+            if ((int) $coefficient <= 1) {
+                $gradecategoryweight->raw_weight = self::return_weight($coefficient);
                 $gradecategoryweight->grade_category_weight = (($gradecategoryweight->raw_weight > 0) ?
                     $gradecategoryweight->raw_weight . '%' : '-');
             }
         } else {
-            $gradecategoryweight->raw_weight = self::return_weight($item->aggregationcoef);
+            $gradecategoryweight->raw_weight = self::return_weight($coefficient);
             $gradecategoryweight->grade_category_weight = (($gradecategoryweight->raw_weight > 0) ?
                 $gradecategoryweight->raw_weight . '%' : '-');
         }
