@@ -159,8 +159,7 @@ class activity {
     }
 
     /**
-     * Method to determine which course type API needs to be used in
-     * order to process the returned grade category and course items.
+     * Processes the activities for a given course and category, determining grades, weights, and other relevant data.
      *
      * @param object $activityitems
      * @param int $courseid
@@ -168,7 +167,8 @@ class activity {
      * @param int $userid
      * @param string $activetab
      * @param string $assessmenttype
-     * @return array
+     * @param \grade_item|null $gradeitem
+     * @return array The processed activity data including course items, category grades, and weight towards course.
      */
     public static function process_get_activities(
         object $activityitems,
@@ -179,129 +179,190 @@ class activity {
         string $assessmenttype,
         ?\grade_item $gradeitem = null
     ): array {
-        $data = [];
-        $data['mygradesenabled'] = false;
-        $data['weighttowardscourse'] = '-';
-        $data['hascategorygrade'] = false;
-        $data['categorygrade'] = '';
-        $data['courseitems'] = [];
-        $data['hasgradecategory'] = false;
-        $data['hasdualgrades'] = false;
-        $data['parentisdualgrades'] = false;
-        $data['firstattemptgrade'] = '';
-        $data['awardgrade'] = '';
-        $data['hascourseitems'] = false;
-        $data['hasdata'] = false;
+        $data = self::default_activity_data();
+
         // We've lost all knowledge at this point of the course type - fetch it again.
         $mygradesenabled = course::is_type_mygrades($courseid);
-        // MGU-1368 The call to api::get_aggregation_dashboard_user() might not return data.
-        $hasgradedata = false;
 
-        if ($mygradesenabled) {
-            // This call should return grade data that has been processed through the MyGrades tool.
-            // This includes grade category data as well as individual grade item data.
-            if ($gradedata = api::get_aggregation_dashboard_user($courseid, $categoryid, $userid)) {
-                $data['mygradesenabled'] = true;
+        // Returns null when MyGrades is off or has no data for this user (MGU-1368).
+        $mygradesdata = $mygradesenabled
+            ? self::process_mygrades_data($courseid, $categoryid, $userid, $activityitems, $activetab, $assessmenttype, $gradeitem)
+            : null;
 
-                // The weight value for this category can be derived from different places in the process.
-                $categoryweight = course::get_weight_towards_course($courseid, $gradedata, $activityitems, $gradeitem);
-                $data['weighttowardscourse'] = $categoryweight->grade_category_weight;  
-
-                // Get the category grade.
-                [$hascategorygrade, $categorygrade] = course::get_category_grade($gradedata);
-                $data['hascategorygrade'] = $hascategorygrade;
-                $data['categorygrade'] = $categorygrade;
-
-                $gradecategories = [];
-                $gradeitems = [];
-                $hasdualgrades = false;
-                foreach ($gradedata['fields'] ?? [] as $tmpitem) {
-                    if ($tmpitem['iscategory']) {
-                        $gradecategories[] = $tmpitem;
-                        if (!empty($tmpitem['dualgrades'])) {
-                            $hasdualgrades = true;
-                        }
-                    } else {
-                        $gradeitems[] = $tmpitem;
-                    }
-                }
-
-                // We derive $hasdualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
-                $parentisdualgrades = false;
-                $parent = $gradedata['parent'] ?? null;
-                if (is_object($parent) && $parent->dualgrades) {
-                    $parentisdualgrades = true;
-                }
-
-                if ($activityitems->categories && count($activityitems->categories) > 0) {
-                    $categorydata = course::process_mygrades_subcategories(
-                        $courseid,
-                        $gradecategories,
-                        $activityitems->categories,
-                        $assessmenttype,
-                        $userid
-                    );
-                    $data['courseitems'] = $categorydata;
-                    $data['hasgradecategory'] = true;
-                    $data['hasdualgrades'] = $hasdualgrades;
-                    $data['parentisdualgrades'] = $parentisdualgrades;
-                    $data['firstattemptgrade'] = $gradedata['releasegrade1st'] ?? '';
-                    $data['awardgrade'] = $gradedata['releasegrade'] ?? '';
-                }
-
-                if ($activityitems->items && count($activityitems->items) > 0) {
-                    $activitydata = activityitems::process_mygrades_items(
-                        $gradeitems,
-                        $activityitems->items,
-                        $activetab,
-                        $assessmenttype,
-                        $userid
-                    );
-                    $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
-                    $data['hascourseitems'] = true;
-                }
-
-                $hasgradedata = true;
-            }
-        }
-
-        if (!$mygradesenabled || !$hasgradedata) {
-            // The weight for this grade category can be derived from the aggregation coefficient
-            // value of the grade item, this needs to have been set in Gradebook Setup however.
-            $categoryweight = new stdClass();
-            $categoryweight->grade_category_weight = '-';
-            if ($gradeitem && is_object($activityitems->category)) {
-                $categoryweight = course::get_grade_category_weight($gradeitem, $activityitems->category);
-                $data['weighttowardscourse'] = $categoryweight->grade_category_weight;
-            }
-
-            if ($activityitems->categories && count($activityitems->categories) > 0) {
-                $categorydata = course::process_default_subcategories($courseid, $activityitems->categories, $assessmenttype);
-                $data['courseitems'] = $categorydata;
-                $data['hasgradecategory'] = true;
-            }
-
-            if ($activityitems->items && count($activityitems->items) > 0) {
-                $displayweights = false;
-                if (is_object($activityitems->category)) {
-                    $displayweights = self::display_activity_item_weights($categoryweight, $activityitems->category);
-                }
-                $activitydata = activityitems::process_default_items(
-                    $activityitems->items,
-                    $activetab,
-                    $assessmenttype,
-                    $displayweights,
-                    $userid
-                );
-                $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
-                $data['hascourseitems'] = true;
-            }
-        }
+        $data = array_merge($data, $mygradesdata ?? self::process_default_data(
+            $courseid, $userid, $activityitems, $activetab, $assessmenttype, $gradeitem
+        ));
 
         if (!empty($data['courseitems'])) {
             $data['hasdata'] = true;
-            // Finalise the course items.
             $data['courseitems'] = self::finalise_course_items($data['courseitems']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get the default activity data structure.
+     *
+     * @return array
+     */
+    public static function default_activity_data(): array {
+        return [
+            'mygradesenabled' => false,
+            'weighttowardscourse' => '-',
+            'hascategorygrade' => false,
+            'categorygrade' => '',
+            'courseitems' => [],
+            'hasgradecategory' => false,
+            'hasdualgrades' => false,
+            'parentisdualgrades' => false,
+            'firstattemptgrade' => '',
+            'awardgrade' => '',
+            'hascourseitems' => false,
+            'hasdata' => false,
+        ];
+    }
+
+    /**
+     * Process MyGrades data for a given course, category, and user.
+     *
+     * @param int $courseid
+     * @param int $categoryid
+     * @param int $userid
+     * @param object $activityitems
+     * @param string $activetab
+     * @param string $assessmenttype
+     * @param \grade_item|null $gradeitem
+     * @return array|null
+     */
+    private static function process_mygrades_data(
+        int $courseid,
+        int $categoryid,
+        int $userid,
+        object $activityitems,
+        string $activetab,
+        string $assessmenttype,
+        ?\grade_item $gradeitem = null
+    ): ?array {
+        // This call should return grade data that has been processed through the MyGrades tool.
+        // This includes grade category data as well as individual grade item data.
+        if (!$gradedata = api::get_aggregation_dashboard_user($courseid, $categoryid, $userid)) {
+            return null;
+        }
+
+        $data = ['courseitems' => []];
+        $data['mygradesenabled'] = true;
+
+        // The weight value for this category can be derived from different places in the process.
+        $categoryweight = course::get_weight_towards_course($courseid, $userid, $gradedata, $activityitems, $gradeitem);
+        $data['weighttowardscourse'] = $categoryweight->grade_category_weight;
+
+        // Get the category grade.
+        [$hascategorygrade, $categorygrade] = course::get_category_grade($gradedata);
+        $data['hascategorygrade'] = $hascategorygrade;
+        $data['categorygrade'] = $categorygrade;
+
+        $gradecategories = [];
+        $gradeitems = [];
+        $hasdualgrades = false;
+        foreach ($gradedata['fields'] ?? [] as $tmpitem) {
+            if ($tmpitem['iscategory']) {
+                $gradecategories[] = $tmpitem;
+                if (!empty($tmpitem['dualgrades'])) {
+                    $hasdualgrades = true;
+                }
+            } else {
+                $gradeitems[] = $tmpitem;
+            }
+        }
+
+        // We derive $hasdualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
+        $parentisdualgrades = false;
+        $parent = $gradedata['parent'] ?? null;
+        if (is_object($parent) && $parent->dualgrades) {
+            $parentisdualgrades = true;
+        }
+
+        if ($activityitems->categories && !empty($activityitems->categories)) {
+            $categorydata = course::process_mygrades_subcategories(
+                $courseid,
+                $gradecategories,
+                $activityitems->categories,
+                $assessmenttype,
+                $userid
+            );
+            $data['courseitems'] = $categorydata;
+            $data['hasgradecategory'] = true;
+            $data['hasdualgrades'] = $hasdualgrades;
+            $data['parentisdualgrades'] = $parentisdualgrades;
+            $data['firstattemptgrade'] = $gradedata['releasegrade1st'] ?? '';
+            $data['awardgrade'] = $gradedata['releasegrade'] ?? '';
+        }
+
+        if ($activityitems->items && !empty($activityitems->items)) {
+            $activitydata = activityitems::process_mygrades_items(
+                $gradeitems,
+                $activityitems->items,
+                $activetab,
+                $assessmenttype,
+                $userid
+            );
+            $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
+            $data['hascourseitems'] = true;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Process default data for the activity.
+     *
+     * @param int $courseid
+     * @param int $userid
+     * @param object $activityitems
+     * @param string $activetab
+     * @param string $assessmenttype
+     * @param \grade_item|null $gradeitem
+     * @return array
+     */
+    private static function process_default_data(
+        int $courseid,
+        int $userid,
+        object $activityitems,
+        string $activetab,
+        string $assessmenttype,
+        ?\grade_item $gradeitem = null
+    ): array {
+        $data = ['courseitems' => []];
+        // The weight for this grade category can be derived from the aggregation coefficient
+        // value of the grade item, this needs to have been set in Gradebook Setup however.
+        $categoryweight = new stdClass();
+        $categoryweight->grade_category_weight = '-';
+        if ($gradeitem && is_object($activityitems->category)) {
+            $categoryweight = course::get_grade_category_weight($gradeitem, $activityitems->category);
+            $data['weighttowardscourse'] = $categoryweight->grade_category_weight;
+        }
+
+        if ($activityitems->categories && !empty($activityitems->categories)) {
+            $categorydata = course::process_default_subcategories($courseid, $activityitems->categories, $assessmenttype);
+            $data['courseitems'] = $categorydata;
+            $data['hasgradecategory'] = true;
+        }
+
+        if ($activityitems->items && !empty($activityitems->items)) {
+            $displayweights = false;
+            if (is_object($activityitems->category)) {
+                $displayweights = self::display_activity_item_weights($categoryweight, $activityitems->category);
+            }
+            $activitydata = activityitems::process_default_items(
+                $activityitems->items,
+                $activetab,
+                $assessmenttype,
+                $displayweights,
+                $userid
+            );
+            $data['courseitems'] = self::merge_course_items($data['courseitems'], $activitydata);
+            $data['hascourseitems'] = true;
         }
 
         return $data;
@@ -317,7 +378,7 @@ class activity {
     public static function merge_course_items(array $courseitems, array $activitydata): array {
         return array_merge($courseitems, $activitydata);
     }
-    
+
     /**
      * Finalise the course items by sorting and reindexing them.
      *

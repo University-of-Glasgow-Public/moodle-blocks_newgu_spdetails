@@ -335,6 +335,7 @@ class course {
      * We also might override the $weighttowardscourse value based on altered weights.
      *
      * @param int $courseid
+     * @param int $userid
      * @param array $gradedata
      * @param object $activityitems
      * @param \grade_item|null $gradeitem
@@ -342,6 +343,7 @@ class course {
      */
     public static function get_weight_towards_course(
         int $courseid,
+        int $userid,
         array $gradedata,
         object $activityitems,
         ?\grade_item $gradeitem = null
@@ -366,7 +368,7 @@ class course {
             // MGU-1410 - Check for the correct weighting.
             [$originalweight, $alteredweight, $isaltered] = \local_gugrades\grades::get_altered_weight(
                 $gradedata['parent']->gradeitemid,
-                $gradedata['parent']->userid
+                $userid
             );
             $coefficient = $isaltered ? $alteredweight : $originalweight;
         }

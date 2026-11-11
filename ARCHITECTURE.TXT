@@ -30,8 +30,11 @@ Main entry points
   Course/category presentation, weights, assessment classification, chart
   totals and chart drill-down data.
 - classes/activity.php:
-  Category navigation, activity presentation, MyGrades/gradebook branching,
-  visibility handling and the activity adapter factory.
+  Category navigation, MyGrades/gradebook branching in process_get_activities(),
+  and the activity adapter factory.
+- classes/activityitems.php:
+  Activity item preparation: process_mygrades_items(), process_default_items()
+  and process_manual_grade_item().
 - classes/grade.php:
   Grade/status/feedback presentation, manual grade items, numeric and scale
   formatting, and administrative grade display.
@@ -146,11 +149,19 @@ For MyGrades courses:
 - Use the supplied grade, release and visibility information.
 - Preserve reassessment and dual-grade presentation flags.
 - Distinguish child dual-grade state from the parent category's state.
+- Weight towards the course is set by course::get_weight_towards_course(). For
+  released categories it uses the altered weight from local_gugrades when one
+  exists, otherwise the original weight. Both cases apply the MGU-1066 rule
+  through course::get_grade_category_weight().
+- For released categories it uses the altered weight from local_gugrades
+  when one exists. It also applies the MGU-1066 rule through
+  get_grade_category_weight().
 
 For ordinary gradebook courses:
 - Read Moodle grade items and activity-specific data.
 - Produce grade, submission status, deadline and feedback presentation.
-- Handle manually created grade items separately from module-backed items.
+- Handle manually created grade items separately, in
+  activityitems::process_manual_grade_item().
 
 The existence of a grade is not equivalent to permission to display it.
 Preserve release checks, grade visibility and user-specific hiding.
@@ -196,8 +207,12 @@ such as Formative or Summative and aggregation coefficients participate in
 classification.
 
 Weight helpers convert aggregation information into displayed percentages.
-Changes must account for nested categories and the distinction between an
-item's local weight and its contribution towards the course.
+course::get_grade_category_weight() applies the MGU-1066 rule, and
+course::get_weight_towards_course() adds altered weights for released
+MyGrades categories. Item weights are shown only when the category weight is
+above zero and MGU-1066 does not hide it. Changes must account for nested
+categories and the distinction between an item's local weight and its
+contribution towards the course.
 
 When changing grade handling, explicitly test zero grades, missing grades,
 administrative grades, hidden grades and unreleased MyGrades results.
@@ -350,3 +365,15 @@ instead initialises block_newgu_spdetails/main.
 Keep this document aligned with implementation and tests. It describes the
 code structure and important constraints; it does not configure runtime
 behaviour.
+
+process_get_activities() builds its result from default_activity_data(), then
+merges in one of two private helpers:
+
+- process_mygrades_data() returns the MyGrades fields, or null when
+  api::get_aggregation_dashboard_user() returns no data (MGU-1368). In that
+  case the gradebook path runs instead.
+- process_default_data() returns the gradebook fields. It runs when MyGrades
+  is disabled or has no data for the user.
+
+Both helpers must return complete course item arrays, because the merged
+result replaces the defaults.
