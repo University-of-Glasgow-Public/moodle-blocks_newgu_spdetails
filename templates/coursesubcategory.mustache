@@ -79,12 +79,12 @@
 {{/data.coursedata.reassessment}}
         </div>
 {{#data.coursedata.hascategorygrade}}
-    {{^data.coursedata.parentisdualgrades}}
+    {{^data.coursedata.dualgrades}}
         <div>
             <span class="subcategory-details-label">{{#str}} label_coursecategorygrade, block_newgu_spdetails {{/str}}</span>
             <span id="subcategory-details-categorygrade" class="subcategory-details-value">{{#data.coursedata}}{{categorygrade}}{{/data.coursedata}}</span>
         </div>
-    {{/data.coursedata.parentisdualgrades}}
+    {{/data.coursedata.dualgrades}}
 {{/data.coursedata.hascategorygrade}}
         <div>
             <span class="subcategory-details-label">{{#str}} label_weight, block_newgu_spdetails {{/str}}</span>
@@ -127,10 +127,10 @@
             {{#data.coursedata.hasgradecategory}}
                 <th id="sortby_grade" data-sortby="grade" class="td10 th-sortable">{{#str}} header_grade, block_newgu_spdetails {{/str}}</th>
             {{/data.coursedata.hasgradecategory}}
-            {{#data.coursedata.hasdualgrades}}
+            {{#data.coursedata.dualgrades}}
                 <th id="sortby_firstattempt" data-sortby="firstattempt" class="td10 th-sortable">{{#str}} header_firstattempt, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_award" data-sortby="award" class="td10 th-sortable">{{#str}} header_award, block_newgu_spdetails {{/str}}</th>
-            {{/data.coursedata.hasdualgrades}}
+            {{/data.coursedata.dualgrades}}
         {{/data.coursedata.mygradesenabled}}
     {{/data.coursedata.hascourseitems}}
             </tr>
@@ -153,22 +153,22 @@
                     <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{grade_category_grade}}</span>
                 {{/grade_category_grade}}
                 </td>
-                {{#hasdualgrades}}
-                    {{#category_firstattempt}}
+                {{#dualgrades}}
                 <td>
-                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{category_firstattempt}}</span>
+                    {{#firstattemptgrade}}
+                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{firstattemptgrade}}</span>
+                    {{/firstattemptgrade}}
                 </td>
-                    {{/category_firstattempt}}
-                    {{#category_award}}
                 <td>
-                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{category_award}}</span>
+                    {{#awardgrade}}
+                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{awardgrade}}</span>
+                    {{/awardgrade}}
                 </td>
-                    {{/category_award}}
-                {{/hasdualgrades}}
-                {{^hasdualgrades}}
+                {{/dualgrades}}
+                {{^dualgrades}}
                 <td></td>
                 <td></td>
-                {{/hasdualgrades}}
+                {{/dualgrades}}
             {{/mygradesenabled}}
             {{^mygradesenabled}}
                 {{#data.coursedata.hascourseitems}}
@@ -223,8 +223,8 @@
     </table>
 
     {{#data.coursedata.mygradesenabled}}
-        {{^data.coursedata.hascourseitems}}
-            {{^data.coursedata.hasdualgrades}}
+        {{#data.coursedata.dualgrades}}
+            {{#data.coursedata.firstattemptgrade}}
     <div class="subcategory-details-container dualgrades mb-3">
         <div>
             <span class="subcategory-details-label dualgrades">{{#str}} label_grade_dual, block_newgu_spdetails {{/str}}</span>
@@ -238,8 +238,8 @@
             <span class="subcategory-details-value dualgrades">{{data.coursedata.awardgrade}}</span>
         </div>
     </div>
-            {{/data.coursedata.hasdualgrades}}
-        {{/data.coursedata.hascourseitems}}
+            {{/data.coursedata.firstattemptgrade}}
+        {{/data.coursedata.dualgrades}}
     {{/data.coursedata.mygradesenabled}}
 
     <div class="d-flex flex-row mb-2 justify-content-end">

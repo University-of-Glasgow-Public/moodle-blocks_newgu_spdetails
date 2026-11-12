@@ -146,8 +146,7 @@ class activity {
             $coursedata['hascategorygrade'] = $activitiesdata['hascategorygrade'];
             $coursedata['categorygrade'] = $activitiesdata['categorygrade'];
             $coursedata['hasgradecategory'] = $activitiesdata['hasgradecategory'];
-            $coursedata['hasdualgrades'] = $activitiesdata['hasdualgrades'];
-            $coursedata['parentisdualgrades'] = $activitiesdata['parentisdualgrades'];
+            $coursedata['dualgrades'] = $activitiesdata['dualgrades'];
             $coursedata['firstattemptgrade'] = $activitiesdata['firstattemptgrade'];
             $coursedata['awardgrade'] = $activitiesdata['awardgrade'];
             $coursedata['hascourseitems'] = $activitiesdata['hascourseitems'];
@@ -190,7 +189,12 @@ class activity {
             : null;
 
         $data = array_merge($data, $mygradesdata ?? self::process_default_data(
-            $courseid, $userid, $activityitems, $activetab, $assessmenttype, $gradeitem
+            $courseid,
+            $userid,
+            $activityitems,
+            $activetab,
+            $assessmenttype,
+            $gradeitem
         ));
 
         if (!empty($data['courseitems'])) {
@@ -214,7 +218,7 @@ class activity {
             'categorygrade' => '',
             'courseitems' => [],
             'hasgradecategory' => false,
-            'hasdualgrades' => false,
+            'dualgrades' => false,
             'parentisdualgrades' => false,
             'firstattemptgrade' => '',
             'awardgrade' => '',
@@ -264,24 +268,34 @@ class activity {
 
         $gradecategories = [];
         $gradeitems = [];
-        $hasdualgrades = false;
+        $dualgrades = false;
         foreach ($gradedata['fields'] ?? [] as $tmpitem) {
             if ($tmpitem['iscategory']) {
                 $gradecategories[] = $tmpitem;
                 if (!empty($tmpitem['dualgrades'])) {
-                    $hasdualgrades = true;
+                    $dualgrades = true;
                 }
             } else {
                 $gradeitems[] = $tmpitem;
             }
         }
 
-        // We derive $hasdualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
-        $parentisdualgrades = false;
+        // We derive $dualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
         $parent = $gradedata['parent'] ?? null;
+        $data['firstattemptgrade'] = '';
+        $data['awardgrade'] = '';
         if (is_object($parent) && $parent->dualgrades) {
-            $parentisdualgrades = true;
+            $dualgrades = true;
+            if (is_object($parent->releasegrade1st)) {
+                $data['firstattemptgrade'] = $parent->releasegrade1st->displaygrade ?? '';
+            }
+            if (is_object($parent->releasegrade)) {
+                $data['awardgrade'] = $parent->releasegrade->displaygrade ?? '';
+            }
         }
+
+        // We're not relying on this being a category value anymore.
+        $data['dualgrades'] = $dualgrades;
 
         if ($activityitems->categories && !empty($activityitems->categories)) {
             $categorydata = course::process_mygrades_subcategories(
@@ -293,8 +307,6 @@ class activity {
             );
             $data['courseitems'] = $categorydata;
             $data['hasgradecategory'] = true;
-            $data['hasdualgrades'] = $hasdualgrades;
-            $data['parentisdualgrades'] = $parentisdualgrades;
             $data['firstattemptgrade'] = $gradedata['releasegrade1st'] ?? '';
             $data['awardgrade'] = $gradedata['releasegrade'] ?? '';
         }
@@ -473,16 +485,16 @@ class activity {
      *
      * @param int $courseid
      * @param int $categoryid
-     * @param string $gradecategoryfullname
+     * @param string $gradecategoryname
      * @return array [$assessmenttype, $item]
      */
-    public static function get_activitytype(int $courseid, int $categoryid, string $gradecategoryfullname): array {
+    public static function get_activitytype(int $courseid, int $categoryid, string $gradecategoryname): array {
         if (!$item = grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $categoryid, 'itemtype' => 'category'])) {
             $item = grade_item::fetch(['courseid' => $courseid, 'iteminstance' => $categoryid, 'itemtype' => 'course']);
         }
-        $assessmenttype = course::return_assessmenttype($gradecategoryfullname, $item->aggregationcoef);
+        $assessmenttype = course::return_assessmenttype($gradecategoryname, $item->aggregationcoef);
 
-        return [$assessmenttype, $item]; 
+        return [$assessmenttype, $item];
     }
 
     /**

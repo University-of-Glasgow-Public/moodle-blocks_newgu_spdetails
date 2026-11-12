@@ -107,7 +107,7 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
 
         [$assessmenttype, $item] = $this->activityapi->get_activitytype(
             $this->gradeitemobj->courseid,
-            $this->gradeitemobj->category->id, 
+            $this->gradeitemobj->category->id,
             $gradecategory->category->fullname
         );
 
@@ -185,7 +185,7 @@ final class mgu_1410_category_weights_test extends \block_newgu_spdetails\extern
 
         [$assessmenttype, $item] = $this->activityapi->get_activitytype(
             $this->gradeitemobj->courseid,
-            $this->gradeitemobj->category->id, 
+            $this->gradeitemobj->category->id,
             $gradecategory->category->fullname
         );
 

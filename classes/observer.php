@@ -245,6 +245,8 @@ class observer {
         if (!empty($event->userid)) {
             return self::delete_key_from_cache($event->userid);
         }
+
+        return false;
     }
 
     /**
@@ -322,6 +324,12 @@ class observer {
      * https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
      */
     public static function user_loggedout(\core\event\user_loggedout $event): bool {
+        
+        // Invalidate the cache.
+        if (!empty($event->userid)) {
+            return self::delete_key_from_cache($event->userid);
+        }
+
         return true;
     }
 

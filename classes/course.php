@@ -179,7 +179,7 @@ class course {
                     $subcat->id = $item->iteminstance;
                     $subcat->name = $gradecategory['fullname'];
                     // MGU-1459.
-                    $subcat->hasdualgrades = $gradecategory['dualgrades'];
+                    $subcat->dualgrades = $gradecategory['dualgrades'];
                     // MGU-1372 - We need to check if the category grade item is a resit grade item.
                     $subcat->reassessment = \local_gugrades\grades::is_resit_gradeitem($item->id);
                     $subcat->reassessment_text = $subcat->reassessment ? get_string('reassessment', 'block_newgu_spdetails') : '';
@@ -211,14 +211,14 @@ class course {
                         $subcat->sub_category_weight = $subcatweight;
 
                         if (!$gradecategory['grademissing']) {
-                            if (!$subcat->hasdualgrades) {
+                            if (!$subcat->dualgrades) {
                                 $subcat->grade_category_grade = grade::is_admin_or_generic_grade(
                                     $gradecategory['releasegrade']->admingrade,
                                     $gradecategory['releasegrade']->displaygrade
                                 );
                             } else {
-                                $subcat->category_firstattempt = $gradecategory['releasegrade1st']->displaygrade;
-                                $subcat->category_award = $gradecategory['releasegrade']->displaygrade;
+                                $subcat->firstattemptgrade = $gradecategory['releasegrade1st']->displaygrade;
+                                $subcat->awardgrade = $gradecategory['releasegrade']->displaygrade;
                             }
                         }
                     }
