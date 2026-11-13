@@ -449,4 +449,45 @@ class newgu_spdetails_base_testcase extends externallib_advanced_testcase {
             $status
         );
     }
+
+    /**
+     * Get gradeitemid for given name of item
+     * @param string $itemname
+     * @return int
+     */
+    public function get_gradeitemid(string $itemname) {
+        global $DB;
+
+        $item = $DB->get_record('grade_items', ['itemname' => $itemname], '*', MUST_EXIST);
+
+        return $item->id;
+    }
+
+    /**
+     * Get gradeitemid from grade category name
+     * @param string $catname
+     * @return int
+     */
+    public function get_gradeitemid_from_grade_category(string $catname) {
+        global $DB;
+
+        $catid = $this->get_grade_category_id($catname);
+        $item = $DB->get_record('grade_items', ['itemtype' => 'category', 'iteminstance' => $catid], '*', MUST_EXIST);
+
+        return $item->id;
+    }
+
+    /**
+     * Get grade category id given name of category
+     * @param string $catname
+     * @return int
+     *
+     */
+    public function get_grade_category_id(string $catname) {
+        global $DB;
+
+        $gcat = $DB->get_record('grade_categories', ['fullname' => $catname], '*', MUST_EXIST);
+
+        return $gcat->id;
+    }
 }

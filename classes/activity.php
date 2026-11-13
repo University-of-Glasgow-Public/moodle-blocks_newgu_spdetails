@@ -147,6 +147,8 @@ class activity {
             $coursedata['categorygrade'] = $activitiesdata['categorygrade'];
             $coursedata['hasgradecategory'] = $activitiesdata['hasgradecategory'];
             $coursedata['dualgrades'] = $activitiesdata['dualgrades'];
+            $coursedata['released'] = $activitiesdata['released'] ?? false;
+            $coursedata['reassessmentgradespresent'] = $activitiesdata['reassessmentgradespresent'] ?? false;
             $coursedata['firstattemptgrade'] = $activitiesdata['firstattemptgrade'];
             $coursedata['awardgrade'] = $activitiesdata['awardgrade'];
             $coursedata['hascourseitems'] = $activitiesdata['hascourseitems'];
@@ -218,8 +220,9 @@ class activity {
             'categorygrade' => '',
             'courseitems' => [],
             'hasgradecategory' => false,
+            'released' => false,
             'dualgrades' => false,
-            'parentisdualgrades' => false,
+            'reassessmentgradespresent' => false,
             'firstattemptgrade' => '',
             'awardgrade' => '',
             'hascourseitems' => false,
@@ -280,12 +283,15 @@ class activity {
             }
         }
 
-        // We derive $dualgrades from $gradedata['fields'] - this can get lost. Check if the parent has this value.
+        // Get the dualgrades property from the parent object, if it exists.
         $parent = $gradedata['parent'] ?? null;
         $data['firstattemptgrade'] = '';
         $data['awardgrade'] = '';
         if (is_object($parent) && $parent->dualgrades) {
             $dualgrades = true;
+            if ($parent->released) {
+                $data['released'] = true;
+            }
             if (is_object($parent->releasegrade1st)) {
                 $data['firstattemptgrade'] = $parent->releasegrade1st->displaygrade ?? '';
             }
@@ -293,6 +299,9 @@ class activity {
                 $data['awardgrade'] = $parent->releasegrade->displaygrade ?? '';
             }
         }
+
+        // This is needed for the template. Its not always easy to distinguish dualgrade items or not.
+        $data['reassessmentgradespresent'] = $gradedata['reassessmentgradespresent'] ?? false;
 
         // We're not relying on this being a category value anymore.
         $data['dualgrades'] = $dualgrades;

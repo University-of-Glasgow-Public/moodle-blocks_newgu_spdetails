@@ -81,7 +81,14 @@
 {{#data.coursedata.hascategorygrade}}
     {{^data.coursedata.dualgrades}}
         <div>
-            <span class="subcategory-details-label">{{#str}} label_coursecategorygrade, block_newgu_spdetails {{/str}}</span>
+            <span class="subcategory-details-label">
+        {{#data.coursedata.reassessmentgradespresent}}
+            {{#str}} label_dualcategorygrade, block_newgu_spdetails {{/str}}
+        {{/data.coursedata.reassessmentgradespresent}}
+        {{^data.coursedata.reassessmentgradespresent}}
+            {{#str}} label_coursecategorygrade, block_newgu_spdetails {{/str}}
+        {{/data.coursedata.reassessmentgradespresent}}
+            </span>
             <span id="subcategory-details-categorygrade" class="subcategory-details-value">{{#data.coursedata}}{{categorygrade}}{{/data.coursedata}}</span>
         </div>
     {{/data.coursedata.dualgrades}}
@@ -125,11 +132,17 @@
     {{^data.coursedata.hascourseitems}}
         {{#data.coursedata.mygradesenabled}}
             {{#data.coursedata.hasgradecategory}}
+                {{#data.coursedata.hascategorygrade}}
                 <th id="sortby_grade" data-sortby="grade" class="td10 th-sortable">{{#str}} header_grade, block_newgu_spdetails {{/str}}</th>
+                {{/data.coursedata.hascategorygrade}}
             {{/data.coursedata.hasgradecategory}}
             {{#data.coursedata.dualgrades}}
+                {{^data.coursedata.hascategorygrade}}
+                    {{#data.coursedata.reassessmentgradespresent}}
                 <th id="sortby_firstattempt" data-sortby="firstattempt" class="td10 th-sortable">{{#str}} header_firstattempt, block_newgu_spdetails {{/str}}</th>
                 <th id="sortby_award" data-sortby="award" class="td10 th-sortable">{{#str}} header_award, block_newgu_spdetails {{/str}}</th>
+                    {{/data.coursedata.reassessmentgradespresent}}
+                {{/data.coursedata.hascategorygrade}}
             {{/data.coursedata.dualgrades}}
         {{/data.coursedata.mygradesenabled}}
     {{/data.coursedata.hascourseitems}}
@@ -148,26 +161,27 @@
                 <td class="td15 subcategory-row">{{assessment_type}}</td>
                 <td class="subcategory-row"{{#data.coursedata.hascourseitems}} colspan="3"{{/data.coursedata.hascourseitems}} data-rawcategoryweight="{{raw_category_weight}}">{{sub_category_weight}}</td>
             {{#mygradesenabled}}
-                <td>
                 {{#grade_category_grade}}
+                <td>
                     <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{grade_category_grade}}</span>
+                </td>
                 {{/grade_category_grade}}
-                </td>
                 {{#dualgrades}}
-                <td>
                     {{#firstattemptgrade}}
-                    <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{firstattemptgrade}}</span>
+                <td><span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{firstattemptgrade}}</span></td>
                     {{/firstattemptgrade}}
-                </td>
-                <td>
                     {{#awardgrade}}
+                <td>
                     <span class="{{#str}} status_graded, block_newgu_spdetails {{/str}}">{{awardgrade}}</span>
-                    {{/awardgrade}}
                 </td>
+                    {{/awardgrade}}
                 {{/dualgrades}}
                 {{^dualgrades}}
+                    {{#grade_category_grade}}
+                        {{#data.coursedata.hascourseitems}}
                 <td></td>
-                <td></td>
+                        {{/data.coursedata.hascourseitems}}
+                    {{/grade_category_grade}}
                 {{/dualgrades}}
             {{/mygradesenabled}}
             {{^mygradesenabled}}
